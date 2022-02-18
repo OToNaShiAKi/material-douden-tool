@@ -1,9 +1,8 @@
 <template>
-  <section>
+  <section class="px-3 pb-3">
     <Pack>切换主题色</Pack>
     <v-radio-group row v-model="theme" @change="change">
       <v-radio
-        class="mx-3"
         v-for="item in themes"
         :key="item.value"
         :label="item.label"
@@ -11,7 +10,7 @@
         :value="item.value"
       />
     </v-radio-group>
-    <v-switch class="mx-3" @change="dark" inset label="Dark" />
+    <v-switch @change="dark" inset label="Dark" />
   </section>
 </template>
 

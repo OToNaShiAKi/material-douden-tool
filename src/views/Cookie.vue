@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <section class="px-3">
     <Pack>设置Cookie</Pack>
     <v-textarea
       v-model="cookie"
@@ -15,23 +15,19 @@
 </template>
 
 <script>
-import { ipcRenderer } from "electron";
 import Pack from "../components/Pack.vue";
-import { ChangeCookie } from "../plugins/axios";
+import { ChangeCookie } from "../store/mutations";
+import { mapMutations } from "vuex";
 
 export default {
   name: "Cookie",
   components: { Pack },
-  data: () => ({ cookie: "" }),
+  data: ({ $store: { state } }) => ({ cookie: state.cookie }),
   methods: {
+    ...mapMutations([ChangeCookie.name]),
     setcookie(input) {
-      if (input) {
-        const bili_jct = input.match(/bili_jct=([^;]+);/);
-        if (bili_jct) {
-          ipcRenderer.send(ChangeCookie, input, bili_jct[1]);
-        }
-        localStorage.setItem("cookie", input);
-      }
+      this.ChangeCookie(input);
+      localStorage.setItem("cookie", input);
     },
   },
 };

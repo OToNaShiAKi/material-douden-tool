@@ -1,4 +1,5 @@
 import axios from "axios";
+import QS from "qs";
 
 export const Bilibili = axios.create({
   baseURL: "https://api.live.bilibili.com/",
@@ -15,31 +16,26 @@ Bilibili.interceptors.request.use((config) => {
   config.data.csrf = Bilibili.defaults.data.csrf;
   config.data.csrf_token = Bilibili.defaults.data.csrf_token;
   config.data.rnd = Bilibili.defaults.data.rnd;
+  config.data = QS.stringify(config.data);
   return config;
 });
 
 Bilibili.interceptors.response.use((response) => {
-  console.log(response);
+  if (response.data.code !== 0) throw response.data;
   return response.data;
 });
 
-export const SendComment = async (event, roomids, msg) => {
-  const send = roomids.map((roomid) =>
-    Bilibili.post("/msg/send", {
+export const SendComment = async (roomid, msg) => {
+  try {
+    await Bilibili.post("/msg/send", {
       roomid,
       msg,
       color: 1677215,
       mode: 1,
       bubble: 0,
       fontsize: 25,
-    })
-  );
-  try {
-    const result = await Promise.all(send);
-    console.log(result);
+    });
   } catch (error) {
     console.log(error);
   }
 };
-
-export const ChangeCookie = "ChangeCookie";
