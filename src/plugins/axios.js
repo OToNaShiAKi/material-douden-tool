@@ -1,23 +1,45 @@
 import axios from "axios";
 
-const Bilibili = axios.create({
+export const Bilibili = axios.create({
   baseURL: "https://api.live.bilibili.com/",
   widthCredentials: true,
   headers: {
     origin: "https://live.bilibili.com",
     referer: "https://live.bilibili.com",
-    Cookie:
-      "buvid3=270E286A-D309-4AE0-AF8F-6B72A049D6A7148830infoc;SESSDATA=85a5a9d8%2C1656407117%2C63138%2Ac1;bili_jct=996cb2df77454c1fdb3aa4b5fb81dd16",
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
   },
 });
 
-export const SendContent = async (roomids, msg) => {
-  for (const roomid of roomids) {
-    try {
-      const result = await Bilibili.post("/msg/send", { roomid, msg });
-      console.log(result);
-    } catch (error) {
-      console.log(error);
-    }
+Bilibili.interceptors.request.use((config) => {
+  config.data.csrf = Bilibili.defaults.data.csrf;
+  config.data.csrf_token = Bilibili.defaults.data.csrf_token;
+  config.data.rnd = Bilibili.defaults.data.rnd;
+  return config;
+});
+
+Bilibili.interceptors.response.use((response) => {
+  console.log(response);
+  return response.data;
+});
+
+export const SendComment = async (event, roomids, msg) => {
+  const send = roomids.map((roomid) =>
+    Bilibili.post("/msg/send", {
+      roomid,
+      msg,
+      color: 1677215,
+      mode: 1,
+      bubble: 0,
+      fontsize: 25,
+    })
+  );
+  try {
+    const result = await Promise.all(send);
+    console.log(result);
+  } catch (error) {
+    console.log(error);
   }
 };
+
+export const ChangeCookie = "ChangeCookie";

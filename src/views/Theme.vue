@@ -1,11 +1,6 @@
 <template>
   <section>
-    <v-subheader class="justify-space-between">
-      <span>切换主题色</span>
-      <v-btn icon @click="$router.go(-1)">
-        <v-icon>mdi-chevron-up</v-icon>
-      </v-btn>
-    </v-subheader>
+    <Pack>切换主题色</Pack>
     <v-radio-group row v-model="theme" @change="change">
       <v-radio
         class="mx-3"
@@ -21,8 +16,11 @@
 </template>
 
 <script>
+import Pack from "../components/Pack.vue";
+
 export default {
   name: "Colors",
+  components: { Pack },
   created() {
     this.theme = this.$vuetify.theme.currentTheme.primary;
   },

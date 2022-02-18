@@ -7,17 +7,26 @@
           <v-text-field
             v-model="content"
             @keypress.enter="send"
+            @click:append-inner="send"
             autofocus
-            label="Text"
+            label="Comment"
             class="flex-grow-1"
             append-icon="mdi-arrow-left-bottom"
           />
         </section>
         <v-subheader class="justify-space-between">
           <span></span>
-          <v-btn icon to="theme">
-            <v-icon>mdi-palette</v-icon>
-          </v-btn>
+          <v-btn-toggle color="primary" group shaped dense>
+            <v-btn icon to="theme" value="theme">
+              <v-icon>mdi-palette</v-icon>
+            </v-btn>
+            <v-btn icon to="cookie" value="cookie">
+              <v-icon>mdi-cookie</v-icon>
+            </v-btn>
+            <v-btn icon to="music" value="music">
+              <v-icon>mdi-music</v-icon>
+            </v-btn>
+          </v-btn-toggle>
         </v-subheader>
         <router-view />
       </v-container>
@@ -26,6 +35,7 @@
 </template>
 
 <script>
+import { SendComment, ChangeCookie } from "./plugins/axios";
 import { ipcRenderer } from "electron";
 
 export default {
@@ -34,9 +44,20 @@ export default {
     items: ["【", "【（"],
     content: "",
   }),
+  created() {
+    const cookie = localStorage.getItem("cookie");
+    if (cookie) {
+      const bili_jct = cookie.match(/bili_jct=(\w+);/);
+      ipcRenderer.send(ChangeCookie, cookie, bili_jct[1]);
+    }
+  },
   methods: {
     send() {
-      ipcRenderer.send("SendContent", ["10035114", "14525229"], this.content);
+      ipcRenderer.send(
+        SendComment.name,
+        ["10035114", "14525339"],
+        this.content
+      );
       this.content = "";
     },
   },
