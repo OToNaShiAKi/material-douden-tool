@@ -1,11 +1,8 @@
 import { ipcMain } from "electron";
-import { SendComment, Bilibili } from "./plugins/axios";
+import { SendComment, Bilibili, GetWebSocket, GetMusic } from "./plugins/axios";
 import { ChangeCookie } from "./store/mutations";
 
-const Stacks = {
-  RoomIds: [],
-  timer: null,
-};
+const Stacks = { RoomIds: [], timer: null };
 
 ipcMain.on(SendComment.name, (event, roomids, msg) => {
   if (Stacks.timer) {
@@ -34,3 +31,10 @@ ipcMain.on(ChangeCookie.name, (event, cookie, csrf) => {
     rnd: Math.floor(Date.now() / 1000),
   };
 });
+
+ipcMain.handle(GetWebSocket.name, async (event, roomids) => {
+  const promise = roomids.map(async (roomid) => GetWebSocket(roomid));
+  return await Promise.all(promise);
+});
+
+ipcMain.handle(GetMusic.name, GetMusic);

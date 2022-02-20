@@ -5,11 +5,10 @@
       v-model="cookie"
       label="Bilibili Cookie"
       auto-grow
-      autofocus
       outlined
       clearable
       class="rounded-tl-xl rounded-br-xl"
-      @input="setcookie"
+      @input="ChangeCookie"
     />
   </section>
 </template>
@@ -23,12 +22,6 @@ export default {
   name: "Cookie",
   components: { Pack },
   data: ({ $store: { state } }) => ({ cookie: state.cookie }),
-  methods: {
-    ...mapMutations([ChangeCookie.name]),
-    setcookie(input) {
-      this.ChangeCookie(input);
-      localStorage.setItem("cookie", input);
-    },
-  },
+  methods: { ...mapMutations([ChangeCookie.name]) },
 };
 </script>

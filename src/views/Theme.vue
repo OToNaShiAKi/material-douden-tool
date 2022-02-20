@@ -10,7 +10,7 @@
         :value="item.value"
       />
     </v-radio-group>
-    <v-switch @change="dark" inset label="Dark" />
+    <v-switch v-model="dark" @change="model" inset label="Dark" />
   </section>
 </template>
 
@@ -20,11 +20,8 @@ import Pack from "../components/Pack.vue";
 export default {
   name: "Colors",
   components: { Pack },
-  created() {
-    this.theme = this.$vuetify.theme.currentTheme.primary;
-  },
-  data: () => ({
-    theme: "#2196f3",
+  data: ({ $vuetify: { theme } }) => ({
+    theme: theme.currentTheme.primary,
     themes: [
       { label: "少女粉", value: "#fa7298" },
       { label: "宝石蓝", value: "#2196f3" },
@@ -34,15 +31,17 @@ export default {
       { label: "早苗绿", value: "#8bc24a" },
       { label: "罗兰紫", value: "#9c28b1" },
     ],
+    dark: theme.dark,
   }),
   methods: {
     change(value) {
-      localStorage.setItem("primary", value);
       this.$vuetify.theme.themes.light.primary = value;
       this.$vuetify.theme.themes.dark.primary = value;
+      localStorage.setItem("primary", value);
     },
-    dark(value) {
+    model(value) {
       this.$vuetify.theme.dark = value;
+      localStorage.setItem("model", value);
     },
   },
 };

@@ -1,7 +1,13 @@
 <template>
   <section class="px-3 pb-3">
     <Pack>选择房间</Pack>
-    <v-chip-group column :multiple="multiple" color="primary" v-model="select">
+    <v-chip-group
+      column
+      :multiple="multiple"
+      color="primary"
+      @change="ChangeSelect"
+      :value="select"
+    >
       <v-chip
         v-for="(v, i) of rooms"
         close
@@ -14,7 +20,7 @@
         {{ v.name }}
       </v-chip>
     </v-chip-group>
-    <v-switch v-model="multiple" inset label="多选" />
+    <v-switch @change="ChangeSelect" v-model="multiple" inset label="多选" />
     <section class="d-flex">
       <v-text-field class="mr-3" v-model="roomid" label="房间号" />
       <v-text-field v-model="name" label="名称" />
@@ -47,23 +53,18 @@ export default {
     name: "",
   }),
   computed: {
-    select: {
-      get() {
-        const select = this.$store.state.select || [];
-        return this.multiple ? select : select[0];
-      },
-      set(value) {
-        const select = Array.isArray(value) ? value : value ? [value] : [];
-        localStorage.setItem("select", select);
-        this.ChangeSelect(select);
-      },
+    select() {
+      const select = this.$store.state.select || [];
+      return this.multiple ? select : select[0];
     },
   },
   methods: {
     ...mapMutations([ChangeSelect.name]),
     add() {
       this.rooms.push({ roomid: this.roomid, name: this.name });
-      this.select = this.multiple ? [...this.select, this.roomid] : this.roomid;
+      this.ChangeSelect(
+        this.multiple ? [...this.select, this.roomid] : [this.roomid]
+      );
       this.roomid = "";
       this.name = "";
       localStorage.setItem("rooms", JSON.stringify(this.rooms));
