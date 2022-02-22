@@ -1,5 +1,5 @@
 <template>
-  <section class="px-3 pb-3">
+  <section>
     <Pack>选择房间</Pack>
     <v-chip-group
       column
@@ -30,7 +30,6 @@
       outlined
       small
       color="primary"
-      class="float-right"
       @click="add"
     >
       添加

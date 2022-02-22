@@ -1,5 +1,11 @@
 import { ipcMain } from "electron";
-import { SendComment, Bilibili, GetWebSocket, GetMusic } from "./plugins/axios";
+import {
+  SendComment,
+  Bilibili,
+  GetWebSocket,
+  GetMusic,
+  GetHistoryComment,
+} from "./plugins/axios";
 import { ChangeCookie } from "./store/mutations";
 
 const Stacks = { RoomIds: [], timer: null };
@@ -33,8 +39,24 @@ ipcMain.on(ChangeCookie.name, (event, cookie, csrf) => {
 });
 
 ipcMain.handle(GetWebSocket.name, async (event, roomids) => {
-  const promise = roomids.map(async (roomid) => GetWebSocket(roomid));
+  const promise = roomids.map(async (roomid) => {
+    const [socket, comment] = await Promise.all([
+      GetWebSocket(roomid),
+      GetHistoryComment(roomid),
+    ]);
+    socket.comment = comment;
+    socket.roomid = roomid;
+    return socket;
+  });
   return await Promise.all(promise);
 });
 
-ipcMain.handle(GetMusic.name, GetMusic);
+ipcMain.handle(GetMusic.name, async (event, keyword) => {
+  const result = await GetMusic(keyword);
+  for (const item of result) {
+    if (item.lyric && item.tlyric) item.language = "双语";
+    else if (item.lyric || item.tlyric) item.language = "单语";
+    else item.language = "无词";
+  }
+  return result;
+});

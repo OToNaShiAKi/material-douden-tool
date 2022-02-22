@@ -30,7 +30,7 @@ const Music163 = axios.create({
 
 Music163.interceptors.response.use((response) => {
   if (response.data.code !== 200) throw response.data;
-  return response.data.result;
+  return response.data;
 });
 
 const MusicQQ = axios.create({
@@ -46,7 +46,7 @@ const MusicQQ = axios.create({
 
 MusicQQ.interceptors.response.use((response) => {
   if (response.data.code !== 0) throw response.data;
-  return response.data.data;
+  return response.data;
 });
 
 export const SendComment = async (roomid, msg) => {
@@ -70,41 +70,81 @@ export const SendComment = async (roomid, msg) => {
 
 export const GetWebSocket = async (roomid) => {
   try {
-    const result = await Promise.all([
-      Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
-        params: { type: 0, id: roomid },
-      }),
-      Bilibili.get("/xlive/web-room/v1/dM/gethistory", {
-        params: { roomid },
-      }),
-    ]);
+    const result = await Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
+      params: { type: 0, id: roomid },
+    });
     return {
-      host_list: result[0].host_list,
-      comments: result[1].room,
-      roomid,
-      token: result[0].token,
+      host_list: result.host_list,
+      token: result.token,
     };
   } catch (error) {
-    console.log(error);
     return { roomid };
   }
 };
 
-export const GetMusic = async (event, keyword) => {
+export const GetHistoryComment = async (roomid) => {
+  try {
+    const result = await Bilibili.get("/xlive/web-room/v1/dM/gethistory", {
+      params: { roomid },
+    });
+    return result.room;
+  } catch (error) {
+    return [];
+  }
+};
+
+export const GetMusic = async (keyword) => {
   try {
     const [song163, songQQ] = await Promise.all([
       Music163.get("/search/get/web", {
         params: { s: keyword, type: 1 },
-      }),
+      }).then(
+        async ({ result: { songs } }) =>
+          await Promise.all(
+            songs.map(async ({ name, artists, id }) => {
+              const { lrc, tlyric } = await Music163.get("/song/lyric", {
+                params: { id, lv: -1, tv: -1 },
+              });
+              return {
+                id,
+                name,
+                lyric: lrc && lrc.lyric,
+                tlyric: tlyric && tlyric.lyric,
+                singer: artists.map(({ name }) => name).join("、"),
+                origin: "网易云",
+              };
+            })
+          )
+      ),
       MusicQQ.get("/soso/fcgi-bin/client_search_cp", {
         params: { w: keyword, format: "json" },
-      }),
+      }).then(
+        async ({
+          data: {
+            song: { list },
+          },
+        }) =>
+          await Promise.all(
+            list.map(async ({ songmid, songname, singer }) => {
+              const { lyric, trans } = await MusicQQ.get(
+                "/lyric/fcgi-bin/fcg_query_lyric_new.fcg",
+                { params: { songmid, nobase64: 1, g_tk: 5381, format: "json" } }
+              );
+              return {
+                id: songmid,
+                name: songname,
+                lyric,
+                tlyric: trans,
+                singer: singer.map(({ name }) => name).join("、"),
+                origin: "QQ",
+              };
+            })
+          )
+      ),
     ]);
-    return {
-      songs: [...song163.songs, ...songQQ.song.list],
-      total: song163.songCount + songQQ.song.totalnum,
-    };
+    return [...song163, ...songQQ];
   } catch (error) {
     console.log(error);
+    return [];
   }
 };

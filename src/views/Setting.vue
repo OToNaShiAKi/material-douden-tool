@@ -1,5 +1,5 @@
 <template>
-  <section class="px-3 pb-3">
+  <section>
     <Pack>配置项</Pack>
     <v-chip-group :max="-1" column color="primary">
       <v-chip
@@ -23,7 +23,6 @@
       outlined
       small
       color="primary"
-      class="float-right"
       @click="add"
     >
       添加

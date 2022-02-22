@@ -1,5 +1,5 @@
 <template>
-  <section class="px-3">
+  <section>
     <Pack>设置Cookie</Pack>
     <v-textarea
       v-model="cookie"

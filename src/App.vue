@@ -3,11 +3,19 @@
     <v-main>
       <v-container>
         <section class="d-flex">
-          <v-combobox v-model="fix" :items="fixes" class="mr-3 select-width" />
+          <v-combobox
+            :return-object="false"
+            v-model="fix"
+            :items="fixes"
+            class="mr-3 select-width"
+          />
           <v-text-field
             v-model="content"
             @keypress.enter="send"
             @click:append="send"
+            @keypress.down="history"
+            @keypress.prevent.tab="changefix"
+            @keypress.up="history"
             autofocus
             class="flex-grow-1"
             append-icon="mdi-arrow-left-bottom"
@@ -36,7 +44,7 @@ export default {
   name: "App",
   data: () => ({
     content: "",
-    fix: null,
+    fix: "",
     pages: [
       { icon: "mdi-chat", to: "live" },
       { icon: "mdi-video", to: "room" },
@@ -50,10 +58,7 @@ export default {
     ...mapState(["select"]),
     fixes() {
       const fixes = this.$store.state.fixes;
-      return fixes.map((value) => ({
-        text: value.prefix + value.suffix,
-        value,
-      }));
+      return fixes.map(({ prefix, suffix }) => prefix + " " + suffix);
     },
   },
   created() {
@@ -71,9 +76,22 @@ export default {
     ...mapMutations([ChangeCookie.name, ChangeSelect.name, ChangeFixes.name]),
     send() {
       if (!this.content || !this.select.length) return;
-      const comment = this.fix.prefix + this.content + this.fix.suffix;
-      ipcRenderer.send(SendComment.name, this.select, comment);
+      const [prefix, suffix] = this.fix.split(" ");
+      ipcRenderer.send(
+        SendComment.name,
+        this.select,
+        prefix + this.content + suffix
+      );
       this.content = "";
+    },
+    changefix() {
+      let index = this.fixes.indexOf(this.fix);
+      console.log(index);
+      if (index === this.fixes.length - 1) index = -1;
+      this.fix = this.fixes[index + 1];
+    },
+    history(event) {
+      console.log(event);
     },
   },
 };
@@ -81,6 +99,6 @@ export default {
 
 <style scoped>
 .select-width {
-  max-width: 96px !important;
+  max-width: 120px !important;
 }
 </style>

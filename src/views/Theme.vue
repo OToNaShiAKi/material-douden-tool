@@ -1,5 +1,5 @@
 <template>
-  <section class="px-3 pb-3">
+  <section>
     <Pack>切换主题色</Pack>
     <v-radio-group row v-model="theme" @change="change">
       <v-radio
