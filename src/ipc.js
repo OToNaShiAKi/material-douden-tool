@@ -17,6 +17,7 @@ ipcMain.on(SendComment.name, (event, roomids, msg) => {
     SendComment(roomids.shift(), msg);
     Stacks.RoomIds = Stacks.RoomIds.concat(roomids);
     Stacks.timer = setInterval(() => {
+      console.log(Stacks, msg);
       const roomid = Stacks.RoomIds.shift();
       if (roomid) {
         SendComment(roomid, msg);
@@ -54,9 +55,19 @@ ipcMain.handle(GetWebSocket.name, async (event, roomids) => {
 ipcMain.handle(GetMusic.name, async (event, keyword) => {
   const result = await GetMusic(keyword);
   for (const item of result) {
-    if (item.lyric && item.tlyric) item.language = "双语";
-    else if (item.lyric || item.tlyric) item.language = "单语";
-    else item.language = "无词";
+    const lyric = [];
+    item.lyric.replace(/\[(\d{2}):([0-9\.]{6})\](.*)\n?/g, (l, m, s, c) => {
+      if (!/作词|作曲/.test(c) && c) {
+        const t = item.tlyric.match(new RegExp(`\\[${m}:${s}\\](.*)\n?`));
+        lyric.push({
+          stamp: (+m * 60 + +s) * 1000,
+          lyric: c.trim(),
+          tlyric: t && t[1].trim(),
+        });
+      }
+      return "";
+    });
+    item.stamp = lyric;
   }
   return result;
 });

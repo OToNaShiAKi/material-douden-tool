@@ -3,12 +3,7 @@
     <v-main>
       <v-container>
         <section class="d-flex">
-          <v-combobox
-            :return-object="false"
-            v-model="fix"
-            :items="fixes"
-            class="mr-3 select-width"
-          />
+          <v-combobox v-model="fix" :items="fixes" class="mr-3 select-width" />
           <v-text-field
             v-model="content"
             @keypress.enter="send"
@@ -76,7 +71,7 @@ export default {
     ...mapMutations([ChangeCookie.name, ChangeSelect.name, ChangeFixes.name]),
     send() {
       if (!this.content || !this.select.length) return;
-      const [prefix, suffix] = this.fix.split(" ");
+      const [prefix = "", suffix = ""] = this.fix.split(" ");
       ipcRenderer.send(
         SendComment.name,
         this.select,
@@ -97,8 +92,11 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 .select-width {
   max-width: 120px !important;
+}
+body::-webkit-scrollbar {
+  width: 0;
 }
 </style>

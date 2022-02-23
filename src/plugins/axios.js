@@ -108,8 +108,8 @@ export const GetMusic = async (keyword) => {
               return {
                 id,
                 name,
-                lyric: lrc && lrc.lyric,
-                tlyric: tlyric && tlyric.lyric,
+                lyric: lrc ? lrc.lyric : "",
+                tlyric: tlyric ? tlyric.lyric : "",
                 singer: artists.map(({ name }) => name).join("、"),
                 origin: "网易云",
               };
@@ -126,7 +126,7 @@ export const GetMusic = async (keyword) => {
         }) =>
           await Promise.all(
             list.map(async ({ songmid, songname, singer }) => {
-              const { lyric, trans } = await MusicQQ.get(
+              const { lyric = "", trans = "" } = await MusicQQ.get(
                 "/lyric/fcgi-bin/fcg_query_lyric_new.fcg",
                 { params: { songmid, nobase64: 1, g_tk: 5381, format: "json" } }
               );
