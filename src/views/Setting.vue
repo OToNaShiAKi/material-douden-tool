@@ -11,7 +11,7 @@
         :value="v.prefix"
         :key="v.prefix"
       >
-        {{ v.prefix + v.suffix }}
+        {{ v.text }}
       </v-chip>
     </v-chip-group>
     <section class="d-flex">
@@ -43,7 +43,11 @@ export default {
   methods: {
     ...mapMutations([ChangeFixes.name]),
     add() {
-      this.fixes.push({ prefix: this.prefix, suffix: this.suffix });
+      this.fixes.push({
+        prefix: this.prefix,
+        suffix: this.suffix,
+        text: this.prefix + " " + this.suffix,
+      });
       this.ChangeFixes(this.fixes);
       this.prefix = "";
       this.suffix = "";

@@ -10,14 +10,13 @@ import { ChangeCookie } from "./store/mutations";
 
 const Stacks = { RoomIds: [], timer: null };
 
-ipcMain.on(SendComment.name, (event, roomids, msg) => {
+ipcMain.on(SendComment.name, (event, msg, roomids) => {
   if (Stacks.timer) {
     Stacks.RoomIds = Stacks.RoomIds.concat(roomids);
   } else {
     SendComment(roomids.shift(), msg);
     Stacks.RoomIds = Stacks.RoomIds.concat(roomids);
     Stacks.timer = setInterval(() => {
-      console.log(Stacks, msg);
       const roomid = Stacks.RoomIds.shift();
       if (roomid) {
         SendComment(roomid, msg);
@@ -67,6 +66,7 @@ ipcMain.handle(GetMusic.name, async (event, keyword) => {
       }
       return "";
     });
+
     item.stamp = lyric;
   }
   return result;

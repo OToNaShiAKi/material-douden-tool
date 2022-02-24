@@ -1,13 +1,17 @@
 <template>
   <section>
     <Pack>歌词获取</Pack>
-    <v-text-field
-      v-model="keyword"
-      prepend-inner-icon="mdi-magnify"
-      append-icon="mdi-arrow-left-bottom"
-      @keypress.enter="search"
-      label="关键词"
-    />
+    <section class="d-flex">
+      <v-select v-model="fix" :items="fixes" class="mr-3 select-width" />
+      <v-text-field
+        v-model="keyword"
+        prepend-inner-icon="mdi-magnify"
+        append-icon="mdi-arrow-left-bottom"
+        @keypress.enter="search"
+        label="关键词"
+      />
+    </section>
+
     <v-tabs-items v-model="tab">
       <v-tab-item value="table">
         <v-data-table
@@ -19,26 +23,33 @@
         />
       </v-tab-item>
       <v-tab-item value="lyric">
-        <section class="d-flex justify-center align-center">
+        <section ref="lyric" style="height: 256px; overflow: auto">
+          <p
+            v-for="(v, i) of lyric"
+            :key="v.stamp"
+            class="text-center flex-column"
+            :class="i === stamp && 'primary--text'"
+          >
+            <span class="text-body-1">{{ v.lyric }}</span>
+            <br />
+            <span class="text-body-2">{{ v.tlyric }}</span>
+          </p>
+        </section>
+        <section class="d-flex justify-center align-center mt-3">
+          <v-btn text small>复制此句</v-btn>
           <v-btn text small>-0.5s</v-btn>
           <v-btn
             fab
             small
             class="mx-3"
             depressed
-            @click="send"
+            @click="play"
             :color="active ? 'primary' : 'secondary'"
           >
             <v-icon>{{ active ? "mdi-pause" : "mdi-play" }}</v-icon>
           </v-btn>
           <v-btn text small>+0.5s</v-btn>
-        </section>
-        <section>
-          <p v-for="v of lyric" :key="v.stamp" class="text-center flex-column">
-            <span class="text-body-1">{{ v.lyric }}</span>
-            <br />
-            <span class="text-body-2">{{ v.tlyric }}</span>
-          </p>
+          <v-btn text small @click="next">发送下句</v-btn>
         </section>
       </v-tab-item>
     </v-tabs-items>
@@ -46,10 +57,11 @@
 </template>
 
 <script>
-import { ipcRenderer } from "electron";
 import Pack from "../components/Pack.vue";
-import { GetMusic, SendComment } from "../plugins/axios";
+import { GetMusic } from "../plugins/axios";
 import { mapState } from "vuex";
+import { clipboard, ipcRenderer } from "electron";
+import { FormatComment } from "../plugins/utils";
 
 export default {
   name: "Music",
@@ -81,33 +93,42 @@ export default {
       this.loading = false;
     },
     async choose(item) {
-      console.log(item);
       this.lyric = item.stamp;
       this.tab = "lyric";
-      clearTimeout(this.timer);
-      this.timer = null;
-      this.stamp = 0;
+      clearTimeout(this.send.timer);
+      this.send.timer = null;
+      this.stamp = -1;
     },
-    send() {
+    play() {
       this.active = !this.active;
-      const SendLyric = (lyric, roomids = [], fix = "") => {
-        const [prefix = "", suffix = ""] = fix.split(" ");
-        const comment = prefix + (lyric[0].tlyric || lyric[0].lyric) + suffix;
-        ipcRenderer.send(SendComment.name, roomids, comment);
-        this.stamp += 1;
-        if (lyric.length <= 1) {
-          this.timer = null;
-          return;
-        }
-        console.log(lyric);
-        this.timer = setTimeout(() => {
-          clearTimeout(this.timer);
-          SendLyric(lyric.slice(1), roomids, fix);
-        }, lyric[1].stamp - lyric[0].stamp);
-      };
-      if (this.active)
-        SendLyric(this.lyric.slice(this.stamp), this.select, this.fix);
-      else clearTimeout(SendLyric.timer);
+      if (this.active) this.send(this.lyric.slice(this.stamp + 1));
+      else clearTimeout(this.send.timer);
+    },
+    send(lyric) {
+      this.stamp += 1;
+      this.$vuetify.goTo(this.stamp * 64, {
+        container: this.$refs.lyric,
+        offset: 64,
+        easing: "easeInOutCubic",
+      });
+      FormatComment(lyric[0].tlyric, this.select, this.fix);
+      if (lyric.length <= 1) {
+        this.send.timer = null;
+        this.active = false;
+        this.stamp = -1;
+        return;
+      }
+      this.send.timer = setTimeout(() => {
+        clearTimeout(this.send.timer);
+        this.send(lyric.slice(1));
+      }, lyric[1].stamp - lyric[0].stamp);
+    },
+    next() {
+      clearTimeout(this.send.timer);
+      this.send(this.lyric.slice(this.stamp + 1));
+    },
+    copy() {
+      clipboard.writeText(this.lyric[this.stamp].tlyric);
     },
   },
 };
