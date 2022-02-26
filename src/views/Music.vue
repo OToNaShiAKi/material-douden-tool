@@ -8,16 +8,18 @@
         prepend-inner-icon="mdi-magnify"
         append-icon="mdi-arrow-left-bottom"
         @keypress.enter="search"
+        @click:append="search"
         label="关键词"
+        :error-messages="message"
       />
     </section>
-
     <v-tabs-items v-model="tab">
       <v-tab-item value="table">
         <v-data-table
           :loading="loading"
           :items-per-page="5"
           :headers="headers"
+          hide-default-header
           :items="musics"
           @click:row="choose"
         />
@@ -72,7 +74,6 @@ export default {
       { text: "歌名", value: "name" },
       { text: "歌手", value: "singer" },
       { text: "语言", value: "language" },
-      { text: "来源", value: "origin" },
     ],
     musics: [],
     loading: false,
@@ -81,12 +82,24 @@ export default {
     stamp: 0,
     active: false,
     fix: "",
+    message: "",
   }),
-  computed: { ...mapState(["fixes", "select"]) },
+  computed: {
+    ...mapState(["select"]),
+    fixes() {
+      const all = this.$store.state.fixes;
+      return all.filter((v) => v.scope !== "同传");
+    },
+  },
   methods: {
     async search() {
+      if (this.keyword.length <= 0) {
+        this.message = "关键词不可为空";
+        return;
+      }
       this.loading = true;
       this.tab = "table";
+      this.message = "";
       const result = await ipcRenderer.invoke(GetMusic.name, this.keyword);
       this.keyword = "";
       this.musics = result;

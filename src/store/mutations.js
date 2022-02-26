@@ -26,4 +26,12 @@ export const ChangeFixes = (state, fixes = []) => {
   state.fixes = [...fixes];
 };
 
-export default { ChangeCookie, ChangeSelect, ChangeFixes };
+export const ChangeShortcuts = (state, { key, value }) => {
+  const shortcuts = state.shortcuts;
+  if (value) shortcuts[key] = value;
+  else delete shortcuts[key];
+  state.shortcuts = { ...shortcuts };
+  localStorage.setItem("shortcuts", JSON.stringify(state.shortcuts));
+};
+
+export default { ChangeCookie, ChangeSelect, ChangeFixes, ChangeShortcuts };

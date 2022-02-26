@@ -6,6 +6,6 @@ import mutations from "./mutations";
 Vue.use(Vuex);
 
 export default new Vuex.Store({
-  state: { cookie: "", select: [], fixes: [] },
+  state: { cookie: "", select: [], fixes: [], shortcuts: [] },
   mutations,
 });

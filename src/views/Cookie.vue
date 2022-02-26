@@ -6,6 +6,7 @@
       label="Bilibili Cookie"
       auto-grow
       outlined
+      :spellcheck="false"
       clearable
       class="rounded-tl-xl rounded-br-xl"
       @input="ChangeCookie"

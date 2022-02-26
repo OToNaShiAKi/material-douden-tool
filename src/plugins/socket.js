@@ -1,95 +1,4 @@
-import { BrotliDecode } from "./decode";
-
-const Certification = (certify) => {
-  const json = new TextEncoder().encode(certify);
-  const buffer = new ArrayBuffer(json.byteLength + 16);
-  const view = new DataView(buffer);
-  view.setUint32(0, json.byteLength + 16);
-  view.setUint16(4, 16);
-  view.setUint16(6, 1);
-  view.setUint32(8, 7);
-  view.setUint32(12, 1);
-  for (let r = 0; r < json.byteLength; r++) {
-    view.setUint8(16 + r, json[r]);
-  }
-  return buffer;
-};
-
-const HandleMessage = (blob, resolve) => {
-  const reader = new FileReader();
-  reader.addEventListener("load", ({ target: { result: buff } }) => {
-    let decoder = new TextDecoder(); //解码器
-    let view = new DataView(buff); //视图
-    let offset = 0;
-    let packet = {};
-    let result = [];
-    while (offset < buff.byteLength) {
-      //数据提取
-      let packetLen = view.getUint32(offset + 0);
-      let headLen = view.getUint16(offset + 4);
-      let packetVer = view.getUint16(offset + 6);
-      let packetType = view.getUint32(offset + 8);
-      let num = view.getUint32(12);
-      if (packetVer == 3) {
-        //解压数据
-        let brArray = new Uint8Array(
-          buff,
-          offset + headLen,
-          packetLen - headLen
-        );
-        let buffFromBr = BrotliDecode(brArray); //返回Int8Array视图
-        let view = new DataView(buffFromBr.buffer);
-        let offset_Ver3 = 0;
-        while (offset_Ver3 < buffFromBr.byteLength) {
-          //解压后数据提取
-          let packetLen = view.getUint32(offset_Ver3 + 0);
-          let headLen = view.getUint16(offset_Ver3 + 4);
-          let packetVer = view.getUint16(offset_Ver3 + 6);
-          let packetType = view.getUint32(offset_Ver3 + 8);
-          let num = view.getUint32(12);
-          packet.Len = packetLen;
-          packet.HeadLen = headLen;
-          packet.Ver = packetVer;
-          packet.Type = packetType;
-          packet.Num = num;
-          let dataArray = new Uint8Array(
-            buffFromBr.buffer,
-            offset_Ver3 + headLen,
-            packetLen - headLen
-          );
-          packet.body = decoder.decode(dataArray); //utf-8格式数据解码，获得字符串
-          result.push(JSON.stringify(packet)); //数据打包后传入数组
-          offset_Ver3 += packetLen;
-        }
-      } else {
-        packet.Len = packetLen;
-        packet.HeadLen = headLen;
-        packet.Ver = packetVer;
-        packet.Type = packetType;
-        packet.Num = num;
-        let dataArray = new Uint8Array(
-          buff,
-          offset + headLen,
-          packetLen - headLen
-        );
-        if (packetType == 3) {
-          //获取人气值
-          packet.body = new DataView(
-            buff,
-            offset + headLen,
-            packetLen - headLen
-          ).getUint32(0); //若入参为dataArray.buffer，会返回整段buff的视图，而不是截取后的视图
-        } else {
-          packet.body = decoder.decode(dataArray); //utf-8格式数据解码，获得字符串
-        }
-        result.push(JSON.stringify(packet)); //数据打包后传入数组
-      }
-      offset += packetLen;
-    }
-    resolve(result);
-  });
-  reader.readAsArrayBuffer(blob);
-};
+import { Certification, HandleMessage } from "./utils";
 
 export default class Socket {
   constructor(host, port, roomid, token) {
@@ -98,6 +7,7 @@ export default class Socket {
     this.roomid = roomid;
     this.token = token;
     this.timer = null;
+    this.comments = [];
 
     socket.addEventListener("open", this.Open);
     socket.addEventListener("message", this.Message);
@@ -136,6 +46,12 @@ export default class Socket {
     const result = await new Promise((resolve) =>
       HandleMessage(event.data, resolve)
     );
-    console.log(result);
+    for (const item of result) {
+      const body = JSON.parse(item.body);
+      console.log(body);
+      // if (item.Type === 5 && body.cmd === "DANMU_MSG") {
+      //   console.log(body);
+      // }
+    }
   };
 }
