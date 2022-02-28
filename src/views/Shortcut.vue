@@ -1,12 +1,11 @@
 <template>
   <section>
     <Pack>配置快捷用语</Pack>
-    <v-data-table
-      :items-per-page="5"
-      hide-default-header
-      :items="shortcuts"
-      :headers="headers"
-    />
+    <v-data-table :items-per-page="5" :items="shortcuts" :headers="headers">
+      <template v-slot:item.actions="{ item }">
+        <v-icon small @click="remove" :data-key="item.key"> mdi-delete </v-icon>
+      </template>
+    </v-data-table>
     <section class="d-flex">
       <v-select
         v-model="key"
@@ -28,8 +27,8 @@
     <ul class="caption">
       <li>{c}部分会被同传输入框中语句替换</li>
       <li>{v}部分会被剪切板中复制语句替换</li>
-      <li>{s}部分会被当前同传歌曲歌名代替<br />eg: 谢谢 刚才唱了{s}</li>
-      <li>{a}部分会被当前同传歌曲歌手代替<br />eg: 谢谢 刚才唱了{a}的{s}</li>
+      <li>{s}部分会被当前同传歌曲歌名代替 eg: 谢谢 刚才唱了{s}</li>
+      <li>{a}部分会被当前同传歌曲歌手代替 eg: 谢谢 刚才唱了{a}的{s}</li>
       <li>{l}部分会被当前同传歌曲轮播到的歌词代替</li>
     </ul>
   </section>
@@ -77,6 +76,7 @@ export default {
     headers: [
       { text: "快捷键", value: "key" },
       { text: "快捷用语", value: "phrase" },
+      { text: "操作", value: "actions", sortable: false },
     ],
     key: "",
     phrase: "",
@@ -93,11 +93,14 @@ export default {
         this.message = "未输入快捷用语";
         return;
       }
-
       this.ChangeShortcuts({ key: this.key, value: this.phrase });
       this.key = "";
       this.phrase = "";
       this.message = "";
+    },
+    remove({ target: { dataset } }) {
+      const { key } = dataset;
+      this.ChangeShortcuts({ key, value: "" });
     },
   },
 };

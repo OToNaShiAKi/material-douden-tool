@@ -2,19 +2,15 @@ import { SendComment } from "./axios";
 import { ipcRenderer } from "electron";
 import BrotliDecode from "brotli/decompress";
 
-export const FormatComment = (
-  content,
-  select = [],
-  { prefix = "", suffix = "" } = {},
-  shield = {}
-) => {
+export const FormatComment = (content, select = [], fix = {}, shield = {}) => {
+  const { prefix = "", suffix = "" } = fix;
   content = prefix + content + suffix;
   for (let key in shield) {
     content = content.replace(new RegExp(key, "gi"), shield[key]);
   }
   if (content.length > 20) {
-    FormatComment(content.slice(20), select);
-    content = content.slice(0, 20);
+    FormatComment(content.slice(0, content.length - 20), select, fix);
+    content = content.slice(content.length - 20);
   }
   ipcRenderer.send(SendComment.name, content, select);
 };

@@ -1,36 +1,38 @@
 <template>
   <section>
     <Pack>歌词获取</Pack>
-    <section class="d-flex">
-      <v-select v-model="fix" :items="fixes" class="mr-3 select-width" />
-      <v-text-field
-        v-model="keyword"
-        prepend-inner-icon="mdi-magnify"
-        append-icon="mdi-arrow-left-bottom"
-        @keypress.enter="search"
-        @click:append="search"
-        label="关键词"
-        :error-messages="message"
-      />
-    </section>
+    <v-text-field
+      v-model="keyword"
+      prepend-inner-icon="mdi-magnify"
+      append-icon="mdi-arrow-left-bottom"
+      @keypress.enter="search"
+      @click:append="search"
+      label="关键词"
+      hint="自动过滤无词无轴"
+      :error-messages="message"
+    />
     <v-tabs-items v-model="tab">
       <v-tab-item value="table">
         <v-data-table
           :loading="loading"
           :items-per-page="5"
           :headers="headers"
-          hide-default-header
           :items="musics"
           @click:row="choose"
         />
       </v-tab-item>
       <v-tab-item value="lyric">
-        <section ref="lyric" style="height: 256px; overflow: auto">
+        <section class="d-flex">
+          <v-select return-object v-model="fix" :items="fixes" class="mr-3" />
+
+          <v-select return-object v-model="language" :items="languages" />
+        </section>
+        <section id="lyric-selected" ref="lyric">
           <p
+            class="text-center"
+            :class="i === stamp && 'primary--text'"
             v-for="(v, i) of lyric"
             :key="v.stamp"
-            class="text-center flex-column"
-            :class="i === stamp && 'primary--text'"
           >
             <span class="text-body-1">{{ v.lyric }}</span>
             <br />
@@ -38,8 +40,8 @@
           </p>
         </section>
         <section class="d-flex justify-center align-center mt-3">
-          <v-btn text small>复制此句</v-btn>
-          <v-btn text small>-0.5s</v-btn>
+          <v-btn text small @click="copy">复制此句</v-btn>
+          <v-btn text small @click="track">-0.5s</v-btn>
           <v-btn
             fab
             small
@@ -50,7 +52,7 @@
           >
             <v-icon>{{ active ? "mdi-pause" : "mdi-play" }}</v-icon>
           </v-btn>
-          <v-btn text small>+0.5s</v-btn>
+          <v-btn text small @click="track">+0.5s</v-btn>
           <v-btn text small @click="next">发送下句</v-btn>
         </section>
       </v-tab-item>
@@ -61,9 +63,10 @@
 <script>
 import Pack from "../components/Pack.vue";
 import { GetMusic } from "../plugins/axios";
-import { mapState } from "vuex";
+import { mapMutations, mapState } from "vuex";
 import { clipboard, ipcRenderer } from "electron";
 import { FormatComment } from "../plugins/utils";
+import { Notify } from "../store/mutations";
 
 export default {
   name: "Music",
@@ -83,6 +86,7 @@ export default {
     active: false,
     fix: "",
     message: "",
+    language: "",
   }),
   computed: {
     ...mapState(["select"]),
@@ -90,8 +94,13 @@ export default {
       const all = this.$store.state.fixes;
       return all.filter((v) => v.scope !== "同传");
     },
+    languages() {
+      const result = ["原文"];
+      if (this.lyric[0].tlyric) result.push("翻译", "双语");
+    },
   },
   methods: {
+    ...mapMutations([Notify.name]),
     async search() {
       if (this.keyword.length <= 0) {
         this.message = "关键词不可为空";
@@ -113,18 +122,24 @@ export default {
       this.stamp = -1;
     },
     play() {
+      if (!this.language)
+        this.language = this.languages[1] || this.languages[0];
       this.active = !this.active;
       if (this.active) this.send(this.lyric.slice(this.stamp + 1));
       else clearTimeout(this.send.timer);
     },
     send(lyric) {
       this.stamp += 1;
+      this.send.stamp = Date.now();
       this.$vuetify.goTo(this.stamp * 64, {
         container: this.$refs.lyric,
         offset: 64,
         easing: "easeInOutCubic",
       });
-      FormatComment(lyric[0].tlyric, this.select, this.fix);
+      if (/翻译|双语/.test(this.language) && lyric[0].tlyric)
+        FormatComment(lyric[0].tlyric, this.select, this.fix);
+      if (/原文|双语/.test(this.language) && lyric[0].lyric)
+        FormatComment(lyric[0].lyric, this.select, this.fix);
       if (lyric.length <= 1) {
         this.send.timer = null;
         this.active = false;
@@ -140,8 +155,28 @@ export default {
       clearTimeout(this.send.timer);
       this.send(this.lyric.slice(this.stamp + 1));
     },
+    track({ target }) {
+      if (this.active) {
+        const now = Date.now();
+        clearTimeout(this.send.timer);
+        const multiple = parseFloat(target.innerText) > 0 ? 1 : -1;
+        let time =
+          this.lyric[this.stamp + 1].stamp - this.lyric[this.stamp].stamp;
+        time -= now - this.send.stamp - 500 * multiple;
+        this.send.stamp -= 500 * multiple;
+        this.send.timer = setTimeout(() => {
+          clearTimeout(this.send.timer);
+          this.send(this.lyric.slice(this.stamp + 1));
+        }, time);
+      }
+    },
     copy() {
-      clipboard.writeText(this.lyric[this.stamp].tlyric);
+      if (this.stamp >= 0 && this.stamp < this.lyric.length) {
+        let item = this.lyric[this.stamp];
+        item = item.tlyric || tlyric.lyric;
+        clipboard.writeText(item);
+        this.Notify("已复制：" + item);
+      } else this.Notify("尚未播放");
     },
   },
 };

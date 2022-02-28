@@ -34,4 +34,14 @@ export const ChangeShortcuts = (state, { key, value }) => {
   localStorage.setItem("shortcuts", JSON.stringify(state.shortcuts));
 };
 
-export default { ChangeCookie, ChangeSelect, ChangeFixes, ChangeShortcuts };
+export const Notify = (state, text) => {
+  state.snackbar = text;
+};
+
+export default {
+  ChangeCookie,
+  ChangeSelect,
+  ChangeFixes,
+  ChangeShortcuts,
+  Notify,
+};

@@ -1,7 +1,11 @@
 <template>
   <section>
     <Pack>配置项</Pack>
-    <v-data-table hide-default-header :items="fixes" :headers="headers" />
+    <v-data-table :items="fixes" :headers="headers">
+      <template v-slot:item.actions="{ index }">
+        <v-icon small @click="remove" :data-key="index"> mdi-delete </v-icon>
+      </template>
+    </v-data-table>
     <section class="d-flex align-center">
       <v-text-field class="mr-3" v-model="prefix" label="前缀" />
       <v-text-field class="mr-3" v-model="suffix" label="后缀" />
@@ -36,6 +40,7 @@ export default {
       { text: "前缀", value: "prefix" },
       { text: "后缀", value: "suffix" },
       { text: "作用域", value: "scope" },
+      { text: "操作", value: "actions", sortable: false },
     ],
   }),
   computed: { ...mapState(["fixes"]) },
@@ -53,8 +58,9 @@ export default {
       this.suffix = "";
       this.scope = "全部";
     },
-    remove(index) {
-      this.fixes.splice(index, 1);
+    remove({ target: { dataset } }) {
+      const { key } = dataset;
+      this.fixes.splice(key, 1);
       this.ChangeFixes(this.fixes);
     },
   },

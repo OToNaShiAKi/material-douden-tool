@@ -11,22 +11,20 @@ import { ChangeCookie } from "./store/mutations";
 const Stacks = { RoomIds: [], timer: null };
 
 ipcMain.on(SendComment.name, (event, msg, roomids) => {
-  if (Stacks.timer) {
-    Stacks.RoomIds = Stacks.RoomIds.concat(roomids);
-  } else {
+  if (!Stacks.timer) {
     SendComment(roomids.shift(), msg);
-    Stacks.RoomIds = Stacks.RoomIds.concat(roomids);
     Stacks.timer = setInterval(() => {
       const roomid = Stacks.RoomIds.shift();
       if (roomid) {
-        SendComment(roomid, msg);
+        SendComment(roomid.id, roomid.msg);
       }
       if (Stacks.RoomIds.length <= 0) {
         clearInterval(Stacks.timer);
         Stacks.timer = null;
       }
-    }, 750);
+    }, 1000);
   }
+  Stacks.RoomIds = Stacks.RoomIds.concat(roomids.map((v) => ({ id: v, msg })));
 });
 
 ipcMain.on(ChangeCookie.name, (event, cookie, csrf) => {
@@ -52,7 +50,9 @@ ipcMain.handle(GetWebSocket.name, async (event, roomids) => {
 });
 
 ipcMain.handle(GetMusic.name, async (event, keyword) => {
-  const result = await GetMusic(keyword);
+  const result = (await GetMusic(keyword)).filter(
+    ({ lyric }) => lyric && /\[\d{2}:[0-9\.]{6}\]/.test(lyric)
+  );
   for (const item of result) {
     const lyric = [];
     item.lyric.replace(/\[(\d{2}):([0-9\.]{6})\](.*)\n?/g, (l, m, s, c) => {
@@ -66,8 +66,10 @@ ipcMain.handle(GetMusic.name, async (event, keyword) => {
       }
       return "";
     });
-
     item.stamp = lyric;
+    item.language = /\[\d{2}:[0-9\.]{6}\]/.test(item.tlyric)
+      ? "双语轴"
+      : "单语轴";
   }
   return result;
 });

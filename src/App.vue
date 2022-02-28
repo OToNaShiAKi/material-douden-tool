@@ -3,7 +3,12 @@
     <v-main>
       <v-container>
         <section class="d-flex">
-          <v-select v-model="fix" :items="fixes" class="mr-3 select-width" />
+          <v-select
+            return-object
+            v-model="fix"
+            :items="fixes"
+            class="mr-3 select-width"
+          />
           <v-text-field
             v-model="content"
             @keyup.enter="send"
@@ -29,6 +34,16 @@
           <router-view />
         </keep-alive>
       </v-container>
+      <v-snackbar
+        :value="snackbar"
+        color="primary"
+        app
+        shaped
+        outlined
+        :timeout="500"
+      >
+        {{ snackbar }}
+      </v-snackbar>
     </v-main>
   </v-app>
 </template>
@@ -36,7 +51,13 @@
 <script>
 import { FormatComment } from "./plugins/utils";
 import { mapMutations, mapState } from "vuex";
-import { ChangeCookie, ChangeSelect, ChangeFixes } from "./store/mutations";
+import {
+  ChangeCookie,
+  ChangeSelect,
+  ChangeFixes,
+  ChangeShortcuts,
+  Notify,
+} from "./store/mutations";
 import { clipboard } from "electron";
 
 export default {
@@ -57,26 +78,33 @@ export default {
     record: [],
   }),
   computed: {
-    ...mapState(["select", "shortcuts"]),
+    ...mapState(["select", "shortcuts", "snackbar"]),
     fixes() {
       const all = this.$store.state.fixes;
       return all.filter((v) => v.scope !== "歌曲");
     },
   },
   created() {
-    const cookie =
-      "_uuid=41A9FF710-C2F9-7394-E523-AC5DD106A746359284infoc; buvid3=270E286A-D309-4AE0-AF8F-6B72A049D6A7148830infoc; b_nut=1640247859; fingerprint=ec2e9ff620eb185ed4a6ec7034bd9c3a; buvid_fp_plain=270E286A-D309-4AE0-AF8F-6B72A049D6A7148830infoc; SESSDATA=85a5a9d8%2C1656407117%2C63138%2Ac1; bili_jct=996cb2df77454c1fdb3aa4b5fb81dd16; DedeUserID=13616635; DedeUserID__ckMd5=1f0d2bc0302cef8c; sid=bp4kwnkd; i-wanna-go-back=-1; b_ut=5; LIVE_BUVID=AUTO8216409251777581; blackside_state=1; rpdid=0zbfvWnvKo|By3BoP|4FaEJ|3w1N39D8; buvid4=43F82966-86C6-DE85-9B9F-098B982ED81E13608-022012418-1/zpuP3LHi8lZiPHkSza41KvHO6Co9wVk3IJM34pyUi5Nip99Gw7lA%3D%3D; buvid_fp=2b766a68e92128e7dac9787df3efea75; CURRENT_QUALITY=80; Hm_lvt_8a6e55dbd2870f0f5bc9194cddf32a02=1643173209,1643340413,1644389675; CURRENT_BLACKGAP=1; CURRENT_FNVAL=80; innersign=0; b_lsid=D93104F65_17F0A7F2B7B; bp_video_offset_13616635=628373128666340200; bp_t_offset_13616635=628395148959547430; _dfcaptcha=14d8cc6d0b27efc9781f603a0da16252; PVID=1";
-    const select = "10035114";
+    const cookie = localStorage.getItem("cookie");
+    const select = localStorage.getItem("select");
+    const shortcuts = JSON.parse(localStorage.getItem("shortcuts"));
     const fixes = JSON.parse(localStorage.getItem("fixes"));
     this.ChangeCookie(cookie);
     this.ChangeSelect(select);
     this.ChangeFixes(fixes || []);
+    this.ChangeShortcuts(shortcuts);
     if (cookie && select) this.$router.push("/live");
     else if (cookie && !select) this.$router.push("/room");
     else if (!cookie) this.$router.push("/cookie");
   },
   methods: {
-    ...mapMutations([ChangeCookie.name, ChangeSelect.name, ChangeFixes.name]),
+    ...mapMutations([
+      ChangeCookie.name,
+      ChangeSelect.name,
+      ChangeFixes.name,
+      ChangeShortcuts.name,
+      Notify.name,
+    ]),
     send() {
       if (this.content.length <= 0) {
         this.message = "发送内容不可为空";
@@ -137,5 +165,9 @@ export default {
 }
 .v-input--radio-group__input {
   justify-content: space-between;
+}
+#lyric-selected {
+  height: 256px;
+  overflow: auto;
 }
 </style>
