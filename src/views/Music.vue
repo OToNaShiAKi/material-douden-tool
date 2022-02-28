@@ -1,16 +1,24 @@
 <template>
   <section>
     <Pack>歌词获取</Pack>
-    <v-text-field
-      v-model="keyword"
-      prepend-inner-icon="mdi-magnify"
-      append-icon="mdi-arrow-left-bottom"
-      @keypress.enter="search"
-      @click:append="search"
-      label="关键词"
-      hint="自动过滤无词无轴"
-      :error-messages="message"
-    />
+    <section class="d-flex">
+      <v-select
+        return-object
+        class="select-width mr-3"
+        v-model="fix"
+        :items="fixes"
+      />
+      <v-text-field
+        v-model="keyword"
+        prepend-inner-icon="mdi-magnify"
+        append-icon="mdi-arrow-left-bottom"
+        @keypress.enter="search"
+        @click:append="search"
+        label="关键词"
+        hint="自动过滤无词无轴"
+        :error-messages="message"
+      />
+    </section>
     <v-tabs-items v-model="tab">
       <v-tab-item value="table">
         <v-data-table
@@ -22,24 +30,7 @@
         />
       </v-tab-item>
       <v-tab-item value="lyric">
-        <section class="d-flex">
-          <v-select return-object v-model="fix" :items="fixes" class="mr-3" />
-
-          <v-select return-object v-model="language" :items="languages" />
-        </section>
-        <section id="lyric-selected" ref="lyric">
-          <p
-            class="text-center"
-            :class="i === stamp && 'primary--text'"
-            v-for="(v, i) of lyric"
-            :key="v.stamp"
-          >
-            <span class="text-body-1">{{ v.lyric }}</span>
-            <br />
-            <span class="text-body-2">{{ v.tlyric }}</span>
-          </p>
-        </section>
-        <section class="d-flex justify-center align-center mt-3">
+        <section class="d-flex justify-center align-center">
           <v-btn text small @click="copy">复制此句</v-btn>
           <v-btn text small @click="track">-0.5s</v-btn>
           <v-btn
@@ -54,6 +45,21 @@
           </v-btn>
           <v-btn text small @click="track">+0.5s</v-btn>
           <v-btn text small @click="next">发送下句</v-btn>
+        </section>
+        <v-radio-group v-model="language" class="center" row>
+          <v-radio v-for="v of languages" :label="v" :value="v" :key="v" />
+        </v-radio-group>
+        <section id="lyric-selected" ref="lyric">
+          <p
+            class="text-center"
+            :class="i === stamp && 'primary--text'"
+            v-for="(v, i) of lyric"
+            :key="v.stamp"
+          >
+            <span class="text-body-1">{{ v.lyric }}</span>
+            <br />
+            <span class="text-body-2">{{ v.tlyric }}</span>
+          </p>
         </section>
       </v-tab-item>
     </v-tabs-items>
@@ -96,7 +102,8 @@ export default {
     },
     languages() {
       const result = ["原文"];
-      if (this.lyric[0].tlyric) result.push("翻译", "双语");
+      if (this.lyric[0] && this.lyric[0].tlyric) result.push("翻译", "双语");
+      return result;
     },
   },
   methods: {
@@ -120,6 +127,7 @@ export default {
       clearTimeout(this.send.timer);
       this.send.timer = null;
       this.stamp = -1;
+      this.active = false;
     },
     play() {
       if (!this.language)
@@ -173,7 +181,7 @@ export default {
     copy() {
       if (this.stamp >= 0 && this.stamp < this.lyric.length) {
         let item = this.lyric[this.stamp];
-        item = item.tlyric || tlyric.lyric;
+        item = item.tlyric || item.lyric;
         clipboard.writeText(item);
         this.Notify("已复制：" + item);
       } else this.Notify("尚未播放");

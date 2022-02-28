@@ -1,8 +1,8 @@
 import { ipcRenderer } from "electron";
 
 export const ChangeCookie = (state, cookie) => {
-  localStorage.setItem("cookie", cookie);
-  state.cookie = cookie;
+  localStorage.setItem("cookie", cookie || "");
+  state.cookie = cookie || "";
   if (cookie) {
     const bili_jct = cookie.match(/bili_jct=([^;]+);/);
     if (bili_jct) {

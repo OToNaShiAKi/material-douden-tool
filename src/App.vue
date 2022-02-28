@@ -51,13 +51,7 @@
 <script>
 import { FormatComment } from "./plugins/utils";
 import { mapMutations, mapState } from "vuex";
-import {
-  ChangeCookie,
-  ChangeSelect,
-  ChangeFixes,
-  ChangeShortcuts,
-  Notify,
-} from "./store/mutations";
+import { ChangeCookie } from "./store/mutations";
 import { clipboard } from "electron";
 
 export default {
@@ -86,39 +80,20 @@ export default {
   },
   created() {
     const cookie = localStorage.getItem("cookie");
-    const select = localStorage.getItem("select");
-    const shortcuts = JSON.parse(localStorage.getItem("shortcuts"));
-    const fixes = JSON.parse(localStorage.getItem("fixes"));
     this.ChangeCookie(cookie);
-    this.ChangeSelect(select);
-    this.ChangeFixes(fixes || []);
-    this.ChangeShortcuts(shortcuts);
+    const { select } = this.$store.state;
+    console.log(select, cookie);
     if (cookie && select) this.$router.push("/live");
     else if (cookie && !select) this.$router.push("/room");
     else if (!cookie) this.$router.push("/cookie");
   },
   methods: {
-    ...mapMutations([
-      ChangeCookie.name,
-      ChangeSelect.name,
-      ChangeFixes.name,
-      ChangeShortcuts.name,
-      Notify.name,
-    ]),
+    ...mapMutations([ChangeCookie.name]),
     send() {
-      if (this.content.length <= 0) {
-        this.message = "发送内容不可为空";
-        return;
-      }
-      if (this.select.length <= 0) {
-        this.message = "未选择发送房间";
-        return;
-      }
-      FormatComment(this.content, this.select, this.fix);
+      this.message = FormatComment(this.content, this.select, this.fix);
       this.record.push(this.content);
       this.record.index = this.record.length - 1;
       this.content = "";
-      this.message = "";
     },
     changefix() {
       let index = this.fixes.indexOf(this.fix);
@@ -145,10 +120,10 @@ export default {
       if (phrase) {
         phrase = phrase
           .replace(/\{c\}/gi, this.content)
-          .replace(/\{v\}/gi, clipboard.readText())
-          .replace(/\{s\}/gi, this.song.name)
-          .replace(/\{a\}/gi, this.song.singer)
-          .replace(/\{l\}/gi, this.song.lyric[this.song.stamp].tlyric);
+          .replace(/\{v\}/gi, clipboard.readText());
+        // .replace(/\{s\}/gi, this.song.name)
+        // .replace(/\{a\}/gi, this.song.singer)
+        // .replace(/\{l\}/gi, this.song.lyric[this.song.stamp].tlyric);
         FormatComment(phrase, this.select, this.fix);
       }
     },
@@ -163,8 +138,8 @@ export default {
 *::-webkit-scrollbar {
   width: 0;
 }
-.v-input--radio-group__input {
-  justify-content: space-between;
+.center .v-input--radio-group__input {
+  justify-content: center;
 }
 #lyric-selected {
   height: 256px;

@@ -11,14 +11,13 @@ import { ChangeCookie } from "./store/mutations";
 const Stacks = { RoomIds: [], timer: null };
 
 ipcMain.on(SendComment.name, (event, msg, roomids) => {
+  console.log(Stacks, msg);
   if (!Stacks.timer) {
     SendComment(roomids.shift(), msg);
     Stacks.timer = setInterval(() => {
       const roomid = Stacks.RoomIds.shift();
-      if (roomid) {
-        SendComment(roomid.id, roomid.msg);
-      }
-      if (Stacks.RoomIds.length <= 0) {
+      if (roomid) SendComment(roomid.id, roomid.msg);
+      else {
         clearInterval(Stacks.timer);
         Stacks.timer = null;
       }

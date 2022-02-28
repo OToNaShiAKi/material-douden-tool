@@ -85,12 +85,8 @@ export default {
   methods: {
     ...mapMutations([ChangeShortcuts.name]),
     add() {
-      if (this.key.length <= 0) {
-        this.message = "未选择快捷键";
-        return;
-      }
-      if (this.phrase.length <= 0) {
-        this.message = "未输入快捷用语";
+      if (this.key.length <= 0 || this.phrase.length <= 0) {
+        this.message = "快捷键或短语不可为空";
         return;
       }
       this.ChangeShortcuts({ key: this.key, value: this.phrase });

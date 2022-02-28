@@ -11,6 +11,7 @@
       <v-chip
         v-for="(v, i) of rooms"
         close
+        :disabled="!cookie"
         outlined
         @click:close="remove(i)"
         close-icon="mdi-delete"
@@ -38,20 +39,21 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
+import { mapMutations, mapState } from "vuex";
 import Pack from "../components/Pack.vue";
 import { ChangeSelect } from "../store/mutations";
 
 export default {
   name: "Colors",
   components: { Pack },
-  data: () => ({
-    multiple: false,
+  data: ({ $store: { state } }) => ({
+    multiple: state.length > 1,
     rooms: JSON.parse(localStorage.getItem("rooms")) || [],
     roomid: "",
     name: "",
   }),
   computed: {
+    ...mapState(["cookie", "select"]),
     select() {
       const select = this.$store.state.select || [];
       return this.multiple ? select : select[0];

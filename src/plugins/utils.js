@@ -3,16 +3,21 @@ import { ipcRenderer } from "electron";
 import BrotliDecode from "brotli/decompress";
 
 export const FormatComment = (content, select = [], fix = {}, shield = {}) => {
+  if (content.length <= 0 || select.length <= 0)
+    return "内容及所选房间不可为空";
   const { prefix = "", suffix = "" } = fix;
-  content = prefix + content + suffix;
   for (let key in shield) {
     content = content.replace(new RegExp(key, "gi"), shield[key]);
   }
+  content = prefix + content + suffix;
   if (content.length > 20) {
-    FormatComment(content.slice(0, content.length - 20), select, fix);
-    content = content.slice(content.length - 20);
-  }
-  ipcRenderer.send(SendComment.name, content, select);
+    ipcRenderer.send(SendComment.name, content.slice(0, 20), select);
+    FormatComment(
+      content.slice(20, content.length - suffix.length),
+      select,
+      fix
+    );
+  } else ipcRenderer.send(SendComment.name, content, select);
 };
 
 export const Certification = (certify) => {
