@@ -40,7 +40,7 @@
         app
         shaped
         outlined
-        :timeout="500"
+        :timeout="750"
       >
         {{ snackbar }}
       </v-snackbar>
@@ -82,7 +82,6 @@ export default {
     const cookie = localStorage.getItem("cookie");
     this.ChangeCookie(cookie);
     const { select } = this.$store.state;
-    console.log(select, cookie);
     if (cookie && select) this.$router.push("/live");
     else if (cookie && !select) this.$router.push("/room");
     else if (!cookie) this.$router.push("/cookie");
@@ -144,5 +143,11 @@ export default {
 #lyric-selected {
   height: 256px;
   overflow: auto;
+  position: relative;
+}
+.jump {
+  top: 50%;
+  transform: translateY(-50%);
+  left: 20px;
 }
 </style>

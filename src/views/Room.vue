@@ -47,13 +47,13 @@ export default {
   name: "Colors",
   components: { Pack },
   data: ({ $store: { state } }) => ({
-    multiple: state.length > 1,
+    multiple: state.select.length > 1,
     rooms: JSON.parse(localStorage.getItem("rooms")) || [],
     roomid: "",
     name: "",
   }),
   computed: {
-    ...mapState(["cookie", "select"]),
+    ...mapState(["cookie"]),
     select() {
       const select = this.$store.state.select || [];
       return this.multiple ? select : select[0];

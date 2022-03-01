@@ -8,11 +8,13 @@
 </template>
 
 <script>
+import { ipcRenderer } from "electron";
 export default {
   name: "Pack",
   methods: {
     pack() {
       this.$router.replace("/");
+      ipcRenderer.send("WindowSize", 160);
     },
   },
 };

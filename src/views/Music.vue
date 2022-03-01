@@ -137,17 +137,20 @@ export default {
       else clearTimeout(this.send.timer);
     },
     send(lyric) {
-      this.stamp += 1;
-      this.send.stamp = Date.now();
-      this.$vuetify.goTo(this.stamp * 64, {
-        container: this.$refs.lyric,
-        offset: 64,
-        easing: "easeInOutCubic",
-      });
+      this.active = true;
       if (/翻译|双语/.test(this.language) && lyric[0].tlyric)
         FormatComment(lyric[0].tlyric, this.select, this.fix);
       if (/原文|双语/.test(this.language) && lyric[0].lyric)
         FormatComment(lyric[0].lyric, this.select, this.fix);
+      this.stamp += 1;
+      this.send.stamp = Date.now();
+      const target = this.$refs.lyric;
+      const height = target.children[0].clientHeight + 16;
+      this.$vuetify.goTo(this.stamp * height, {
+        container: target,
+        offset: 128 - height,
+        easing: "easeInOutCubic",
+      });
       if (lyric.length <= 1) {
         this.send.timer = null;
         this.active = false;
@@ -162,6 +165,16 @@ export default {
     next() {
       clearTimeout(this.send.timer);
       this.send(this.lyric.slice(this.stamp + 1));
+    },
+    jump() {
+      clearTimeout(this.send.timer);
+      const target = this.$refs.lyric;
+      // const count = Math.floor(
+      //   (target.scrollTop + target.clientHeight / 2) / this.height
+      // );
+      console.log(target.scrollTop);
+      // this.stamp = count;
+      // this.send(this.lyric.slice(count));
     },
     track({ target }) {
       if (this.active) {

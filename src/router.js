@@ -7,21 +7,38 @@ import Bracket from "./views/Bracket.vue";
 import Music from "./views/Music.vue";
 import Live from "./views/Live.vue";
 import Shortcut from "./views/Shortcut.vue";
+import { ipcRenderer } from "electron";
 
 Vue.use(VueRouter);
 
 const routes = [
-  { path: "/theme", name: "Theme", component: Theme },
-  { path: "/cookie", name: "Cookie", component: Cookie },
-  { path: "/room", name: "Room", component: Room },
-  { path: "/bracket", name: "Bracket", component: Bracket },
-  { path: "/music", name: "Music", component: Music },
-  { path: "/live", name: "Live", component: Live },
-  { path: "/shortcut", name: "Shortcut", component: Shortcut },
+  { path: "/theme", name: "Theme", component: Theme, meta: { height: 340 } },
+  { path: "/cookie", name: "Cookie", component: Cookie, meta: { height: 640 } },
+  { path: "/room", name: "Room", component: Room, meta: { height: 640 } },
+  {
+    path: "/bracket",
+    name: "Bracket",
+    component: Bracket,
+    meta: { height: 530 },
+  },
+  { path: "/music", name: "Music", component: Music, meta: { height: 640 } },
+  { path: "/live", name: "Live", component: Live, meta: { height: 640 } },
+  {
+    path: "/shortcut",
+    name: "Shortcut",
+    component: Shortcut,
+    meta: { height: 640 },
+  },
 ];
 
 const router = new VueRouter({
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  const { height } = to.meta;
+  if (height > 0) ipcRenderer.send("WindowSize", height);
+  next();
 });
 
 export default router;

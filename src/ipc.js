@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { ipcMain, BrowserWindow } from "electron";
 import {
   SendComment,
   Bilibili,
@@ -11,7 +11,6 @@ import { ChangeCookie } from "./store/mutations";
 const Stacks = { RoomIds: [], timer: null };
 
 ipcMain.on(SendComment.name, (event, msg, roomids) => {
-  console.log(Stacks, msg);
   if (!Stacks.timer) {
     SendComment(roomids.shift(), msg);
     Stacks.timer = setInterval(() => {
@@ -71,4 +70,10 @@ ipcMain.handle(GetMusic.name, async (event, keyword) => {
       : "单语轴";
   }
   return result;
+});
+
+ipcMain.on("WindowSize", (event, height) => {
+  const win = BrowserWindow.getFocusedWindow();
+  const [width] = win.getSize();
+  win.setSize(width, height);
 });
