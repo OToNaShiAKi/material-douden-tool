@@ -2,14 +2,14 @@ import { SendComment } from "./axios";
 import { ipcRenderer } from "electron";
 import BrotliDecode from "brotli/decompress";
 
-export const FormatComment = (content, select = [], fix = {}, shield = {}) => {
+export const FormatComment = (content, select = [], fix = {}, shield = []) => {
   if (content.length <= 0 || select.length <= 0)
     return "内容及所选房间不可为空";
   const { prefix = "", suffix = "" } = fix;
-  for (let key in shield) {
-    content = content.replace(new RegExp(key, "gi"), shield[key]);
-  }
   content = prefix + content + suffix;
+  for (const item of shield) {
+    content = content.replace(new RegExp(item.shield, "gi"), item.handle);
+  }
   if (content.length > 20) {
     ipcRenderer.send(SendComment.name, content.slice(0, 20), select);
     FormatComment(

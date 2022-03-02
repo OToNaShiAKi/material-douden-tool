@@ -28,10 +28,7 @@ const Music163 = axios.create({
   },
 });
 
-Music163.interceptors.response.use((response) => {
-  if (response.data.code !== 200) throw response.data;
-  return response.data;
-});
+Music163.interceptors.response.use((response) => response.data);
 
 const MusicQQ = axios.create({
   baseURL: "https://c.y.qq.com/",
@@ -44,10 +41,7 @@ const MusicQQ = axios.create({
   },
 });
 
-MusicQQ.interceptors.response.use((response) => {
-  if (response.data.code !== 0) throw response.data;
-  return response.data;
-});
+MusicQQ.interceptors.response.use((response) => response.data);
 
 export const SendComment = async (roomid, msg) => {
   try {
@@ -87,7 +81,11 @@ export const GetHistoryComment = async (roomid) => {
     const result = await Bilibili.get("/xlive/web-room/v1/dM/gethistory", {
       params: { roomid },
     });
-    return result.room;
+    return result.room.map(({ text, uid, nickname }) => ({
+      text,
+      uid,
+      nickname,
+    }));
   } catch (error) {
     return [];
   }
@@ -144,7 +142,6 @@ export const GetMusic = async (keyword) => {
     ]);
     return [...song163, ...songQQ];
   } catch (error) {
-    console.log(error);
     return [];
   }
 };

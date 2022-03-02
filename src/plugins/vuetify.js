@@ -6,7 +6,7 @@ import "@mdi/font/css/materialdesignicons.css";
 
 Vue.use(Vuetify);
 
-const primary = localStorage.getItem("primary") || "#f27298";
+const primary = localStorage.getItem("primary") || "#fa7298";
 const model = localStorage.getItem("model") == "true";
 
 export default new Vuetify({

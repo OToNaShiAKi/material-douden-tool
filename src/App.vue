@@ -31,7 +31,7 @@
           </v-btn>
         </v-btn-toggle>
         <keep-alive>
-          <router-view />
+          <router-view id="router" />
         </keep-alive>
       </v-container>
       <v-snackbar
@@ -60,19 +60,20 @@ export default {
     content: "",
     fix: undefined,
     pages: [
-      { icon: "mdi-chat", to: "live" },
+      // { icon: "mdi-chat", to: "live" },
       { icon: "mdi-video", to: "room" },
       { icon: "mdi-music", to: "music" },
       { icon: "mdi-flash", to: "shortcut" },
       { icon: "mdi-code-brackets", to: "bracket" },
       { icon: "mdi-account", to: "cookie" },
+      { icon: "mdi-shield-off", to: "shield" },
       { icon: "mdi-palette", to: "theme" },
     ],
     message: "",
     record: [],
   }),
   computed: {
-    ...mapState(["select", "shortcuts", "snackbar"]),
+    ...mapState(["select", "shortcuts", "snackbar", "shields"]),
     fixes() {
       const all = this.$store.state.fixes;
       return all.filter((v) => v.scope !== "歌曲");
@@ -82,14 +83,18 @@ export default {
     const cookie = localStorage.getItem("cookie");
     this.ChangeCookie(cookie);
     const { select } = this.$store.state;
-    if (cookie && select) this.$router.push("/live");
-    else if (cookie && !select) this.$router.push("/room");
+    if (cookie && !select) this.$router.push("/room");
     else if (!cookie) this.$router.push("/cookie");
   },
   methods: {
     ...mapMutations([ChangeCookie.name]),
     send() {
-      this.message = FormatComment(this.content, this.select, this.fix);
+      this.message = FormatComment(
+        this.content,
+        this.select,
+        this.fix,
+        this.shields
+      );
       this.record.push(this.content);
       this.record.index = this.record.length - 1;
       this.content = "";
@@ -123,7 +128,7 @@ export default {
         // .replace(/\{s\}/gi, this.song.name)
         // .replace(/\{a\}/gi, this.song.singer)
         // .replace(/\{l\}/gi, this.song.lyric[this.song.stamp].tlyric);
-        FormatComment(phrase, this.select, this.fix);
+        FormatComment(phrase, this.select, this.fix, this.shields);
       }
     },
   },
@@ -143,11 +148,13 @@ export default {
 #lyric-selected {
   height: 256px;
   overflow: auto;
+}
+.relative {
   position: relative;
 }
-.jump {
+.relative .jump {
   top: 50%;
   transform: translateY(-50%);
-  left: 20px;
+  left: 14px;
 }
 </style>

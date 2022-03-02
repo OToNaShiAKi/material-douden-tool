@@ -26,6 +26,16 @@ export const ChangeFixes = (state, fixes = []) => {
   state.fixes = [...fixes];
 };
 
+export const ChangeRooms = (state, rooms = []) => {
+  localStorage.setItem("rooms", JSON.stringify(rooms));
+  state.rooms = [...rooms];
+};
+
+export const ChangeShields = (state, shields = []) => {
+  localStorage.setItem("shields", JSON.stringify(shields));
+  state.shields = [...shields];
+};
+
 export const ChangeShortcuts = (state, { key, value }) => {
   const shortcuts = state.shortcuts;
   if (value) shortcuts[key] = value;
@@ -43,5 +53,6 @@ export default {
   ChangeSelect,
   ChangeFixes,
   ChangeShortcuts,
+  ChangeRooms,
   Notify,
 };

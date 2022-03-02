@@ -48,32 +48,36 @@ ipcMain.handle(GetWebSocket.name, async (event, roomids) => {
 });
 
 ipcMain.handle(GetMusic.name, async (event, keyword) => {
-  const result = (await GetMusic(keyword)).filter(
-    ({ lyric }) => lyric && /\[\d{2}:[0-9\.]{6}\]/.test(lyric)
-  );
-  for (const item of result) {
-    const lyric = [];
-    item.lyric.replace(/\[(\d{2}):([0-9\.]{6})\](.*)\n?/g, (l, m, s, c) => {
-      if (!/作词|作曲/.test(c) && c) {
-        const t = item.tlyric.match(new RegExp(`\\[${m}:${s}\\](.*)\n?`));
-        lyric.push({
-          stamp: (+m * 60 + +s) * 1000,
-          lyric: c.trim(),
-          tlyric: t && t[1].trim(),
-        });
-      }
-      return "";
-    });
-    item.stamp = lyric;
-    item.language = /\[\d{2}:[0-9\.]{6}\]/.test(item.tlyric)
-      ? "双语轴"
-      : "单语轴";
+  try {
+    const result = (await GetMusic(keyword)).filter(
+      ({ lyric }) => lyric && /\[\d{2}:[0-9\.]{6}\]/.test(lyric)
+    );
+    for (const item of result) {
+      const lyric = [];
+      item.lyric.replace(/\[(\d{2}):([0-9\.]{6})\](.*)\n?/g, (l, m, s, c) => {
+        if (!/作词|作曲/.test(c) && c) {
+          const t = item.tlyric.match(new RegExp(`\\[${m}:${s}\\](.*)\n?`));
+          lyric.push({
+            stamp: (+m * 60 + +s) * 1000,
+            lyric: c.trim(),
+            tlyric: t && t[1].trim(),
+          });
+        }
+        return "";
+      });
+      item.stamp = lyric;
+      item.language = /\[\d{2}:[0-9\.]{6}\]/.test(item.tlyric)
+        ? "双语轴"
+        : "单语轴";
+    }
+    return result;
+  } catch (error) {
+    console.log(error);
   }
-  return result;
 });
 
 ipcMain.on("WindowSize", (event, height) => {
-  const win = BrowserWindow.getFocusedWindow();
+  const win = BrowserWindow.getAllWindows()[0];
   const [width] = win.getSize();
-  win.setSize(width, height);
+  win.setSize(width, height, true);
 });

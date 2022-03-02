@@ -49,8 +49,8 @@ export default class Socket {
       this.comments.push({
         info: body.info[1],
         uid: body.info[2][0],
-        name: body.info[2][1],
-        word: JiaBa.cut(body.info[1]),
+        nickname: body.info[2][1],
+        word: JiaBa.cut(body.info[1].replace(/[^\u4e00-\u9fa5]*/g, "")),
       });
     }
   };

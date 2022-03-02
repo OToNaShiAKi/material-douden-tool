@@ -49,18 +49,33 @@
         <v-radio-group v-model="language" class="center" row>
           <v-radio v-for="v of languages" :label="v" :value="v" :key="v" />
         </v-radio-group>
-        <section id="lyric-selected" ref="lyric">
-          <p
-            class="text-center"
-            :class="i === stamp && 'primary--text'"
-            v-for="(v, i) of lyric"
-            :key="v.stamp"
-          >
-            <span class="text-body-1">{{ v.lyric }}</span>
-            <br />
-            <span class="text-body-2">{{ v.tlyric }}</span>
-          </p>
-        </section>
+        <v-hover v-slot="{ hover }">
+          <section class="relative">
+            <v-btn
+              v-show="hover"
+              color="primary"
+              absolute
+              icon
+              small
+              class="jump"
+              @click="jump"
+            >
+              <v-icon>mdi-play</v-icon>
+            </v-btn>
+            <section id="lyric-selected" ref="lyric">
+              <p
+                class="text-center"
+                :class="i === stamp && 'primary--text'"
+                v-for="(v, i) of lyric"
+                :key="v.stamp"
+              >
+                <span class="text-body-1">{{ v.lyric }}</span>
+                <br />
+                <span class="text-body-2">{{ v.tlyric }}</span>
+              </p>
+            </section>
+          </section>
+        </v-hover>
       </v-tab-item>
     </v-tabs-items>
   </section>
@@ -95,7 +110,7 @@ export default {
     language: "",
   }),
   computed: {
-    ...mapState(["select"]),
+    ...mapState(["select", "shields"]),
     fixes() {
       const all = this.$store.state.fixes;
       return all.filter((v) => v.scope !== "同传");
@@ -130,18 +145,17 @@ export default {
       this.active = false;
     },
     play() {
-      if (!this.language)
-        this.language = this.languages[1] || this.languages[0];
       this.active = !this.active;
       if (this.active) this.send(this.lyric.slice(this.stamp + 1));
       else clearTimeout(this.send.timer);
     },
     send(lyric) {
       this.active = true;
+      this.language = this.language || this.languages[1] || this.languages[0];
       if (/翻译|双语/.test(this.language) && lyric[0].tlyric)
-        FormatComment(lyric[0].tlyric, this.select, this.fix);
+        FormatComment(lyric[0].tlyric, this.select, this.fix, this.shields);
       if (/原文|双语/.test(this.language) && lyric[0].lyric)
-        FormatComment(lyric[0].lyric, this.select, this.fix);
+        FormatComment(lyric[0].lyric, this.select, this.fix, this.shields);
       this.stamp += 1;
       this.send.stamp = Date.now();
       const target = this.$refs.lyric;
@@ -169,12 +183,12 @@ export default {
     jump() {
       clearTimeout(this.send.timer);
       const target = this.$refs.lyric;
-      // const count = Math.floor(
-      //   (target.scrollTop + target.clientHeight / 2) / this.height
-      // );
-      console.log(target.scrollTop);
-      // this.stamp = count;
-      // this.send(this.lyric.slice(count));
+      const count = Math.floor(
+        (target.scrollTop + target.clientHeight / 2) /
+          (target.children[0].clientHeight + 16)
+      );
+      this.stamp = count - 1;
+      this.send(this.lyric.slice(count));
     },
     track({ target }) {
       if (this.active) {
