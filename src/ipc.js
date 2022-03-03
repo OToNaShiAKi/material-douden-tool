@@ -4,7 +4,7 @@ import {
   Bilibili,
   GetWebSocket,
   GetMusic,
-  GetHistoryComment,
+  SilentUser,
 } from "./plugins/axios";
 import { ChangeCookie } from "./store/mutations";
 
@@ -35,46 +35,34 @@ ipcMain.on(ChangeCookie.name, (event, cookie, csrf) => {
 });
 
 ipcMain.handle(GetWebSocket.name, async (event, roomids) => {
-  const promise = roomids.map(async (roomid) => {
-    const [socket, comment] = await Promise.all([
-      GetWebSocket(roomid),
-      GetHistoryComment(roomid),
-    ]);
-    socket.comment = comment;
-    socket.roomid = roomid;
-    return socket;
-  });
+  const promise = roomids.map((roomid) => GetWebSocket(roomid));
   return await Promise.all(promise);
 });
 
 ipcMain.handle(GetMusic.name, async (event, keyword) => {
-  try {
-    const result = (await GetMusic(keyword)).filter(
-      ({ lyric }) => lyric && /\[\d{2}:[0-9\.]{6}\]/.test(lyric)
-    );
-    for (const item of result) {
-      const lyric = [];
-      item.lyric.replace(/\[(\d{2}):([0-9\.]{6})\](.*)\n?/g, (l, m, s, c) => {
-        if (!/作词|作曲/.test(c) && c) {
-          const t = item.tlyric.match(new RegExp(`\\[${m}:${s}\\](.*)\n?`));
-          lyric.push({
-            stamp: (+m * 60 + +s) * 1000,
-            lyric: c.trim(),
-            tlyric: t && t[1].trim(),
-          });
-        }
-        return "";
-      });
-      item.stamp = lyric;
-      item.language = /\[\d{2}:[0-9\.]{6}\]/.test(item.tlyric)
-        ? "双语轴"
-        : "单语轴";
-    }
-    return result;
-  } catch (error) {
-    console.log(error);
+  const result = (await GetMusic(keyword)).filter(
+    ({ lyric }) => lyric && /\[\d{2}:[0-9\.]{6}\]/.test(lyric)
+  );
+  for (const item of result) {
+    const lyric = [];
+    item.lyric.replace(/\[(\d{2}):([0-9\.]{6})\](.*)\n?/g, (l, m, s, c) => {
+      if (c) {
+        const t = item.tlyric.match(new RegExp(`\\[${m}:${s}\\](.*)\n?`));
+        lyric.push({
+          stamp: (+m * 60 + +s) * 1000,
+          lyric: c.trim(),
+          tlyric: t && t[1].trim(),
+        });
+      }
+      return "";
+    });
+    item.stamp = lyric;
+    item.language = /\[\d{2}:[0-9\.]{6}\]/.test(item.tlyric) ? "双语" : "单语";
   }
+  return result;
 });
+
+ipcMain.on(SilentUser.name, SilentUser);
 
 ipcMain.on("WindowSize", (event, height) => {
   const win = BrowserWindow.getAllWindows()[0];

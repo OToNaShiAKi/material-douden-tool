@@ -44,6 +44,11 @@ export const ChangeShortcuts = (state, { key, value }) => {
   localStorage.setItem("shortcuts", JSON.stringify(state.shortcuts));
 };
 
+export const ChangeSong = (state, { stamp = -1, song = state.song }) => {
+  state.song = song;
+  state.stamp = stamp;
+};
+
 export const Notify = (state, text) => {
   state.snackbar = text;
 };
@@ -54,5 +59,6 @@ export default {
   ChangeFixes,
   ChangeShortcuts,
   ChangeRooms,
+  ChangeSong,
   Notify,
 };

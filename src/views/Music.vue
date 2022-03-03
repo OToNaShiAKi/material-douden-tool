@@ -87,7 +87,7 @@ import { GetMusic } from "../plugins/axios";
 import { mapMutations, mapState } from "vuex";
 import { clipboard, ipcRenderer } from "electron";
 import { FormatComment } from "../plugins/utils";
-import { Notify } from "../store/mutations";
+import { ChangeSong, Notify } from "../store/mutations";
 
 export default {
   name: "Music",
@@ -102,18 +102,20 @@ export default {
     musics: [],
     loading: false,
     tab: "table",
-    lyric: [],
-    stamp: 0,
     active: false,
     fix: "",
     message: "",
     language: "",
   }),
   computed: {
-    ...mapState(["select", "shields"]),
+    ...mapState(["select", "shields", "stamp"]),
     fixes() {
       const all = this.$store.state.fixes;
       return all.filter((v) => v.scope !== "同传");
+    },
+    lyric() {
+      const { stamp = [] } = this.$store.state.song || {};
+      return stamp;
     },
     languages() {
       const result = ["原文"];
@@ -122,7 +124,7 @@ export default {
     },
   },
   methods: {
-    ...mapMutations([Notify.name]),
+    ...mapMutations([Notify.name, ChangeSong.name]),
     async search() {
       if (this.keyword.length <= 0) {
         this.message = "关键词不可为空";
@@ -137,11 +139,10 @@ export default {
       this.loading = false;
     },
     async choose(item) {
-      this.lyric = item.stamp;
-      this.tab = "lyric";
       clearTimeout(this.send.timer);
+      this.tab = "lyric";
       this.send.timer = null;
-      this.stamp = -1;
+      this.ChangeSong({ song: item, stamp: -1 });
       this.active = false;
     },
     play() {
@@ -156,7 +157,7 @@ export default {
         FormatComment(lyric[0].tlyric, this.select, this.fix, this.shields);
       if (/原文|双语/.test(this.language) && lyric[0].lyric)
         FormatComment(lyric[0].lyric, this.select, this.fix, this.shields);
-      this.stamp += 1;
+      this.ChangeSong({ stamp: this.stamp + 1 });
       this.send.stamp = Date.now();
       const target = this.$refs.lyric;
       const height = target.children[0].clientHeight + 16;
@@ -168,7 +169,7 @@ export default {
       if (lyric.length <= 1) {
         this.send.timer = null;
         this.active = false;
-        this.stamp = -1;
+        this.ChangeSong({ stamp: -1 });
         return;
       }
       this.send.timer = setTimeout(() => {
@@ -187,7 +188,7 @@ export default {
         (target.scrollTop + target.clientHeight / 2) /
           (target.children[0].clientHeight + 16)
       );
-      this.stamp = count - 1;
+      this.ChangeSong({ stamp: count - 1 });
       this.send(this.lyric.slice(count));
     },
     track({ target }) {

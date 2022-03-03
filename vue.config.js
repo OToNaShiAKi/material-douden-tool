@@ -5,8 +5,17 @@ module.exports = {
       nodeIntegration: true,
       builderOptions: {
         productName: "Material DouDen Tool",
-        win: { icon: "./public/favicon.png" },
+        win: {
+          icon: "./public/favicon.png",
+          target: ["nsis"],
+        },
         mac: { icon: "./public/favicon.png" },
+        nsis: {
+          oneClick: false,
+          allowElevation: true,
+          allowToChangeInstallationDirectory: true,
+          createStartMenuShortcut: true,
+        },
       },
     },
   },

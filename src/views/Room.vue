@@ -11,7 +11,6 @@
       <v-chip
         v-for="(v, i) of rooms"
         close
-        :disabled="!cookie"
         outlined
         @click:close="remove(i)"
         close-icon="mdi-delete"
@@ -21,7 +20,13 @@
         {{ v.text }}
       </v-chip>
     </v-chip-group>
-    <v-switch @change="ChangeSelect" v-model="multiple" inset label="多选" />
+    <v-switch
+      class="ml-1"
+      @change="ChangeSelect"
+      v-model="multiple"
+      inset
+      label="多选"
+    />
     <section class="d-flex align-center">
       <v-text-field class="mr-3" v-model="roomid" label="房间号" />
       <v-text-field class="mr-3" v-model="name" label="名称" />
@@ -44,7 +49,7 @@ import Pack from "../components/Pack.vue";
 import { ChangeRooms, ChangeSelect } from "../store/mutations";
 
 export default {
-  name: "Colors",
+  name: "Room",
   components: { Pack },
   data: ({ $store: { state } }) => ({
     multiple: state.select.length > 1,
@@ -52,7 +57,7 @@ export default {
     name: "",
   }),
   computed: {
-    ...mapState(["cookie", "rooms"]),
+    ...mapState(["rooms"]),
     select() {
       const select = this.$store.state.select || [];
       return this.multiple ? select : select[0];

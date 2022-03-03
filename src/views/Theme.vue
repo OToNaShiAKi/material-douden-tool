@@ -10,7 +10,7 @@
         :value="item.value"
       />
     </v-radio-group>
-    <v-switch v-model="dark" @change="model" inset label="Dark" />
+    <v-switch class="ml-1" v-model="dark" @change="model" inset label="Dark" />
   </section>
 </template>
 
@@ -18,25 +18,21 @@
 import Pack from "../components/Pack.vue";
 
 export default {
-  name: "Colors",
+  name: "Theme",
   components: { Pack },
-
-  data: ({ $vuetify: { theme } }) => {
-    console.log(theme.currentTheme.primary, theme.dark);
-    return {
-      theme: theme.currentTheme.primary,
-      themes: [
-        { label: "少女", value: "#fa7298" },
-        { label: "宝石", value: "#2196f3" },
-        { label: "咖啡", value: "#5c2e2e" },
-        { label: "咸蛋", value: "#fd8a2f" },
-        { label: "夕阳", value: "#ff5252" },
-        { label: "早苗", value: "#8bc24a" },
-        { label: "罗兰", value: "#9c28b1" },
-      ],
-      dark: theme.dark,
-    };
-  },
+  data: ({ $vuetify: { theme } }) => ({
+    theme: theme.currentTheme.primary,
+    themes: [
+      { label: "少女", value: "#fa7298" },
+      { label: "宝石", value: "#2196f3" },
+      { label: "咖啡", value: "#5c2e2e" },
+      { label: "咸蛋", value: "#fd8a2f" },
+      { label: "夕阳", value: "#ff5252" },
+      { label: "早苗", value: "#8bc24a" },
+      { label: "罗兰", value: "#9c28b1" },
+    ],
+    dark: theme.dark,
+  }),
   methods: {
     change(value) {
       this.$vuetify.theme.themes.light.primary = value;

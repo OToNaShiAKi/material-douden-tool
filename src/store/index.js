@@ -28,6 +28,8 @@ export default new Vuex.Store({
     snackbar: "",
     rooms: rooms || [],
     shields: shields || [],
+    stamp: -1,
+    song: undefined,
   },
   mutations,
 });

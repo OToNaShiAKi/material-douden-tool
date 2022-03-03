@@ -22,7 +22,7 @@
             :error-messages="message"
             class="flex-grow-1"
             append-icon="mdi-arrow-left-bottom"
-            hint="上下键可循环切换已发弹幕 TAB可循环切换前后缀"
+            hint="上下键可循环切换已发弹幕 TAB可循环切换前后缀 快捷键立即发送对应快捷用语"
           />
         </section>
         <v-btn-toggle color="primary" group shaped dense>
@@ -60,7 +60,7 @@ export default {
     content: "",
     fix: undefined,
     pages: [
-      // { icon: "mdi-chat", to: "live" },
+      { icon: "mdi-chat", to: "live" },
       { icon: "mdi-video", to: "room" },
       { icon: "mdi-music", to: "music" },
       { icon: "mdi-flash", to: "shortcut" },
@@ -73,7 +73,14 @@ export default {
     record: [],
   }),
   computed: {
-    ...mapState(["select", "shortcuts", "snackbar", "shields"]),
+    ...mapState([
+      "select",
+      "shortcuts",
+      "snackbar",
+      "shields",
+      "stamp",
+      "song",
+    ]),
     fixes() {
       const all = this.$store.state.fixes;
       return all.filter((v) => v.scope !== "歌曲");
@@ -82,9 +89,9 @@ export default {
   created() {
     const cookie = localStorage.getItem("cookie");
     this.ChangeCookie(cookie);
-    const { select } = this.$store.state;
-    if (cookie && !select) this.$router.push("/room");
-    else if (!cookie) this.$router.push("/cookie");
+    if (!cookie) this.$router.push("/cookie");
+    else if (this.select.length <= 0) this.$router.push("/room");
+    else this.$router.push("/live");
   },
   methods: {
     ...mapMutations([ChangeCookie.name]),
@@ -122,12 +129,13 @@ export default {
       key += event.key;
       let phrase = this.shortcuts[key];
       if (phrase) {
+        const lyric = this.song.stamp[this.stamp];
         phrase = phrase
           .replace(/\{c\}/gi, this.content)
-          .replace(/\{v\}/gi, clipboard.readText());
-        // .replace(/\{s\}/gi, this.song.name)
-        // .replace(/\{a\}/gi, this.song.singer)
-        // .replace(/\{l\}/gi, this.song.lyric[this.song.stamp].tlyric);
+          .replace(/\{v\}/gi, clipboard.readText())
+          .replace(/\{s\}/gi, this.song.name)
+          .replace(/\{a\}/gi, this.song.singer)
+          .replace(/\{l\}/gi, lyric.tlyric || lyric.lyric);
         FormatComment(phrase, this.select, this.fix, this.shields);
       }
     },
@@ -156,5 +164,9 @@ export default {
   top: 50%;
   transform: translateY(-50%);
   left: 14px;
+}
+#danmu {
+  height: 360px;
+  overflow: auto;
 }
 </style>

@@ -29,7 +29,7 @@ import Pack from "../components/Pack.vue";
 import { ChangeFixes } from "../store/mutations";
 
 export default {
-  name: "Setting",
+  name: "Bracket",
   components: { Pack },
   data: () => ({
     prefix: "",

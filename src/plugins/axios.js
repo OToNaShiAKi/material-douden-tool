@@ -64,30 +64,41 @@ export const SendComment = async (roomid, msg) => {
 
 export const GetWebSocket = async (roomid) => {
   try {
-    const result = await Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
-      params: { type: 0, id: roomid },
-    });
+    const [socket, { room }, { badge }] = await Promise.all([
+      Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
+        params: { type: 0, id: roomid },
+      }),
+      Bilibili.get("/xlive/web-room/v1/dM/gethistory", { params: { roomid } }),
+      Bilibili.get("/xlive/web-room/v1/index/getInfoByUser", {
+        params: { room_id: roomid },
+      }),
+    ]);
     return {
-      host_list: result.host_list,
-      token: result.token,
+      host_list: socket.host_list,
+      token: socket.token,
+      comment: room.map(({ text, uid, nickname }) => ({
+        text,
+        uid,
+        nickname,
+      })),
+      admin: badge.is_room_admin,
+      roomid,
     };
   } catch (error) {
     return { roomid };
   }
 };
 
-export const GetHistoryComment = async (roomid) => {
+export const SilentUser = async (event, tuid, room_id) => {
   try {
-    const result = await Bilibili.get("/xlive/web-room/v1/dM/gethistory", {
-      params: { roomid },
+    await Bilibili.post("/xlive/web-ucenter/v1/banned/AddSilentUser", {
+      room_id,
+      tuid,
+      mobile_app: "web",
+      ...Bilibili.defaults.data,
     });
-    return result.room.map(({ text, uid, nickname }) => ({
-      text,
-      uid,
-      nickname,
-    }));
   } catch (error) {
-    return [];
+    console.log(error);
   }
 };
 
