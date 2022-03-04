@@ -5,7 +5,9 @@ import {
   GetWebSocket,
   GetMusic,
   SilentUser,
+  Translate,
 } from "./plugins/axios";
+import { e } from "./plugins/utils";
 
 const Stacks = { RoomIds: [], timer: null };
 
@@ -34,7 +36,15 @@ ipcMain.on("ChangeCookie", (event, cookie, csrf) => {
 });
 
 ipcMain.handle("GetWebSocket", async (event, roomids) => {
-  const promise = roomids.map((roomid) => GetWebSocket(roomid));
+  const promise = roomids.map(async (roomid) => {
+    const room = await GetWebSocket(roomid);
+    for (const w of room.comments) {
+      const sign = e(w.info);
+      const text = await Translate(w.info, sign);
+      w.text = text;
+    }
+    return room;
+  });
   return await Promise.all(promise);
 });
 
@@ -61,10 +71,16 @@ ipcMain.handle("GetMusic", async (event, keyword) => {
   return result;
 });
 
-ipcMain.on("SilentUser", SilentUser);
+ipcMain.handle("SilentUser", SilentUser);
 
 ipcMain.on("WindowSize", (event, height) => {
   const win = BrowserWindow.getAllWindows()[0];
   const [width] = win.getSize();
   win.setSize(width, height, true);
+});
+
+ipcMain.handle("CutWord", async (event, phrase) => {
+  const sign = e(phrase);
+  const text = await Translate(phrase, sign);
+  return text;
 });

@@ -43,6 +43,21 @@ const MusicQQ = axios.create({
 
 MusicQQ.interceptors.response.use((response) => response.data);
 
+const Baidu = axios.create({
+  baseURL: "https://fanyi.baidu.com/",
+  widthCredentials: true,
+  headers: {
+    Cookie:
+      "BAIDUID=7B8DB65FA1970FCBD48FE3DF075AEEA4:FG=1; Hm_lvt_64ecd82404c51e03dc91cb9e8c025574=1646374963; Hm_lpvt_64ecd82404c51e03dc91cb9e8c025574=1646374963; REALTIME_TRANS_SWITCH=1; FANYI_WORD_SWITCH=1; HISTORY_SWITCH=1; SOUND_SPD_SWITCH=1; SOUND_PREFER_SWITCH=1; APPGUIDE_10_0_2=1",
+    origin: "https://fanyi.baidu.com/",
+    referer: "https://fanyi.baidu.com/",
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
+  },
+});
+
+Baidu.interceptors.response.use((response) => response.data);
+
 export const SendComment = async (roomid, msg) => {
   try {
     await Bilibili.post(
@@ -64,20 +79,23 @@ export const SendComment = async (roomid, msg) => {
 
 export const GetWebSocket = async (roomid) => {
   try {
-    const [socket, { room }, { badge }] = await Promise.all([
-      Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
-        params: { type: 0, id: roomid },
-      }),
-      Bilibili.get("/xlive/web-room/v1/dM/gethistory", { params: { roomid } }),
-      Bilibili.get("/xlive/web-room/v1/index/getInfoByUser", {
-        params: { room_id: roomid },
-      }),
-    ]);
+    const [socket, { room } = { room: [] }, { badge } = { badge: {} }] =
+      await Promise.all([
+        Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
+          params: { type: 0, id: roomid },
+        }),
+        Bilibili.get("/xlive/web-room/v1/dM/gethistory", {
+          params: { roomid },
+        }),
+        Bilibili.get("/xlive/web-room/v1/index/getInfoByUser", {
+          params: { room_id: roomid },
+        }),
+      ]);
     return {
       host_list: socket.host_list,
       token: socket.token,
-      comment: room.map(({ text, uid, nickname }) => ({
-        text,
+      comments: room.map(({ text, uid, nickname }) => ({
+        info: text,
         uid,
         nickname,
       })),
@@ -91,14 +109,19 @@ export const GetWebSocket = async (roomid) => {
 
 export const SilentUser = async (event, tuid, room_id) => {
   try {
-    await Bilibili.post("/xlive/web-ucenter/v1/banned/AddSilentUser", {
-      room_id,
-      tuid,
-      mobile_app: "web",
-      ...Bilibili.defaults.data,
-    });
+    await Bilibili.post(
+      "/xlive/web-ucenter/v1/banned/AddSilentUser",
+      QS.stringify({
+        room_id,
+        tuid,
+        mobile_app: "web",
+        csrf: Bilibili.defaults.data.csrf,
+        csrf_token: Bilibili.defaults.data.csrf_token,
+      })
+    );
+    return true;
   } catch (error) {
-    console.log(error);
+    return false;
   }
 };
 
@@ -154,5 +177,26 @@ export const GetMusic = async (keyword) => {
     return [...song163, ...songQQ];
   } catch (error) {
     return [];
+  }
+};
+
+export const Translate = async (query, sign) => {
+  try {
+    const { lan } = await Baidu.post("/langdetect", { query });
+    if (lan !== "zh") {
+      const result = await Baidu.post(`/v2transapi`, {
+        from: lan,
+        to: "zh",
+        query,
+        simple_means_flag: 3,
+        sign,
+        token: "46cfb720f37f680bbb084eb646578407",
+        domain: "common",
+      });
+      return result.trans_result.data[0].dst;
+    }
+    return "";
+  } catch (error) {
+    return "";
   }
 };

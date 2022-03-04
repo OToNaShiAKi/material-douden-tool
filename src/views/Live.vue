@@ -1,7 +1,14 @@
 <template>
   <section>
     <Pack>弹幕捕获</Pack>
-    <v-select hint="用户名称、弹幕均可点击复制" :items="rooms" v-model="show" />
+    <section class="d-flex">
+      <v-switch inset class="mr-3 ml-1" label="翻译" v-model="translate" />
+      <v-select
+        hint="用户名称、弹幕、翻译均可点击复制"
+        :items="rooms"
+        v-model="show"
+      />
+    </section>
     <section id="danmu" ref="danmu" @click="copy">
       <div
         v-for="(v, k) of comments[show]"
@@ -9,16 +16,18 @@
         class="caption d-flex align-baseline"
       >
         <v-chip
-          v-if="sockets[show].admin"
+          v-if="sockets[show] && sockets[show].admin"
           x-small
           outlined
-          :data-uid="item.uid"
+          :data-uid="v.uid"
+          :data-nickname="v.nickname"
         >
           禁言
         </v-chip>
         <span class="font-weight-medium ml-3">{{ v.nickname }}</span>
         ：
         <span>{{ v.info }}</span>
+        <span v-show="translate && v.text">（{{ v.text }}）</span>
       </div>
     </section>
   </section>
@@ -45,16 +54,20 @@ export default {
     sockets: {},
     comments: {},
     show: state.select[0],
+    translate: true,
   }),
   methods: {
     ...mapMutations(["Notify"]),
-    copy({ target }) {
-      const { innerText } = target;
+    async copy({ target }) {
+      let { innerText } = target;
       const uid = target.dataset.uid || target.parentElement.dataset.uid;
+      const nickname =
+        target.dataset.nickname || target.parentElement.dataset.nickname;
       if (uid) {
-        ipcRenderer.send("SilentUser", uid, this.show);
-        this.Notify("已禁言：" + uid);
+        const result = await ipcRenderer.invoke("SilentUser", uid, this.show);
+        this.Notify(result ? "已禁言：" + nickname : "禁言失败");
       } else if (innerText && !/\n/.test(innerText)) {
+        innerText = innerText.replace(/（|）/g, "");
         clipboard.writeText(innerText);
         this.Notify("已复制：" + innerText);
       }
@@ -92,10 +105,11 @@ export default {
             +item.roomid,
             item.token,
             item.admin,
+            item.comments,
             this.receive
           );
           this.sockets[item.roomid] = socket;
-          comments[item.roomid] = socket.comments;
+          comments[item.roomid] = item.comments;
         }
         this.comments = comments;
       },
