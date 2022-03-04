@@ -46,7 +46,6 @@
 <script>
 import { mapMutations, mapState } from "vuex";
 import Pack from "../components/Pack.vue";
-import { ChangeRooms, ChangeSelect } from "../store/mutations";
 
 export default {
   name: "Room",
@@ -64,7 +63,7 @@ export default {
     },
   },
   methods: {
-    ...mapMutations([ChangeSelect.name, ChangeRooms.name]),
+    ...mapMutations(["ChangeSelect", "ChangeRooms"]),
     add() {
       this.rooms.push({ value: this.roomid, text: this.name });
       this.ChangeSelect(

@@ -1,14 +1,7 @@
 <template>
   <section>
     <Pack>弹幕捕获</Pack>
-    <section class="d-flex">
-      <v-switch inset class="mr-3 ml-" label="展示分词" v-model="cut" />
-      <v-select
-        hint="用户名称、弹幕、关键词均可点击复制"
-        :items="rooms"
-        v-model="show"
-      />
-    </section>
+    <v-select hint="用户名称、弹幕均可点击复制" :items="rooms" v-model="show" />
     <section id="danmu" ref="danmu" @click="copy">
       <div
         v-for="(v, k) of comments[show]"
@@ -25,14 +18,7 @@
         </v-chip>
         <span class="font-weight-medium ml-3">{{ v.nickname }}</span>
         ：
-        <section class="d-flex flex-column flex-grow-1">
-          <span>{{ v.info }}</span>
-          <section v-show="cut" :max="0">
-            <v-chip x-small v-for="(w, i) of v.word" :key="i">
-              {{ w }}
-            </v-chip>
-          </section>
-        </section>
+        <span>{{ v.info }}</span>
       </div>
     </section>
   </section>
@@ -40,10 +26,8 @@
 
 <script>
 import { clipboard, ipcRenderer } from "electron";
-import { GetWebSocket, SilentUser } from "../plugins/axios";
 import { mapMutations, mapState } from "vuex";
 import Socket from "../plugins/socket";
-import { Notify } from "../store/mutations";
 import Pack from "../components/Pack.vue";
 
 export default {
@@ -61,15 +45,14 @@ export default {
     sockets: {},
     comments: {},
     show: state.select[0],
-    cut: false,
   }),
   methods: {
-    ...mapMutations([Notify.name]),
+    ...mapMutations(["Notify"]),
     copy({ target }) {
       const { innerText } = target;
       const uid = target.dataset.uid || target.parentElement.dataset.uid;
       if (uid) {
-        ipcRenderer.send(SilentUser.name, uid, this.show);
+        ipcRenderer.send("SilentUser", uid, this.show);
         this.Notify("已禁言：" + uid);
       } else if (innerText && !/\n/.test(innerText)) {
         clipboard.writeText(innerText);
@@ -100,7 +83,7 @@ export default {
             delete comments[key];
           } else sockets.splice(index, 1);
         }
-        const result = await ipcRenderer.invoke(GetWebSocket.name, sockets);
+        const result = await ipcRenderer.invoke("GetWebSocket", sockets);
         for (const item of result) {
           const first = item.host_list.pop();
           const socket = new Socket(

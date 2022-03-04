@@ -1,7 +1,4 @@
 import { Certification, HandleMessage } from "./utils";
-import JiaBa from "nodejieba";
-
-JiaBa.load();
 
 export default class Socket {
   constructor(host, port, roomid, token, admin, receive) {
@@ -52,7 +49,6 @@ export default class Socket {
         info: body.info[1],
         uid: body.info[2][0],
         nickname: body.info[2][1],
-        word: JiaBa.cut(body.info[1].replace(/[^\u4e00-\u9fa5]*/g, "")),
       });
     }
   };

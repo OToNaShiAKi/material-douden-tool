@@ -37,7 +37,6 @@
 <script>
 import { mapMutations } from "vuex";
 import Pack from "../components/Pack.vue";
-import { ChangeShortcuts } from "../store/mutations";
 
 export default {
   components: { Pack },
@@ -83,7 +82,7 @@ export default {
     message: "",
   }),
   methods: {
-    ...mapMutations([ChangeShortcuts.name]),
+    ...mapMutations(["ChangeShortcuts"]),
     add() {
       if (this.key.length <= 0 || this.phrase.length <= 0) {
         this.message = "快捷键或短语不可为空";

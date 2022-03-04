@@ -1,17 +1,17 @@
 import { ipcRenderer } from "electron";
 
-export const ChangeCookie = (state, cookie) => {
+const ChangeCookie = (state, cookie) => {
   localStorage.setItem("cookie", cookie || "");
   state.cookie = cookie || "";
   if (cookie) {
     const bili_jct = cookie.match(/bili_jct=([^;]+);/);
     if (bili_jct) {
-      ipcRenderer.send(ChangeCookie.name, cookie, bili_jct[1]);
+      ipcRenderer.send("ChangeCookie", cookie, bili_jct[1]);
     }
   }
 };
 
-export const ChangeSelect = (state, select = []) => {
+const ChangeSelect = (state, select = []) => {
   select = Array.isArray(select)
     ? select
     : typeof select === "string"
@@ -21,22 +21,22 @@ export const ChangeSelect = (state, select = []) => {
   state.select = select.filter((v) => v);
 };
 
-export const ChangeFixes = (state, fixes = []) => {
+const ChangeFixes = (state, fixes = []) => {
   localStorage.setItem("fixes", JSON.stringify(fixes));
   state.fixes = [...fixes];
 };
 
-export const ChangeRooms = (state, rooms = []) => {
+const ChangeRooms = (state, rooms = []) => {
   localStorage.setItem("rooms", JSON.stringify(rooms));
   state.rooms = [...rooms];
 };
 
-export const ChangeShields = (state, shields = []) => {
+const ChangeShields = (state, shields = []) => {
   localStorage.setItem("shields", JSON.stringify(shields));
   state.shields = [...shields];
 };
 
-export const ChangeShortcuts = (state, { key, value }) => {
+const ChangeShortcuts = (state, { key, value }) => {
   const shortcuts = state.shortcuts;
   if (value) shortcuts[key] = value;
   else delete shortcuts[key];
@@ -44,12 +44,13 @@ export const ChangeShortcuts = (state, { key, value }) => {
   localStorage.setItem("shortcuts", JSON.stringify(state.shortcuts));
 };
 
-export const ChangeSong = (state, { stamp = -1, song = state.song }) => {
+const ChangeSong = (state, { stamp = -1, song = state.song }) => {
   state.song = song;
+  song[-1] = { lryic: "", tlyric: "" };
   state.stamp = stamp;
 };
 
-export const Notify = (state, text) => {
+const Notify = (state, text) => {
   state.snackbar = text;
 };
 
@@ -60,5 +61,6 @@ export default {
   ChangeShortcuts,
   ChangeRooms,
   ChangeSong,
+  ChangeShields,
   Notify,
 };

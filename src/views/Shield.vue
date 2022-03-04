@@ -10,7 +10,7 @@
       <v-text-field class="mr-3" v-model="shield" label="屏蔽词" />
       <v-text-field class="mr-3" v-model="handle" label="处理后" />
       <v-btn
-        :disabled="!(shield && handle && roomid)"
+        :disabled="!(shield && handle)"
         outlined
         small
         color="primary"
@@ -25,7 +25,6 @@
 <script>
 import { mapMutations, mapState } from "vuex";
 import Pack from "../components/Pack.vue";
-import { ChangeShields } from "../store/mutations";
 
 export default {
   name: "Shield",
@@ -38,11 +37,10 @@ export default {
     ],
     shield: "",
     handle: "",
-    roomid: "",
   }),
   computed: { ...mapState(["shields"]) },
   methods: {
-    ...mapMutations([ChangeShields.name]),
+    ...mapMutations(["ChangeShields"]),
     add() {
       this.shields.push({
         shield: this.shield,

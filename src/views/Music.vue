@@ -83,11 +83,9 @@
 
 <script>
 import Pack from "../components/Pack.vue";
-import { GetMusic } from "../plugins/axios";
 import { mapMutations, mapState } from "vuex";
 import { clipboard, ipcRenderer } from "electron";
 import { FormatComment } from "../plugins/utils";
-import { ChangeSong, Notify } from "../store/mutations";
 
 export default {
   name: "Music",
@@ -114,17 +112,22 @@ export default {
       return all.filter((v) => v.scope !== "同传");
     },
     lyric() {
-      const { stamp = [] } = this.$store.state.song || {};
+      const { stamp = [] } = this.$store.state.song;
       return stamp;
     },
     languages() {
       const result = ["原文"];
-      if (this.lyric[0] && this.lyric[0].tlyric) result.push("翻译", "双语");
+      result.height = 40;
+      const song = this.$store.state.song;
+      if (song.lyric && song.tlyric) {
+        result.push("翻译", "双语");
+        result.height = 64;
+      }
       return result;
     },
   },
   methods: {
-    ...mapMutations([Notify.name, ChangeSong.name]),
+    ...mapMutations(["Notify", "ChangeSong"]),
     async search() {
       if (this.keyword.length <= 0) {
         this.message = "关键词不可为空";
@@ -133,7 +136,7 @@ export default {
       this.loading = true;
       this.tab = "table";
       this.message = "";
-      const result = await ipcRenderer.invoke(GetMusic.name, this.keyword);
+      const result = await ipcRenderer.invoke("GetMusic", this.keyword);
       this.keyword = "";
       this.musics = result;
       this.loading = false;
@@ -160,10 +163,9 @@ export default {
       this.ChangeSong({ stamp: this.stamp + 1 });
       this.send.stamp = Date.now();
       const target = this.$refs.lyric;
-      const height = target.children[0].clientHeight + 16;
-      this.$vuetify.goTo(this.stamp * height, {
+      this.$vuetify.goTo(this.stamp * this.languages.height, {
         container: target,
-        offset: 128 - height,
+        offset: 128 - this.languages.height,
         easing: "easeInOutCubic",
       });
       if (lyric.length <= 1) {
@@ -185,8 +187,7 @@ export default {
       clearTimeout(this.send.timer);
       const target = this.$refs.lyric;
       const count = Math.floor(
-        (target.scrollTop + target.clientHeight / 2) /
-          (target.children[0].clientHeight + 16)
+        (target.scrollTop + target.clientHeight / 2) / this.languages.height
       );
       this.ChangeSong({ stamp: count - 1 });
       this.send(this.lyric.slice(count));

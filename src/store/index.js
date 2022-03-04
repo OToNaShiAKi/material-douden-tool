@@ -11,6 +11,9 @@ const fixes = JSON.parse(localStorage.getItem("fixes"));
 const rooms = JSON.parse(localStorage.getItem("rooms"));
 const shields = JSON.parse(localStorage.getItem("shields"));
 
+const stamp = [];
+stamp[-1] = { lyric: "", tlyric: "" };
+
 export default new Vuex.Store({
   state: {
     cookie: "",
@@ -29,7 +32,7 @@ export default new Vuex.Store({
     rooms: rooms || [],
     shields: shields || [],
     stamp: -1,
-    song: undefined,
+    song: { stamp, singer: "", name: "" },
   },
   mutations,
 });

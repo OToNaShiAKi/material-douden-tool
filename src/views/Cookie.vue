@@ -16,13 +16,12 @@
 
 <script>
 import Pack from "../components/Pack.vue";
-import { ChangeCookie } from "../store/mutations";
 import { mapMutations } from "vuex";
 
 export default {
   name: "Cookie",
   components: { Pack },
   data: ({ $store: { state } }) => ({ cookie: state.cookie }),
-  methods: { ...mapMutations([ChangeCookie.name]) },
+  methods: { ...mapMutations(["ChangeCookie"]) },
 };
 </script>

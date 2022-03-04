@@ -26,7 +26,6 @@
 <script>
 import { mapMutations, mapState } from "vuex";
 import Pack from "../components/Pack.vue";
-import { ChangeFixes } from "../store/mutations";
 
 export default {
   name: "Bracket",
@@ -45,7 +44,7 @@ export default {
   }),
   computed: { ...mapState(["fixes"]) },
   methods: {
-    ...mapMutations([ChangeFixes.name]),
+    ...mapMutations(["ChangeFixes"]),
     add() {
       this.fixes.push({
         prefix: this.prefix,

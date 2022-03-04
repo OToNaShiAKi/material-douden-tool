@@ -22,7 +22,7 @@
             :error-messages="message"
             class="flex-grow-1"
             append-icon="mdi-arrow-left-bottom"
-            hint="上下键可循环切换已发弹幕 TAB可循环切换前后缀 快捷键立即发送对应快捷用语"
+            hint="上下键可循环切换已发弹幕 TAB可循环切换前后缀"
           />
         </section>
         <v-btn-toggle color="primary" group shaped dense>
@@ -51,7 +51,6 @@
 <script>
 import { FormatComment } from "./plugins/utils";
 import { mapMutations, mapState } from "vuex";
-import { ChangeCookie } from "./store/mutations";
 import { clipboard } from "electron";
 
 export default {
@@ -94,7 +93,7 @@ export default {
     else this.$router.push("/live");
   },
   methods: {
-    ...mapMutations([ChangeCookie.name]),
+    ...mapMutations(["ChangeCookie"]),
     send() {
       this.message = FormatComment(
         this.content,

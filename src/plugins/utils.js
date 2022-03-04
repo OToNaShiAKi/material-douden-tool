@@ -1,4 +1,3 @@
-import { SendComment } from "./axios";
 import { ipcRenderer } from "electron";
 import BrotliDecode from "brotli/decompress";
 
@@ -11,13 +10,13 @@ export const FormatComment = (content, select = [], fix = {}, shield = []) => {
     content = content.replace(new RegExp(item.shield, "gi"), item.handle);
   }
   if (content.length > 20) {
-    ipcRenderer.send(SendComment.name, content.slice(0, 20), select);
+    ipcRenderer.send("SendComment", content.slice(0, 20), select);
     FormatComment(
       content.slice(20, content.length - suffix.length),
       select,
       fix
     );
-  } else ipcRenderer.send(SendComment.name, content, select);
+  } else ipcRenderer.send("SendComment", content, select);
 };
 
 export const Certification = (certify) => {
