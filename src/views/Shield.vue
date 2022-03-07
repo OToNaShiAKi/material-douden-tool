@@ -1,6 +1,6 @@
 <template>
   <section>
-    <Pack>配置项</Pack>
+    <Pack>屏蔽词</Pack>
     <v-data-table :items="shields" :headers="headers">
       <template v-slot:item.actions="{ index }">
         <v-icon small @click="remove" :data-key="index"> mdi-delete </v-icon>

@@ -1,6 +1,6 @@
 <template>
   <section>
-    <Pack>配置快捷用语</Pack>
+    <Pack>快捷用语</Pack>
     <v-data-table :items-per-page="5" :items="shortcuts" :headers="headers">
       <template v-slot:item.actions="{ item }">
         <v-icon small @click="remove" :data-key="item.key">mdi-delete</v-icon>

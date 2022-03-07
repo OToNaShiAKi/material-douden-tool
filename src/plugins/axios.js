@@ -1,5 +1,6 @@
 import axios from "axios";
 import QS from "qs";
+import { BrowserWindow } from "electron";
 
 export const Bilibili = axios.create({
   baseURL: "https://api.live.bilibili.com/",
@@ -13,7 +14,13 @@ export const Bilibili = axios.create({
 });
 
 Bilibili.interceptors.response.use((response) => {
-  if (response.data.code !== 0) throw response.data;
+  if (response.data.code !== 0) {
+    if (!response.config.url.includes("send")) {
+      const [win] = BrowserWindow.getAllWindows();
+      win.webContents.send("CookieOverdue");
+    }
+    throw response.data;
+  }
   return response.data.data;
 });
 
@@ -73,24 +80,30 @@ export const SendComment = async (roomid, msg) => {
       })
     );
   } catch (error) {
-    console.log(error);
+    return error;
   }
 };
 
 export const GetWebSocket = async (roomid) => {
   try {
-    const [socket, { room } = { room: [] }, { badge } = { badge: {} }] =
-      await Promise.all([
-        Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
-          params: { type: 0, id: roomid },
-        }),
-        Bilibili.get("/xlive/web-room/v1/dM/gethistory", {
-          params: { roomid },
-        }),
-        Bilibili.get("/xlive/web-room/v1/index/getInfoByUser", {
-          params: { room_id: roomid },
-        }),
-      ]);
+    const [
+      socket,
+      { room = [] },
+      {
+        badge: { is_room_admin = false },
+        info: { uid = "" },
+      },
+    ] = await Promise.all([
+      Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
+        params: { type: 0, id: roomid },
+      }),
+      Bilibili.get("/xlive/web-room/v1/dM/gethistory", {
+        params: { roomid },
+      }),
+      Bilibili.get("/xlive/web-room/v1/index/getInfoByUser", {
+        params: { room_id: roomid },
+      }),
+    ]);
     return {
       host_list: socket.host_list,
       token: socket.token,
@@ -99,11 +112,12 @@ export const GetWebSocket = async (roomid) => {
         uid,
         nickname,
       })),
-      admin: badge.is_room_admin,
+      admin: is_room_admin,
       roomid,
+      uid,
     };
   } catch (error) {
-    return { roomid };
+    return { host_list: [], comments: [], admin: false, roomid };
   }
 };
 
@@ -115,6 +129,52 @@ export const SilentUser = async (event, tuid, room_id) => {
         room_id,
         tuid,
         mobile_app: "web",
+        csrf: Bilibili.defaults.data.csrf,
+        csrf_token: Bilibili.defaults.data.csrf_token,
+      })
+    );
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+export const GetUserRoomMode = async (room_id) => {
+  try {
+    const [
+      { group, mode },
+      {
+        property: { danmu },
+      },
+    ] = await Promise.all([
+      Bilibili.get("/xlive/web-room/v1/dM/GetDMConfigByGroup", {
+        params: { room_id },
+      }),
+      Bilibili.get("/xlive/web-room/v1/index/getInfoByUser", {
+        params: { room_id },
+      }),
+    ]);
+    return {
+      colors: group,
+      modes: mode,
+      length: danmu.length,
+      color: danmu.color.toString(16),
+      mode: danmu.mode,
+      roomid: room_id,
+    };
+  } catch (error) {
+    return { colors: [], modes: [], roomid: room_id };
+  }
+};
+
+export const SetUserRoomMode = async (event, room_id, color, mode) => {
+  try {
+    await Bilibili.post(
+      "/xlive/web-room/v1/dM/AjaxSetConfig",
+      QS.stringify({
+        room_id,
+        color,
+        mode,
         csrf: Bilibili.defaults.data.csrf,
         csrf_token: Bilibili.defaults.data.csrf_token,
       })

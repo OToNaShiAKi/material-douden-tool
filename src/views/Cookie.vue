@@ -9,7 +9,8 @@
       :spellcheck="false"
       clearable
       class="rounded-tl-xl rounded-br-xl"
-      @input="ChangeCookie"
+      @input="change"
+      :error-messages="message"
     />
   </section>
 </template>
@@ -21,7 +22,12 @@ import { mapMutations } from "vuex";
 export default {
   name: "Cookie",
   components: { Pack },
-  data: ({ $store: { state } }) => ({ cookie: state.cookie }),
-  methods: { ...mapMutations(["ChangeCookie"]) },
+  data: ({ $store: { state } }) => ({ cookie: state.cookie, message: "" }),
+  methods: {
+    ...mapMutations(["ChangeCookie"]),
+    change(input) {
+      this.message = this.ChangeCookie(input);
+    },
+  },
 };
 </script>

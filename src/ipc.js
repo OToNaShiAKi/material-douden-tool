@@ -6,6 +6,8 @@ import {
   GetMusic,
   SilentUser,
   Translate,
+  GetUserRoomMode,
+  SetUserRoomMode,
 } from "./plugins/axios";
 import { e } from "./plugins/utils";
 
@@ -49,12 +51,13 @@ ipcMain.handle("GetWebSocket", async (event, roomids) => {
 });
 
 ipcMain.handle("GetMusic", async (event, keyword) => {
+  const match = /\[(\d{1,2}):([0-9\.]{1,6})\](.*)\n?/g;
   const result = (await GetMusic(keyword)).filter(
-    ({ lyric }) => lyric && /\[\d{2}:[0-9\.]{6}\]/.test(lyric)
+    ({ lyric }) => lyric && match.test(lyric)
   );
   for (const item of result) {
     const lyric = [];
-    item.lyric.replace(/\[(\d{2}):([0-9\.]{6})\](.*)\n?/g, (l, m, s, c) => {
+    item.lyric.replace(match, (l, m, s, c) => {
       if (c && (!/:|：/.test(c) || lyric.length > 0)) {
         const t = item.tlyric.match(new RegExp(`\\[${m}:${s}\\](.*)\n?`));
         lyric.push({
@@ -66,12 +69,31 @@ ipcMain.handle("GetMusic", async (event, keyword) => {
       return "";
     });
     item.stamp = lyric;
-    item.language = /\[\d{2}:[0-9\.]{6}\]/.test(item.tlyric) ? "双语" : "单语";
+    item.language = match.test(item.tlyric) ? "双语" : "单语";
   }
   return result;
 });
 
 ipcMain.handle("SilentUser", SilentUser);
+
+ipcMain.handle("GetUserRoomMode", async (event, roomid) => {
+  const result = await GetUserRoomMode(roomid);
+  let colors = [];
+  result.modes = result.modes
+    .filter(({ status }) => status)
+    .map(({ name, mode }) => ({ text: name, value: mode }));
+  for (const { color } of result.colors) {
+    colors = colors.concat(
+      color
+        .filter(({ status }) => status)
+        .map(({ color_hex, name }) => ({ text: name, value: color_hex }))
+    );
+  }
+  result.colors = colors;
+  return result;
+});
+
+ipcMain.handle("SetUserRoomMode", SetUserRoomMode);
 
 ipcMain.on("WindowSize", (event, height) => {
   const win = BrowserWindow.getAllWindows()[0];

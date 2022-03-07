@@ -28,7 +28,7 @@ const routes = [
     path: "/room",
     name: "Room",
     component: Room,
-    meta: { height: 420 },
+    meta: { height: 660 },
     beforeEnter,
   },
   {

@@ -40,10 +40,42 @@
         添加
       </v-btn>
     </section>
+    <v-subheader>弹幕颜色、模式</v-subheader>
+    <section class="d-flex align-center">
+      <v-select
+        class="mr-3"
+        :messages="message"
+        :items="rooms"
+        v-model="id"
+        label="房间"
+      />
+      <v-select
+        class="mr-3"
+        :items="modes[id].colors"
+        v-model="modes[id].color"
+        label="颜色"
+      />
+      <v-select
+        class="mr-3"
+        :items="modes[id].modes"
+        v-model="modes[id].mode"
+        label="模式"
+      />
+      <v-btn
+        :disabled="!(id && modes[id].color && modes[id].mode)"
+        outlined
+        small
+        color="primary"
+        @click="choose"
+      >
+        提交
+      </v-btn>
+    </section>
   </section>
 </template>
 
 <script>
+import { ipcRenderer } from "electron";
 import { mapMutations, mapState } from "vuex";
 import Pack from "../components/Pack.vue";
 
@@ -54,6 +86,9 @@ export default {
     multiple: state.select.length > 1,
     roomid: "",
     name: "",
+    id: "",
+    modes: { "": { colors: [], modes: [] } },
+    message: "房间配置正在请求",
   }),
   computed: {
     ...mapState(["rooms"]),
@@ -62,20 +97,41 @@ export default {
       return this.multiple ? select : select[0];
     },
   },
+  async created() {
+    const modes = await Promise.all(
+      this.rooms.map(({ value }) =>
+        ipcRenderer.invoke("GetUserRoomMode", value)
+      )
+    );
+    for (const item of modes) this.modes[item.roomid] = item;
+    this.message = "";
+  },
   methods: {
-    ...mapMutations(["ChangeSelect", "ChangeRooms"]),
-    add() {
+    ...mapMutations(["ChangeSelect", "ChangeRooms", "Notify"]),
+    async add() {
       this.rooms.push({ value: this.roomid, text: this.name });
       this.ChangeSelect(
         this.multiple ? [...this.select, this.roomid] : [this.roomid]
       );
+      this.ChangeRooms(this.rooms);
+      const result = await ipcRenderer.invoke("GetUserRoomMode", this.roomid);
       this.roomid = "";
       this.name = "";
-      this.ChangeRooms(this.rooms);
+      this.modes[result.roomid] = result;
     },
     remove(index) {
       this.rooms.splice(index, 1);
       this.ChangeRooms(this.rooms);
+    },
+    async choose() {
+      const { mode, color } = this.modes[this.id];
+      const result = await ipcRenderer.invoke(
+        "SetUserRoomMode",
+        this.id,
+        "0x" + color,
+        mode
+      );
+      this.Notify(`房间${this.id}设置${result ? "成功" : "失败"}`);
     },
   },
 };

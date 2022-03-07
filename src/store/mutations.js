@@ -7,8 +7,10 @@ const ChangeCookie = (state, cookie) => {
     const bili_jct = cookie.match(/bili_jct=([^;]+);/);
     if (bili_jct) {
       ipcRenderer.send("ChangeCookie", cookie, bili_jct[1]);
+      return "";
     }
   }
+  return "当前Cookie不合法";
 };
 
 const ChangeSelect = (state, select = []) => {
@@ -50,8 +52,8 @@ const ChangeSong = (state, { stamp = -1, song = state.song }) => {
   state.stamp = stamp;
 };
 
-const Notify = (state, text) => {
-  state.snackbar = text;
+const Notify = (state, text = "") => {
+  state.snackbar = { value: true, text };
 };
 
 export default {

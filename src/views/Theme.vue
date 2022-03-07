@@ -1,6 +1,6 @@
 <template>
   <section>
-    <Pack>切换主题色</Pack>
+    <Pack>主题色</Pack>
     <v-radio-group row v-model="theme" @change="change">
       <v-radio
         v-for="item in themes"

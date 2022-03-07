@@ -28,7 +28,7 @@ export default new Vuex.Store({
       { prefix: "【♪", suffix: "】", text: "【♪ 】", scope: "歌曲" },
     ],
     shortcuts: shortcuts || [],
-    snackbar: "",
+    snackbar: { value: false, text: "" },
     rooms: rooms || [],
     shields: shields || [],
     stamp: -1,

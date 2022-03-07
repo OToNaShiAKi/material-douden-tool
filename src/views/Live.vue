@@ -16,7 +16,7 @@
         class="caption d-flex align-baseline"
       >
         <v-chip
-          v-if="sockets[show] && sockets[show].admin"
+          v-if="sockets[show] && sockets[show].admin && v.uid !== uid"
           x-small
           outlined
           :data-uid="v.uid"
@@ -55,6 +55,7 @@ export default {
     comments: {},
     show: state.select[0],
     translate: true,
+    uid: "",
   }),
   methods: {
     ...mapMutations(["Notify"]),
@@ -97,6 +98,7 @@ export default {
           } else sockets.splice(index, 1);
         }
         const result = await ipcRenderer.invoke("GetWebSocket", sockets);
+        this.uid = result[0].uid;
         for (const item of result) {
           const first = item.host_list.pop();
           const socket = new Socket(

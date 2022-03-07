@@ -35,14 +35,14 @@
         </keep-alive>
       </v-container>
       <v-snackbar
-        :value="snackbar"
+        v-model="snackbar.value"
         color="primary"
         app
         shaped
         outlined
-        :timeout="750"
+        :timeout="1000"
       >
-        {{ snackbar }}
+        {{ snackbar.text }}
       </v-snackbar>
     </v-main>
   </v-app>
@@ -51,7 +51,7 @@
 <script>
 import { FormatComment } from "./plugins/utils";
 import { mapMutations, mapState } from "vuex";
-import { clipboard } from "electron";
+import { clipboard, ipcRenderer } from "electron";
 
 export default {
   name: "App",
@@ -88,12 +88,17 @@ export default {
   created() {
     const cookie = localStorage.getItem("cookie");
     this.ChangeCookie(cookie);
+    ipcRenderer.on("CookieOverdue", () => {
+      this.$router.push("/cookie");
+      this.ChangeCookie("");
+      this.Notify("当前Cookie已过期");
+    });
     if (!cookie) this.$router.push("/cookie");
     else if (this.select.length <= 0) this.$router.push("/room");
     else this.$router.push("/live");
   },
   methods: {
-    ...mapMutations(["ChangeCookie"]),
+    ...mapMutations(["ChangeCookie", "Notify"]),
     send() {
       this.message = FormatComment(
         this.content,
