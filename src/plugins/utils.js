@@ -9,14 +9,14 @@ export const FormatComment = (content, select = [], fix = {}, shield = []) => {
   for (const item of shield) {
     content = content.replace(new RegExp(item.shield, "gi"), item.handle);
   }
+  ipcRenderer.send("SendComment", content.slice(0, 20), select);
   if (content.length > 20) {
-    ipcRenderer.send("SendComment", content.slice(0, 20), select);
     FormatComment(
       content.slice(20, content.length - suffix.length),
       select,
       fix
     );
-  } else ipcRenderer.send("SendComment", content, select);
+  }
 };
 
 export const Certification = (certify) => {

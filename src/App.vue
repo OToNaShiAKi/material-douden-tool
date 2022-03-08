@@ -108,7 +108,7 @@ export default {
         this.shields
       );
       this.record.push(this.content);
-      this.record.index = this.record.length - 1;
+      this.record.index = this.record.length;
       this.content = "";
     },
     changefix() {
@@ -118,13 +118,11 @@ export default {
     },
     history(event) {
       if (event.keyCode === 40) {
-        this.record.index += 1;
-        if (this.record.index >= this.record.length) this.record.index = 0;
+        this.record.index += this.record.index >= this.record.length ? 0 : 1;
       } else if (event.keyCode === 38) {
-        this.record.index -= 1;
-        if (this.record.index < 0) this.record.index = this.record.length - 1;
+        this.record.index -= this.record.index <= 0 ? 0 : 1;
       }
-      this.content = this.record[this.record.index];
+      this.content = this.record[this.record.index] || "";
     },
     phrase(event) {
       let key = "";
@@ -135,7 +133,6 @@ export default {
       let phrase = this.shortcuts[key];
       if (phrase) {
         const lyric = this.song.stamp[this.stamp];
-        console.log(lyric);
         phrase = phrase
           .replace(/\{c\}/gi, this.content)
           .replace(/\{v\}/gi, clipboard.readText())

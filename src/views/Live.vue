@@ -98,7 +98,7 @@ export default {
           } else sockets.splice(index, 1);
         }
         const result = await ipcRenderer.invoke("GetWebSocket", sockets);
-        this.uid = result[0].uid;
+        this.uid = result[0] ? result[0].uid : "";
         for (const item of result) {
           const first = item.host_list.pop();
           const socket = new Socket(
