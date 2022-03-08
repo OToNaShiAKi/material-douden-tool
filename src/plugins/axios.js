@@ -14,14 +14,18 @@ export const Bilibili = axios.create({
 });
 
 Bilibili.interceptors.response.use((response) => {
-  if (response.data.code !== 0) {
-    if (!response.config.url.includes("send")) {
+  const {
+    data,
+    config: { url },
+  } = response;
+  if (data.code !== 0 && data.code !== 1200000) {
+    if (!url.includes("send")) {
       const [win] = BrowserWindow.getAllWindows();
       win.webContents.send("CookieOverdue");
     }
-    throw response.data;
+    throw data;
   }
-  return response.data.data;
+  return data.data;
 });
 
 const Music163 = axios.create({
@@ -177,6 +181,42 @@ export const SetUserRoomMode = async (event, room_id, color, mode) => {
         mode,
         csrf: Bilibili.defaults.data.csrf,
         csrf_token: Bilibili.defaults.data.csrf_token,
+      })
+    );
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+export const GetSilentUser = async (room_id) => {
+  try {
+    const result = await Bilibili.post(
+      "/xlive/web-ucenter/v1/banned/GetSilentUserList",
+      QS.stringify({
+        room_id,
+        ps: 1,
+        visit_id: "",
+        csrf: Bilibili.defaults.data.csrf,
+        csrf_token: Bilibili.defaults.data.csrf_token,
+      })
+    );
+    return result.data;
+  } catch (error) {
+    return [];
+  }
+};
+
+export const RemoveSilentUser = async (event, id, roomid) => {
+  try {
+    await Bilibili.post(
+      "/banned_service/v1/Silent/del_room_block_user",
+      QS.stringify({
+        roomid,
+        id,
+        csrf: Bilibili.defaults.data.csrf,
+        csrf_token: Bilibili.defaults.data.csrf_token,
+        visit_id: "",
       })
     );
     return true;

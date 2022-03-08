@@ -7,10 +7,8 @@ const ChangeCookie = (state, cookie) => {
     const bili_jct = cookie.match(/bili_jct=([^;]+);/);
     if (bili_jct) {
       ipcRenderer.send("ChangeCookie", cookie, bili_jct[1]);
-      return "";
     }
   }
-  return "当前Cookie不合法";
 };
 
 const ChangeSelect = (state, select = []) => {
@@ -48,7 +46,7 @@ const ChangeShortcuts = (state, { key, value }) => {
 
 const ChangeSong = (state, { stamp = -1, song = state.song }) => {
   state.song = song;
-  song[-1] = { lryic: "", tlyric: "" };
+  song.stamp[-1] = { lyric: "", tlyric: "" };
   state.stamp = stamp;
 };
 

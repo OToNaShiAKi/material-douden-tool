@@ -23,7 +23,7 @@ export default new Vuex.Store({
       ? select.split(",")
       : [],
     fixes: fixes || [
-      { prefix: " ", suffix: " ", text: "   ", scope: "同传" },
+      { prefix: " ", suffix: " ", text: "   ", scope: "全部" },
       { prefix: "【", suffix: "】", text: "【 】", scope: "同传" },
       { prefix: "【♪", suffix: "】", text: "【♪ 】", scope: "歌曲" },
     ],

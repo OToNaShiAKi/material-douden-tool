@@ -8,6 +8,8 @@ import {
   Translate,
   GetUserRoomMode,
   SetUserRoomMode,
+  GetSilentUser,
+  RemoveSilentUser,
 } from "./plugins/axios";
 import { e } from "./plugins/utils";
 
@@ -94,6 +96,24 @@ ipcMain.handle("GetUserRoomMode", async (event, roomid) => {
 });
 
 ipcMain.handle("SetUserRoomMode", SetUserRoomMode);
+
+ipcMain.handle("GetSilentUser", async (event, roomids) => {
+  const result = await Promise.all(roomids.map((v) => GetSilentUser(v.value)));
+  let slients = [];
+  for (let i = 0; i < result.length; i++) {
+    slients = slients.concat(
+      result[i].map(({ tname, tuid, id }) => ({
+        tname,
+        tuid,
+        id,
+        ...roomids[i],
+      }))
+    );
+  }
+  return slients;
+});
+
+ipcMain.handle("RemoveSilentUser", RemoveSilentUser);
 
 ipcMain.on("WindowSize", (event, height) => {
   const win = BrowserWindow.getAllWindows()[0];

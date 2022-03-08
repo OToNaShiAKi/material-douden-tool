@@ -64,8 +64,9 @@ export default {
       { icon: "mdi-music", to: "music" },
       { icon: "mdi-flash", to: "shortcut" },
       { icon: "mdi-code-brackets", to: "bracket" },
-      { icon: "mdi-account", to: "cookie" },
-      { icon: "mdi-shield-off", to: "shield" },
+      { icon: "mdi-cookie", to: "cookie" },
+      { icon: "mdi-shield-remove", to: "shield" },
+      { icon: "mdi-account-cancel", to: "silent" },
       { icon: "mdi-palette", to: "theme" },
     ],
     message: "",
@@ -134,6 +135,7 @@ export default {
       let phrase = this.shortcuts[key];
       if (phrase) {
         const lyric = this.song.stamp[this.stamp];
+        console.log(lyric);
         phrase = phrase
           .replace(/\{c\}/gi, this.content)
           .replace(/\{v\}/gi, clipboard.readText())
