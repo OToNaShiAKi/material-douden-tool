@@ -4,6 +4,7 @@ module.exports = {
     electronBuilder: {
       nodeIntegration: true,
       builderOptions: {
+        publish: ["github"],
         productName: "Material DouDen Tool",
         win: {
           icon: "./public/favicon.png",
@@ -18,5 +19,9 @@ module.exports = {
         },
       },
     },
+  },
+  pages: {
+    index: "./src/pages/main/main.js",
+    other: "./src/pages/other/main.js",
   },
 };

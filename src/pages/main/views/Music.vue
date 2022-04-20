@@ -82,10 +82,10 @@
 </template>
 
 <script>
-import Pack from "../components/Pack.vue";
+import Pack from "../../../components/Pack.vue";
 import { mapMutations, mapState } from "vuex";
 import { clipboard, ipcRenderer } from "electron";
-import { FormatComment } from "../plugins/utils";
+import { FormatComment } from "../../../plugins/utils";
 
 export default {
   name: "Music",

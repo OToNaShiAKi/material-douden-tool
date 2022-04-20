@@ -36,8 +36,8 @@
 <script>
 import { clipboard, ipcRenderer } from "electron";
 import { mapMutations, mapState } from "vuex";
-import Socket from "../plugins/socket";
-import Pack from "../components/Pack.vue";
+import Socket from "../../../plugins/socket";
+import Pack from "../../../components/Pack.vue";
 
 export default {
   components: { Pack },

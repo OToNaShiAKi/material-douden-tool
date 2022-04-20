@@ -25,11 +25,16 @@
             hint="上下键可循环切换已发弹幕 TAB可循环切换前后缀"
           />
         </section>
-        <v-btn-toggle color="primary" group shaped dense>
-          <v-btn v-for="v of pages" :key="v.icon" icon :to="v.to">
-            <v-icon>{{ v.icon }}</v-icon>
+        <section class="d-flex justify-space-between align-center">
+          <v-btn-toggle color="primary" group shaped dense>
+            <v-btn v-for="v of pages" :key="v.icon" icon :to="v.to">
+              <v-icon>{{ v.icon }}</v-icon>
+            </v-btn>
+          </v-btn-toggle>
+          <v-btn icon @click="open">
+            <v-icon>mdi-seed</v-icon>
           </v-btn>
-        </v-btn-toggle>
+        </section>
         <keep-alive>
           <router-view id="router" />
         </keep-alive>
@@ -49,7 +54,7 @@
 </template>
 
 <script>
-import { FormatComment } from "./plugins/utils";
+import { FormatComment } from "../../plugins/utils";
 import { mapMutations, mapState } from "vuex";
 import { clipboard, ipcRenderer } from "electron";
 
@@ -141,6 +146,9 @@ export default {
           .replace(/\{l\}/gi, lyric.tlyric || lyric.lyric);
         FormatComment(phrase, this.select, this.fix, this.shields);
       }
+    },
+    open() {
+      ipcRenderer.send("OtherWindow", "other");
     },
   },
 };

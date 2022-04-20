@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import Pack from "../components/Pack.vue";
+import Pack from "../../../components/Pack.vue";
 
 export default {
   name: "Theme",

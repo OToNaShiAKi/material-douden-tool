@@ -12,6 +12,9 @@ import {
   RemoveSilentUser,
 } from "./plugins/axios";
 import { e } from "./plugins/utils";
+import { writeFile, mkdir, stat } from "fs/promises";
+import createWindow from "./background";
+import { join } from "path";
 
 const Stacks = { RoomIds: [], timer: null };
 
@@ -116,7 +119,8 @@ ipcMain.handle("GetSilentUser", async (event, roomids) => {
 ipcMain.handle("RemoveSilentUser", RemoveSilentUser);
 
 ipcMain.on("WindowSize", (event, height) => {
-  const win = BrowserWindow.getAllWindows()[0];
+  const wins = BrowserWindow.getAllWindows();
+  const win = wins[wins.length - 1];
   const [width] = win.getSize();
   win.setSize(width, height, true);
 });
@@ -125,4 +129,17 @@ ipcMain.handle("CutWord", async (event, phrase) => {
   const sign = e(phrase);
   const text = await Translate(phrase, sign);
   return text;
+});
+
+ipcMain.on("OtherWindow", (event, page) => {
+  const wins = BrowserWindow.getAllWindows();
+  if (wins.length < 2)
+    createWindow(page, { width: 1500, height: 1080, alwaysOnTop: false });
+});
+
+ipcMain.on("SaveImage", async (event, Base64) => {
+  const time = Date.now();
+  const folder = join(__dirname, "./images");
+  await mkdir(folder, { recursive: true });
+  await writeFile(join(folder, `${time}.png`), Base64, { encoding: "base64" });
 });

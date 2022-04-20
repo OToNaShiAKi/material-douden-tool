@@ -36,7 +36,7 @@
 
 <script>
 import { mapMutations } from "vuex";
-import Pack from "../components/Pack.vue";
+import Pack from "../../../components/Pack.vue";
 
 export default {
   components: { Pack },

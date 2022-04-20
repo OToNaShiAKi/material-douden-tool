@@ -24,7 +24,7 @@
 <script>
 import { ipcRenderer } from "electron";
 import { mapState } from "vuex";
-import Pack from "../components/Pack.vue";
+import Pack from "../../../components/Pack.vue";
 
 export default {
   name: "Silent",
