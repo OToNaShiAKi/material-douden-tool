@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow } from "electron";
+import { ipcMain, BrowserWindow, dialog } from "electron";
 import {
   SendComment,
   Bilibili,
@@ -12,7 +12,7 @@ import {
   RemoveSilentUser,
 } from "./plugins/axios";
 import { e } from "./plugins/utils";
-import { writeFile, mkdir, stat } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import createWindow from "./background";
 import { join } from "path";
 
@@ -134,12 +134,23 @@ ipcMain.handle("CutWord", async (event, phrase) => {
 ipcMain.on("OtherWindow", (event, page) => {
   const wins = BrowserWindow.getAllWindows();
   if (wins.length < 2)
-    createWindow(page, { width: 1500, height: 1080, alwaysOnTop: false });
+    createWindow(page, {
+      width: 1920,
+      height: 1080,
+      x: 0,
+      y: 0,
+      alwaysOnTop: false,
+    });
 });
 
 ipcMain.on("SaveImage", async (event, Base64) => {
   const time = Date.now();
-  const folder = join(__dirname, "./images");
-  await mkdir(folder, { recursive: true });
-  await writeFile(join(folder, `${time}.png`), Base64, { encoding: "base64" });
+  const { filePath } = await dialog.showSaveDialog({
+    defaultPath: `${time}.png`,
+    filters: [{ name: "Images", extensions: ["jpg", "png", "gif"] }],
+  });
+  if (filePath)
+    await writeFile(filePath, Base64, {
+      encoding: "base64",
+    });
 });
