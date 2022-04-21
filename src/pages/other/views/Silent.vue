@@ -1,6 +1,5 @@
 <template>
-  <section>
-    <Pack>禁言用户</Pack>
+  <v-container>
     <v-data-table :loading="loading" :items="silents" :headers="headers">
       <template v-slot:item.actions="{ index }">
         <v-icon small @click="remove" :data-key="index">mdi-delete</v-icon>
@@ -18,17 +17,14 @@
     >
       <v-icon>mdi-refresh</v-icon>
     </v-btn>
-  </section>
+  </v-container>
 </template>
 
 <script>
 import { ipcRenderer } from "electron";
-import { mapState } from "vuex";
-import Pack from "../../../components/Pack.vue";
 
 export default {
   name: "Silent",
-  components: { Pack },
   data: () => ({
     silents: [],
     headers: [
@@ -41,7 +37,6 @@ export default {
   created() {
     this.query();
   },
-  computed: { ...mapState(["rooms"]) },
   methods: {
     async remove({ target: { dataset } }) {
       const { value, id } = this.silents[dataset.key];
@@ -50,7 +45,8 @@ export default {
     },
     async query() {
       this.loading = true;
-      const result = await ipcRenderer.invoke("GetSilentUser", this.rooms);
+      const rooms = JSON.parse(localStorage.getItem("rooms"));
+      const result = await ipcRenderer.invoke("GetSilentUser", rooms);
       this.silents = result;
       this.loading = false;
     },

@@ -9,7 +9,7 @@
         :items="fixes"
       />
       <v-text-field
-        v-model="keyword"
+        v-model.trim="keyword"
         prepend-inner-icon="mdi-magnify"
         append-icon="mdi-arrow-left-bottom"
         @keypress.enter="search"
@@ -31,7 +31,7 @@
       </v-tab-item>
       <v-tab-item value="lyric">
         <section class="d-flex justify-center align-center">
-          <v-btn text small @click="copy">复制此句</v-btn>
+          <v-btn text small @click="reset">重置播放</v-btn>
           <v-btn text small @click="track">-0.5s</v-btn>
           <v-btn
             fab
@@ -84,7 +84,7 @@
 <script>
 import Pack from "../../../components/Pack.vue";
 import { mapMutations, mapState } from "vuex";
-import { clipboard, ipcRenderer } from "electron";
+import { ipcRenderer } from "electron";
 import { FormatComment } from "../../../plugins/utils";
 
 export default {
@@ -207,13 +207,15 @@ export default {
         }, time);
       }
     },
-    copy() {
-      if (this.stamp >= 0 && this.stamp < this.lyric.length) {
-        let item = this.lyric[this.stamp];
-        item = item.tlyric || item.lyric;
-        clipboard.writeText(item);
-        this.Notify("已复制：" + item);
-      } else this.Notify("尚未播放");
+    reset() {
+      clearTimeout(this.send.timer);
+      this.send.timer = null;
+      this.$vuetify.goTo(0, {
+        container: this.$refs.lyric,
+        easing: "easeInOutCubic",
+      });
+      this.ChangeSong({ stamp: -1 });
+      this.active = false;
     },
   },
 };

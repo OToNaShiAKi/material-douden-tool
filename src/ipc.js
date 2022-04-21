@@ -1,7 +1,6 @@
-import { ipcMain, BrowserWindow, dialog } from "electron";
+import { ipcMain, BrowserWindow, dialog, screen } from "electron";
 import {
   SendComment,
-  Bilibili,
   GetWebSocket,
   GetMusic,
   SilentUser,
@@ -10,11 +9,12 @@ import {
   SetUserRoomMode,
   GetSilentUser,
   RemoveSilentUser,
+  GetDynamic,
 } from "./plugins/axios";
 import { e } from "./plugins/utils";
-import { writeFile, mkdir } from "fs/promises";
+import { Bilibili, API } from "./plugins/config";
+import { writeFile } from "fs/promises";
 import createWindow from "./background";
-import { join } from "path";
 
 const Stacks = { RoomIds: [], timer: null };
 
@@ -35,6 +35,7 @@ ipcMain.on("SendComment", (event, msg, roomids) => {
 
 ipcMain.on("ChangeCookie", (event, cookie, csrf) => {
   Bilibili.defaults.headers["Cookie"] = cookie;
+  API.defaults.headers["Cookie"] = cookie;
   Bilibili.defaults.data = {
     csrf,
     csrf_token: csrf,
@@ -133,10 +134,11 @@ ipcMain.handle("CutWord", async (event, phrase) => {
 
 ipcMain.on("OtherWindow", (event, page) => {
   const wins = BrowserWindow.getAllWindows();
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   if (wins.length < 2)
     createWindow(page, {
-      width: 1920,
-      height: 1080,
+      width,
+      height,
       x: 0,
       y: 0,
       alwaysOnTop: false,
@@ -153,4 +155,20 @@ ipcMain.on("SaveImage", async (event, Base64) => {
     await writeFile(filePath, Base64, {
       encoding: "base64",
     });
+});
+
+ipcMain.handle("GetDynamic", async (event, ids) => {
+  ids = ids.map(async (v) => {
+    let dynamic = [];
+    let index = 0;
+    do {
+      const replies = await GetDynamic(v, index);
+      if (replies.length <= 0 || !replies) break;
+      dynamic = dynamic.concat(replies);
+      index = replies.next;
+    } while (true);
+    return dynamic;
+  });
+  const result = await Promise.all(ids);
+  return result.flat(1);
 });

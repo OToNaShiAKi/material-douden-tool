@@ -50,8 +50,9 @@ export default {
       this.handle = "";
       this.ChangeShields(this.shields);
     },
-    remove(index) {
-      this.shields.splice(index, 1);
+    remove({ target: { dataset } }) {
+      const { key } = dataset;
+      this.shields.splice(key, 1);
       this.ChangeShields(this.shields);
     },
   },

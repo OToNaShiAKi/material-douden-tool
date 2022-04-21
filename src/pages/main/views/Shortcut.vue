@@ -14,7 +14,7 @@
         class="select-width mr-3"
       />
       <v-text-field
-        v-model="phrase"
+        v-model.trim="phrase"
         @keyup.enter="add"
         label="快捷用语"
         append-icon="mdi-arrow-left-bottom"

@@ -27,7 +27,11 @@
 export default {
   name: "App",
   data: () => ({
-    items: [{ title: "棉花糖", icon: "mdi-candy", to: "/" }],
+    items: [
+      { title: "棉花糖", icon: "mdi-candy", to: "/" },
+      { title: "禁言用户", icon: "mdi-account-cancel", to: "silent" },
+      // { title: "动画鉴赏", icon: "mdi-microsoft-excel", to: "anime" },
+    ],
   }),
 };
 </script>

@@ -10,7 +10,7 @@
             class="mr-3 select-width"
           />
           <v-text-field
-            v-model="content"
+            v-model.trim="content"
             @keyup.enter="send"
             @click:append="send"
             @keyup.down="history"
@@ -71,7 +71,6 @@ export default {
       { icon: "mdi-code-brackets", to: "bracket" },
       { icon: "mdi-cookie", to: "cookie" },
       { icon: "mdi-shield-remove", to: "shield" },
-      { icon: "mdi-account-cancel", to: "silent" },
       { icon: "mdi-palette", to: "theme" },
     ],
     message: "",

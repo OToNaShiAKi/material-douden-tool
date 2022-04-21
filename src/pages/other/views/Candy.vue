@@ -16,11 +16,24 @@
         <Card id="dom-to-image-cn">棉花糖</Card>
       </section>
     </section>
-    <v-item-group class="my-3">
-      <v-btn outlined color="primary" @click="merge('cn')">导出中文</v-btn>
-      <v-btn outlined color="primary" @click="merge('jp')">导出日语</v-btn>
-      <v-btn outlined color="primary" @click="merge('merge')">合并导出</v-btn>
-    </v-item-group>
+    <section class="my-3">
+      <v-btn outlined color="primary" small @click="merge" data-type="cn">
+        导出中文
+      </v-btn>
+      <v-btn
+        small
+        outlined
+        color="primary"
+        class="mx-3"
+        @click="merge"
+        data-type="jp"
+      >
+        导出日语
+      </v-btn>
+      <v-btn outlined small color="primary" @click="merge" data-type="merge">
+        合并导出
+      </v-btn>
+    </section>
   </v-container>
 </template>
 
@@ -45,16 +58,11 @@ export default {
     items: [{ title: "棉花糖", icon: "mdi-candy", to: "/" }],
   }),
   methods: {
-    merge(type) {
+    merge({ target }) {
+      const type = target.dataset.type || target.parentElement.dataset.type;
       const Dom = document.getElementById(`dom-to-image-${type}`);
       ExportImage(Dom);
     },
   },
 };
 </script>
-
-<style>
-*::-webkit-scrollbar {
-  width: 0;
-}
-</style>

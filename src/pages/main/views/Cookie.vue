@@ -1,6 +1,6 @@
 <template>
   <section>
-    <Pack>设置Cookie</Pack>
+    <Pack>登录Bilibili</Pack>
     <v-textarea
       v-model="cookie"
       label="Bilibili Cookie"

@@ -1,5 +1,6 @@
 import { ipcRenderer } from "electron";
 import BrotliDecode from "brotli/decompress";
+import * as XLSX from "xlsx";
 
 export const FormatComment = (content, select = [], fix = {}, shield = []) => {
   if (content.length <= 0 || select.length <= 0)
@@ -192,4 +193,12 @@ export const e = (r) => {
     (p %= 1e6),
     p.toString() + "." + (p ^ m)
   );
+};
+
+export const ExportExcel = (body, header, name) => {
+  name += ".xlsx";
+  const sheet = XLSX.utils.json_to_sheet(body, { header });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, sheet, name);
+  XLSX.writeFile(workbook, name);
 };

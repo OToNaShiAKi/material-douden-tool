@@ -1,73 +1,5 @@
-import axios from "axios";
 import QS from "qs";
-import { BrowserWindow } from "electron";
-
-export const Bilibili = axios.create({
-  baseURL: "https://api.live.bilibili.com/",
-  widthCredentials: true,
-  headers: {
-    origin: "https://live.bilibili.com",
-    referer: "https://live.bilibili.com",
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
-  },
-});
-
-Bilibili.interceptors.response.use((response) => {
-  const {
-    data,
-    config: { url },
-  } = response;
-  if (data.code !== 0 && data.code !== 1200000) {
-    if (!url.includes("send")) {
-      const [win] = BrowserWindow.getAllWindows();
-      win.webContents.send("CookieOverdue");
-    }
-    throw data;
-  }
-  return data.data;
-});
-
-const Music163 = axios.create({
-  baseURL: "https://music.163.com/api/",
-  widthCredentials: true,
-  headers: {
-    origin: "https://music.163.com",
-    referer: "https://music.163.com",
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
-  },
-});
-
-Music163.interceptors.response.use((response) => response.data);
-
-const MusicQQ = axios.create({
-  baseURL: "https://c.y.qq.com/",
-  widthCredentials: true,
-  headers: {
-    origin: "https://y.qq.com",
-    referer: "https://y.qq.com/portal/player.html",
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
-  },
-});
-
-MusicQQ.interceptors.response.use((response) => response.data);
-
-const Baidu = axios.create({
-  baseURL: "https://fanyi.baidu.com/",
-  widthCredentials: true,
-  headers: {
-    Cookie:
-      "BAIDUID=7B8DB65FA1970FCBD48FE3DF075AEEA4:FG=1; Hm_lvt_64ecd82404c51e03dc91cb9e8c025574=1646374963; Hm_lpvt_64ecd82404c51e03dc91cb9e8c025574=1646374963; REALTIME_TRANS_SWITCH=1; FANYI_WORD_SWITCH=1; HISTORY_SWITCH=1; SOUND_SPD_SWITCH=1; SOUND_PREFER_SWITCH=1; APPGUIDE_10_0_2=1",
-    origin: "https://fanyi.baidu.com/",
-    referer: "https://fanyi.baidu.com/",
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
-  },
-});
-
-Baidu.interceptors.response.use((response) => response.data);
+import { Bilibili, Music163, MusicQQ, Baidu, API } from "./config";
 
 export const SendComment = async (roomid, msg) => {
   try {
@@ -298,5 +230,59 @@ export const Translate = async (query, sign) => {
     return "";
   } catch (error) {
     return "";
+  }
+};
+
+export const GetDynamic = async (id, next = 0) => {
+  try {
+    const {
+      item: {
+        basic: { comment_id_str, comment_type },
+      },
+    } = await API.get("/x/polymer/web-dynamic/v1/detail", {
+      params: { id },
+    });
+    const { cursor, replies } = await API.get("/x/v2/reply/main", {
+      params: {
+        next,
+        type: comment_type,
+        plat: 1,
+        mode: 3,
+        oid: comment_id_str,
+      },
+    });
+    if (!replies) return [];
+    const result = [];
+    result.next = cursor.next;
+    for (let i = 0; i < replies.length; i++) {
+      const {
+        member: { uname },
+        ctime,
+        reply_control: { time_desc },
+        content: { jump_url },
+      } = replies[i];
+      if (Object.keys(jump_url).length <= 0) continue;
+      for (const key in jump_url) {
+        let duration = null;
+        if (/BV.*/.test(key)) {
+          const detail = await API.get("/x/player/pagelist", {
+            params: { bvid: key.match(/BV.*/)[0] },
+          });
+          duration = detail ? detail[0].duration : null;
+        }
+        result.push({
+          title: jump_url[key].title,
+          bvid: /^http/i.test(key) ? key : "https://b23.tv/" + key,
+          uname,
+          ctime,
+          time_desc,
+          duration,
+        });
+      }
+    }
+    return result;
+  } catch (error) {
+    console.log(error);
+    return [];
   }
 };

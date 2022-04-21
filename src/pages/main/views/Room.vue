@@ -28,8 +28,8 @@
       label="多选"
     />
     <section class="d-flex align-center">
-      <v-text-field class="mr-3" v-model="roomid" label="房间号" />
-      <v-text-field class="mr-3" v-model="name" label="名称" />
+      <v-text-field class="mr-3" v-model.trim="roomid" label="房间号" />
+      <v-text-field class="mr-3" v-model.trim="name" label="名称" />
       <v-btn
         :disabled="!(roomid && name)"
         outlined

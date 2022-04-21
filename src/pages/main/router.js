@@ -9,7 +9,6 @@ import Music from "./views/Music.vue";
 import Live from "./views/Live.vue";
 import Shortcut from "./views/Shortcut.vue";
 import Shield from "./views/Shield.vue";
-import Silent from "./views/Silent.vue";
 
 import { ipcRenderer } from "electron";
 
@@ -49,13 +48,6 @@ const routes = [
     path: "/live",
     name: "Live",
     component: Live,
-    meta: { height: 660 },
-    beforeEnter,
-  },
-  {
-    path: "/silent",
-    name: "Silent",
-    component: Silent,
     meta: { height: 660 },
     beforeEnter,
   },
