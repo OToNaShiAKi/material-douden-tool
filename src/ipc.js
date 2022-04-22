@@ -11,7 +11,7 @@ import {
   RemoveSilentUser,
   GetDynamic,
 } from "./plugins/axios";
-import { e } from "./plugins/utils";
+import { e, Replies } from "./plugins/utils";
 import { Bilibili, API } from "./plugins/config";
 import { writeFile } from "fs/promises";
 import createWindow from "./background";
@@ -145,30 +145,25 @@ ipcMain.on("OtherWindow", (event, page) => {
     });
 });
 
-ipcMain.on("SaveImage", async (event, Base64) => {
-  const time = Date.now();
-  const { filePath } = await dialog.showSaveDialog({
-    defaultPath: `${time}.png`,
-    filters: [{ name: "Images", extensions: ["jpg", "png", "gif"] }],
-  });
-  if (filePath)
-    await writeFile(filePath, Base64, {
-      encoding: "base64",
+ipcMain.on(
+  "SaveFile",
+  async (
+    event,
+    Data,
+    name = Date.now(),
+    encoding = "buffer",
+    filters = [{ name: "All Files", extensions: ["*"] }]
+  ) => {
+    const { filePath } = await dialog.showSaveDialog({
+      defaultPath: name,
+      filters,
     });
-});
+    if (filePath) await writeFile(filePath, Data, { encoding });
+  }
+);
 
 ipcMain.handle("GetDynamic", async (event, ids) => {
-  ids = ids.map(async (v) => {
-    let dynamic = [];
-    let index = 0;
-    do {
-      const replies = await GetDynamic(v, index);
-      if (replies.length <= 0 || !replies) break;
-      dynamic = dynamic.concat(replies);
-      index = replies.next;
-    } while (true);
-    return dynamic;
-  });
+  ids = ids.map(async (v) => await Replies(await GetDynamic(v, 0)));
   const result = await Promise.all(ids);
   return result.flat(1);
 });

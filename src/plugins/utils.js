@@ -1,6 +1,7 @@
 import { ipcRenderer } from "electron";
 import BrotliDecode from "brotli/decompress";
-import * as XLSX from "xlsx";
+import { GetVideoDurantion } from "./axios";
+import { writeFile, utils } from "xlsx";
 
 export const FormatComment = (content, select = [], fix = {}, shield = []) => {
   if (content.length <= 0 || select.length <= 0)
@@ -195,10 +196,50 @@ export const e = (r) => {
   );
 };
 
-export const ExportExcel = (body, header, name) => {
+export const ExportExcel = (body, header, name, title, config = {}) => {
+  const sheet = utils.json_to_sheet(body, { header });
+  const workbook = utils.book_new();
+  sheet["!cols"] = config.cols;
+  sheet["!rows"] = config.rows || new Array(body.length + 1).fill({ hpt: 20 });
+  utils.book_append_sheet(workbook, sheet, title || name);
   name += ".xlsx";
-  const sheet = XLSX.utils.json_to_sheet(body, { header });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, sheet, name);
-  XLSX.writeFile(workbook, name);
+  writeFile(workbook, name);
+};
+
+export const FormatDuration = (value, hour = false) => {
+  if (!value) return "";
+  let m = Math.floor(value / 60);
+  let s = value - m * 60;
+  let time = ":" + s.toString().padStart(2, "0");
+  if (hour) {
+    let h = Math.floor(m / 60);
+    m -= h * 60;
+    time = h + ":" + m.toString().padStart(2, "0") + time;
+  } else time = m.toString().padStart(2, "0") + time;
+  return time;
+};
+
+export const Replies = async (replies = []) => {
+  let result = [];
+  for (const item of replies) {
+    const {
+      member: { uname },
+      ctime,
+      reply_control: { time_desc },
+      content: { jump_url },
+    } = item;
+    for (const key in jump_url) {
+      const duration = await GetVideoDurantion(key);
+      result.push({
+        title: jump_url[key].title,
+        bvid: /^http/i.test(key) ? key : "https://b23.tv/" + key,
+        uname,
+        ctime,
+        time_desc,
+        duration,
+      });
+    }
+    result = result.concat(await Replies(item.replies || []));
+  }
+  return result;
 };

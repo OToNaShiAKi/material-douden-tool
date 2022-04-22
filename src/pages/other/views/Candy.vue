@@ -42,14 +42,6 @@ import { ipcRenderer } from "electron";
 import Card from "../../../components/Card.vue";
 import HtmlToCanvas from "html2canvas";
 
-const ExportImage = async (Dom) => {
-  const canvas = await HtmlToCanvas(Dom);
-  const Base64 = canvas
-    .toDataURL()
-    .replace(/^data:image\/(png|gif|jpeg);base64,/, "");
-  ipcRenderer.send("SaveImage", Base64);
-};
-
 export default {
   name: "App",
   components: { Card },
@@ -58,10 +50,16 @@ export default {
     items: [{ title: "棉花糖", icon: "mdi-candy", to: "/" }],
   }),
   methods: {
-    merge({ target }) {
+    async merge({ target }) {
       const type = target.dataset.type || target.parentElement.dataset.type;
       const Dom = document.getElementById(`dom-to-image-${type}`);
-      ExportImage(Dom);
+      const canvas = await HtmlToCanvas(Dom);
+      const Base64 = canvas
+        .toDataURL()
+        .replace(/^data:image\/(png|gif|jpeg);base64,/, "");
+      ipcRenderer.send("SaveFile", Base64, `${Date.now()}.png`, "base64", [
+        { name: "Images", extensions: ["jpg", "png", "gif"] },
+      ]);
     },
   },
 };

@@ -242,47 +242,36 @@ export const GetDynamic = async (id, next = 0) => {
     } = await API.get("/x/polymer/web-dynamic/v1/detail", {
       params: { id },
     });
-    const { cursor, replies } = await API.get("/x/v2/reply/main", {
-      params: {
-        next,
-        type: comment_type,
-        plat: 1,
-        mode: 3,
-        oid: comment_id_str,
-      },
-    });
-    if (!replies) return [];
-    const result = [];
-    result.next = cursor.next;
-    for (let i = 0; i < replies.length; i++) {
-      const {
-        member: { uname },
-        ctime,
-        reply_control: { time_desc },
-        content: { jump_url },
-      } = replies[i];
-      if (Object.keys(jump_url).length <= 0) continue;
-      for (const key in jump_url) {
-        let duration = null;
-        if (/BV.*/.test(key)) {
-          const detail = await API.get("/x/player/pagelist", {
-            params: { bvid: key.match(/BV.*/)[0] },
-          });
-          duration = detail ? detail[0].duration : null;
-        }
-        result.push({
-          title: jump_url[key].title,
-          bvid: /^http/i.test(key) ? key : "https://b23.tv/" + key,
-          uname,
-          ctime,
-          time_desc,
-          duration,
-        });
-      }
-    }
+    let result = [];
+    do {
+      const { cursor, replies } = await API.get("/x/v2/reply/main", {
+        params: {
+          next,
+          type: comment_type,
+          plat: 1,
+          mode: 3,
+          oid: comment_id_str,
+        },
+      });
+      if (!replies) break;
+      result = result.concat(replies);
+      next = cursor.next;
+    } while (true);
     return result;
   } catch (error) {
-    console.log(error);
     return [];
+  }
+};
+
+export const GetVideoDurantion = async (key) => {
+  try {
+    if (/BV.*/.test(key)) {
+      const [{ duration }] = await API.get("/x/player/pagelist", {
+        params: { bvid: key.match(/(BV[^\?]*)/)[0] },
+      });
+      return duration;
+    }
+  } catch (error) {
+    return null;
   }
 };

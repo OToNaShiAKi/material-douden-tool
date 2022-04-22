@@ -1225,6 +1225,11 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.12.tgz#0d4557fd3b94497d793efd4e7d92df2f83b4ef24"
   integrity sha512-q4jlIR71hUpWTnGhXWcakgkZeHa3CCjcQcnuzU8M891BAWA2jHiziiWEPEkdS5pFsz7H9HJiy8BrK7tBRNrY7A==
 
+"@types/node@^17.0.0":
+  version "17.0.25"
+  resolved "https://pkgs.d.xiaomi.net:443/artifactory/api/npm/mi-npm/@types/node/-/node-17.0.25.tgz#527051f3c2f77aa52e5dc74e45a3da5fb2301448"
+  integrity sha1-UnBR88L3eqUuXcdORaPaX7IwFEg=
+
 "@types/normalize-package-data@^2.4.0":
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/@types/normalize-package-data/-/normalize-package-data-2.4.1.tgz#d3357479a0fdfdd5907fe67e17e0a85c906e1301"
@@ -3834,6 +3839,17 @@ doctrine@^3.0.0:
   dependencies:
     esutils "^2.0.2"
 
+docx@^7.3.0:
+  version "7.3.0"
+  resolved "https://pkgs.d.xiaomi.net:443/artifactory/api/npm/mi-npm/docx/-/docx-7.3.0.tgz#5a23fde9cf245f98d31e46ff2292d5f61dbcbf29"
+  integrity sha1-WiP96c8kX5jTHkb/IpLV9h28vyk=
+  dependencies:
+    "@types/node" "^17.0.0"
+    jszip "^3.1.5"
+    nanoid "^3.1.20"
+    xml "^1.0.1"
+    xml-js "^1.6.8"
+
 dom-converter@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/dom-converter/-/dom-converter-0.2.0.tgz#6721a9daee2e293682955b6afe416771627bb768"
@@ -6242,6 +6258,16 @@ jszip@^3.1.0:
     readable-stream "~2.3.6"
     set-immediate-shim "~1.0.1"
 
+jszip@^3.1.5:
+  version "3.9.1"
+  resolved "https://pkgs.d.xiaomi.net:443/artifactory/api/npm/mi-npm/jszip/-/jszip-3.9.1.tgz#784e87f328450d1e8151003a9c67733e2b901051"
+  integrity sha1-eE6H8yhFDR6BUQA6nGdzPiuQEFE=
+  dependencies:
+    lie "~3.3.0"
+    pako "~1.0.2"
+    readable-stream "~2.3.6"
+    set-immediate-shim "~1.0.1"
+
 keyv@^3.0.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/keyv/-/keyv-3.1.0.tgz#ecc228486f69991e49e9476485a5be1e8fc5c4d9"
@@ -6832,6 +6858,11 @@ nan@^2.12.1:
   version "2.15.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.15.0.tgz#3f34a473ff18e15c1b5626b62903b5ad6e665fee"
   integrity sha512-8ZtvEnA2c5aYCZYd1cvgdnU6cqwixRoYg70xPLWUws5ORTa/lnw+u4amixRS/Ac5U5mQVgp9pnlSUnbNWFaWZQ==
+
+nanoid@^3.1.20:
+  version "3.3.3"
+  resolved "https://pkgs.d.xiaomi.net:443/artifactory/api/npm/mi-npm/nanoid/-/nanoid-3.3.3.tgz#fd8e8b7aa761fe807dba2d1b98fb7241bb724a25"
+  integrity sha1-/Y6Leqdh/oB9ui0bmPtyQbtySiU=
 
 nanomatch@^1.2.9:
   version "1.2.13"
@@ -10343,6 +10374,18 @@ xlsx@^0.18.5:
     ssf "~0.11.2"
     wmf "~1.0.1"
     word "~0.3.0"
+
+xml-js@^1.6.8:
+  version "1.6.11"
+  resolved "https://pkgs.d.xiaomi.net:443/artifactory/api/npm/mi-npm/xml-js/-/xml-js-1.6.11.tgz#927d2f6947f7f1c19a316dd8eea3614e8b18f8e9"
+  integrity sha1-kn0vaUf38cGaMW3Y7qNhTosY+Ok=
+  dependencies:
+    sax "^1.2.4"
+
+xml@^1.0.1:
+  version "1.0.1"
+  resolved "https://pkgs.d.xiaomi.net:443/artifactory/api/npm/mi-npm/xml/-/xml-1.0.1.tgz#78ba72020029c5bc87b8a81a3cfcd74b4a2fc1e5"
+  integrity sha1-eLpyAgApxbyHuKgaPPzXS0ovweU=
 
 xmlbuilder@>=11.0.1:
   version "15.1.1"

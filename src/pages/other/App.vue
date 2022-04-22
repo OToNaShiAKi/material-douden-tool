@@ -18,7 +18,9 @@
       </v-list>
     </v-navigation-drawer>
     <v-main>
-      <router-view />
+      <keep-alive>
+        <router-view />
+      </keep-alive>
     </v-main>
   </v-app>
 </template>
@@ -30,7 +32,7 @@ export default {
     items: [
       { title: "棉花糖", icon: "mdi-candy", to: "/" },
       { title: "禁言用户", icon: "mdi-account-cancel", to: "silent" },
-      // { title: "动画鉴赏", icon: "mdi-microsoft-excel", to: "anime" },
+      { title: "动画鉴赏", icon: "mdi-microsoft-excel", to: "anime" },
     ],
   }),
 };
