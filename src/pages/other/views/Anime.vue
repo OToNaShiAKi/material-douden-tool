@@ -19,9 +19,6 @@ fi
       <template v-slot:item.actions="{ index }">
         <v-icon small @click="remove" :data-key="index">mdi-delete</v-icon>
       </template>
-      <template v-slot:item.duration="{ value }">
-        {{ value | Timer }}
-      </template>
       <template v-slot:item.bvid="{ value }">
         <a :href="value" @click.prevent="open">{{ value }}</a>
       </template>
@@ -29,8 +26,13 @@ fi
     <section class="d-flex align-center flex-wrap">
       <v-checkbox class="mr-6" label="标题" v-model="config" value="title" />
       <v-checkbox class="mr-6" label="链接" v-model="config" value="bvid" />
-      <v-checkbox class="mr-6" label="时长" v-model="config" value="duration" />
-      <v-checkbox class="mr-6" label="推荐人" v-model="config" value="uname" />
+      <v-checkbox
+        class="mr-6"
+        label="时长"
+        v-model="config"
+        value="duration_desc"
+      />
+      <v-checkbox class="mr-6" label="推荐" v-model="config" value="uname" />
       <v-checkbox
         class="mr-6"
         label="发布"
@@ -68,9 +70,9 @@ import {
 const Mapping = Object.freeze({
   title: "标题",
   bvid: "链接",
-  duration: "时长",
+  duration_desc: "时长",
   time_desc: "发布",
-  uname: "推荐人",
+  uname: "推荐",
 });
 
 export default {
@@ -81,12 +83,12 @@ export default {
     headers: [
       { text: "标题", value: "title" },
       { text: "链接", value: "bvid" },
-      { text: "时长", value: "duration" },
+      { text: "时长", value: "duration_desc" },
       { text: "发布", value: "time_desc" },
       { text: "操作", value: "actions", sortable: false },
     ],
     comments: [],
-    config: ["title", "bvid", "duration"],
+    config: ["title", "bvid", "duration_desc"],
     total: true,
   }),
   methods: {
@@ -108,8 +110,7 @@ export default {
         const row = {};
         for (let i = 0; i < this.config.length; i++) {
           const key = this.config[i];
-          row[Mapping[key]] =
-            key === "duration" ? FormatDuration(v[key]) : v[key];
+          row[Mapping[key]] = v[key];
           const width = /[\u4e00-\u9fa5]/.test(row[Mapping[key]])
             ? row[Mapping[key]].length * 2
             : row[Mapping[key]].length + 10;
@@ -125,18 +126,20 @@ export default {
       let total = 0;
       const sections = this.comments.map((v) => {
         const children = this.config.map((key) => {
-          let child = null;
+          let child = new TextRun({
+            text: v[key],
+            size: 24,
+            bold: key === "title",
+          });
           if (key === "bvid")
-            child = new ExternalHyperlink({
-              children: [new TextRun(v[key])],
-              link: v[key],
-            });
-          else if (key === "duration")
-            child = new TextRun(FormatDuration(v[key]));
-          else child = new TextRun(v[key]);
+            child = new ExternalHyperlink({ children: [child], link: v[key] });
           return new Paragraph({
             children: [
-              new TextRun({ text: `【${Mapping[key]}】`, bold: true }),
+              new TextRun({
+                text: `【${Mapping[key]}】`,
+                bold: true,
+                size: 24,
+              }),
               child,
             ],
             heading: key === "title" ? HeadingLevel.HEADING_3 : undefined,
@@ -154,7 +157,11 @@ export default {
           children: [
             new Paragraph({
               children: [
-                new TextRun({ text: `【总时长】`, bold: true, italics: false }),
+                new TextRun({
+                  text: `【总时长】`,
+                  bold: true,
+                  italics: false,
+                }),
                 new TextRun({
                   text: FormatDuration(total, true),
                   italics: false,
@@ -174,6 +181,5 @@ export default {
       shell.openExternal(href);
     },
   },
-  filters: { Timer: FormatDuration },
 };
 </script>

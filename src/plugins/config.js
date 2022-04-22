@@ -1,5 +1,5 @@
-import { BrowserWindow } from "electron";
 import axios from "axios";
+import { BrowserWindow } from "electron";
 
 export const Bilibili = axios.create({
   baseURL: "https://api.live.bilibili.com/",

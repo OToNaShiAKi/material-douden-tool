@@ -1,5 +1,6 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
+
 import Candy from "./views/Candy.vue";
 import Silent from "./views/Silent.vue";
 import Anime from "./views/Anime.vue";

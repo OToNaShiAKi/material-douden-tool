@@ -1,3 +1,6 @@
+import { Bilibili, API } from "./plugins/config";
+import createWindow from "./background";
+import { e, Replies } from "./plugins/utils";
 import { ipcMain, BrowserWindow, dialog, screen } from "electron";
 import {
   SendComment,
@@ -11,10 +14,7 @@ import {
   RemoveSilentUser,
   GetDynamic,
 } from "./plugins/axios";
-import { e, Replies } from "./plugins/utils";
-import { Bilibili, API } from "./plugins/config";
 import { writeFile } from "fs/promises";
-import createWindow from "./background";
 
 const Stacks = { RoomIds: [], timer: null };
 

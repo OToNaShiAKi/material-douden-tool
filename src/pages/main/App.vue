@@ -54,9 +54,9 @@
 </template>
 
 <script>
+import { clipboard, ipcRenderer } from "electron";
 import { FormatComment } from "../../plugins/utils";
 import { mapMutations, mapState } from "vuex";
-import { clipboard, ipcRenderer } from "electron";
 
 export default {
   name: "App",

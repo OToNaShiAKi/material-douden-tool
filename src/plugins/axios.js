@@ -267,7 +267,7 @@ export const GetVideoDurantion = async (key) => {
   try {
     if (/BV.*/.test(key)) {
       const [{ duration }] = await API.get("/x/player/pagelist", {
-        params: { bvid: key.match(/(BV[^\?]*)/)[0] },
+        params: { bvid: key.match(/(BV[A-Za-z0-9_-]*)/)[0] },
       });
       return duration;
     }

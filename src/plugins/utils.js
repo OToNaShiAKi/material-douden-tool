@@ -1,6 +1,6 @@
-import { ipcRenderer } from "electron";
 import BrotliDecode from "brotli/decompress";
 import { GetVideoDurantion } from "./axios";
+import { ipcRenderer } from "electron";
 import { writeFile, utils } from "xlsx";
 
 export const FormatComment = (content, select = [], fix = {}, shield = []) => {
@@ -237,6 +237,7 @@ export const Replies = async (replies = []) => {
         ctime,
         time_desc,
         duration,
+        duration_desc: FormatDuration(duration),
       });
     }
     result = result.concat(await Replies(item.replies || []));
