@@ -2,9 +2,9 @@
   <section class="card-container">
     <div class="card-body">
       <div class="card-wrap">
-        <div contenteditable="true" class="card-text" />
+        <div contenteditable="true" class="card-text"><slot /></div>
       </div>
-      <div class="card-brand"><slot /></div>
+      <div class="card-brand">{{ tip }}</div>
     </div>
     <div class="card-logo">
       <img src="/candy.png" class="card-image" />
@@ -15,6 +15,7 @@
 <script>
 export default {
   name: "Card",
+  props: { tip: String },
 };
 </script>
 
