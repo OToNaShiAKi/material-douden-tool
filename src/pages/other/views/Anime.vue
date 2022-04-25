@@ -174,7 +174,7 @@ export default {
         });
       const doc = new Document({ title: "动画鉴赏", sections });
       const buffer = await Packer.toBuffer(doc);
-      ipcRenderer.send("SaveFile", buffer, `${Date.now()}.docx`);
+      ipcRenderer.send("SaveFiles", buffer, `${Date.now()}.docx`);
     },
     open({ target }) {
       const href = target.href;

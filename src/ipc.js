@@ -14,7 +14,8 @@ import {
   RemoveSilentUser,
   GetDynamic,
 } from "./plugins/axios";
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
+import { join } from "path";
 
 const Stacks = { RoomIds: [], timer: null };
 
@@ -145,22 +146,26 @@ ipcMain.on("OtherWindow", (event, page) => {
     });
 });
 
-ipcMain.on(
-  "SaveFile",
-  async (
-    event,
-    Data,
-    name = Date.now(),
-    encoding = "buffer",
-    filters = [{ name: "All Files", extensions: ["*"] }]
-  ) => {
-    const { filePath } = await dialog.showSaveDialog({
-      defaultPath: name,
-      filters,
-    });
-    if (filePath) await writeFile(filePath, Data, { encoding });
+ipcMain.on("SaveFiles", async (event, Datas, name, encoding = "buffer") => {
+  const isArray = Array.isArray(Datas);
+  const { filePath } = await dialog.showSaveDialog({
+    defaultPath: name,
+    filters: [{ name: "All Files", extensions: ["*"] }],
+    title: isArray ? "保存文件夹" : "保存文件",
+  });
+  if (filePath) {
+    if (isArray) {
+      await mkdir(filePath);
+      for (let i = 0; i < Datas.length; i++) {
+        writeFile(join(filePath, `./${i}.png`), Datas[i], {
+          encoding,
+        });
+      }
+    } else {
+      writeFile(filePath, Datas, { encoding });
+    }
   }
-);
+});
 
 ipcMain.handle("GetDynamic", async (event, ids) => {
   ids = ids.map(async (v) => await Replies(await GetDynamic(v, 0)));

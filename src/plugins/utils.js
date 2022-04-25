@@ -1,7 +1,7 @@
 import BrotliDecode from "brotli/decompress";
 import { GetVideoDurantion } from "./axios";
 import { ipcRenderer } from "electron";
-import { writeFile, utils } from "xlsx";
+import { writeFileXLSX, utils } from "xlsx";
 
 export const FormatComment = (content, select = [], fix = {}, shield = []) => {
   if (content.length <= 0 || select.length <= 0)
@@ -203,7 +203,7 @@ export const ExportExcel = (body, header, name, title, config = {}) => {
   sheet["!rows"] = config.rows || new Array(body.length + 1).fill({ hpt: 20 });
   utils.book_append_sheet(workbook, sheet, title || name);
   name += ".xlsx";
-  writeFile(workbook, name);
+  writeFileXLSX(workbook, name);
 };
 
 export const FormatDuration = (value, hour = false) => {
