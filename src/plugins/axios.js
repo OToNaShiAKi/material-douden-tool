@@ -1,5 +1,5 @@
 import QS from "qs";
-import { Bilibili, Music163, MusicQQ, Baidu, API } from "./config";
+import { Bilibili, Music163, MusicQQ, Baidu, API, Login } from "./config";
 
 export const SendComment = async (roomid, msg) => {
   try {
@@ -162,33 +162,32 @@ export const GetMusic = async (keyword) => {
     const [song163, songQQ] = await Promise.all([
       Music163.get("/search/get/web", {
         params: { s: keyword, type: 1 },
-      }).then(
-        async ({ result: { songs } }) =>
-          await Promise.all(
-            songs.map(async ({ name, artists, id }) => {
-              const { lrc, tlyric } = await Music163.get("/song/lyric", {
-                params: { id, lv: -1, tv: -1 },
-              });
-              return {
-                id,
-                name,
-                lyric: lrc ? lrc.lyric : "",
-                tlyric: tlyric ? tlyric.lyric : "",
-                singer: artists.map(({ name }) => name).join("、"),
-                origin: "网易云",
-              };
-            })
-          )
+      }).then(({ result: { songs } }) =>
+        Promise.all(
+          songs.map(async ({ name, artists, id }) => {
+            const { lrc, tlyric } = await Music163.get("/song/lyric", {
+              params: { id, lv: -1, tv: -1 },
+            });
+            return {
+              id,
+              name,
+              lyric: lrc ? lrc.lyric : "",
+              tlyric: tlyric ? tlyric.lyric : "",
+              singer: artists.map(({ name }) => name).join("、"),
+              origin: "网易云",
+            };
+          })
+        )
       ),
       MusicQQ.get("/soso/fcgi-bin/client_search_cp", {
         params: { w: keyword, format: "json" },
       }).then(
-        async ({
+        ({
           data: {
             song: { list },
           },
         }) =>
-          await Promise.all(
+          Promise.all(
             list.map(async ({ songmid, songname, singer }) => {
               const { lyric = "", trans = "" } = await MusicQQ.get(
                 "/lyric/fcgi-bin/fcg_query_lyric_new.fcg",
@@ -273,5 +272,26 @@ export const GetVideoDurantion = async (key) => {
     }
   } catch (error) {
     return null;
+  }
+};
+
+export const GetQRCode = async () => {
+  try {
+    const { data } = await Login.get("/qrcode/getLoginUrl");
+    return data;
+  } catch (error) {
+    return { url: "", oauthKey: "" };
+  }
+};
+
+export const GetLoginInfo = async (oauthKey) => {
+  try {
+    const result = await Login.post(
+      "/qrcode/getLoginInfo",
+      QS.stringify({ oauthKey })
+    );
+    return result;
+  } catch (error) {
+    return { status: false, data: null };
   }
 };

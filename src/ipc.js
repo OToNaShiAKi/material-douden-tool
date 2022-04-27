@@ -13,6 +13,8 @@ import {
   GetSilentUser,
   RemoveSilentUser,
   GetDynamic,
+  GetQRCode,
+  GetLoginInfo,
 } from "./plugins/axios";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -171,4 +173,25 @@ ipcMain.handle("GetDynamic", async (event, ids) => {
   ids = ids.map(async (v) => await Replies(await GetDynamic(v, 0)));
   const result = await Promise.all(ids);
   return result.flat(1);
+});
+
+ipcMain.handle("BilibiliLogin", async () => {
+  const { url, oauthKey } = await GetQRCode();
+  const timer = setInterval(async () => {
+    const { status = false, data } = await GetLoginInfo(oauthKey);
+    if (status || data === -2) {
+      clearInterval(timer);
+      const query =
+        typeof data === "object" &&
+        data.url
+          .slice(data.url.indexOf("?") + 1)
+          .replace(/\?/g, "")
+          .replace(/\&/g, ";");
+      const wins = BrowserWindow.getAllWindows();
+      const win = wins[wins.length - 1];
+      win.webContents.send("Login", { status, data, query });
+    }
+  }, 3000);
+  if (!(url && oauthKey)) clearInterval(timer);
+  return url;
 });
