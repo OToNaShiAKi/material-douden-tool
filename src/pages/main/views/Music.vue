@@ -32,7 +32,7 @@
       <v-tab-item value="lyric">
         <section class="d-flex justify-center align-center">
           <v-btn text small @click="reset">重置播放</v-btn>
-          <v-btn text small @click="track">-0.5s</v-btn>
+          <v-btn text small :disabled="!active" @click="track">-0.5s</v-btn>
           <v-btn
             fab
             small
@@ -43,7 +43,7 @@
           >
             <v-icon>{{ active ? "mdi-pause" : "mdi-play" }}</v-icon>
           </v-btn>
-          <v-btn text small @click="track">+0.5s</v-btn>
+          <v-btn text small :disabled="!active" @click="track">+0.5s</v-btn>
           <v-btn text small @click="next">发送下句</v-btn>
         </section>
         <v-radio-group v-model="language" class="center" row>
@@ -136,52 +136,47 @@ export default {
       this.loading = true;
       this.tab = "table";
       this.message = "";
-      const result = await ipcRenderer.invoke("GetMusic", this.keyword);
-      this.keyword = "";
-      this.musics = result;
+      this.musics = await ipcRenderer.invoke("GetMusic", this.keyword);
       this.loading = false;
     },
     async choose(item) {
-      clearTimeout(this.send.timer);
       this.tab = "lyric";
-      this.send.timer = null;
+      this.reset();
       this.ChangeSong({ song: item, stamp: -1 });
-      this.active = false;
     },
     play() {
       this.active = !this.active;
-      if (this.active) this.send(this.lyric.slice(this.stamp + 1));
+      if (this.active) this.send(this.stamp + 1);
       else clearTimeout(this.send.timer);
     },
-    send(lyric) {
-      this.active = true;
+    send(index) {
+      const lyric = this.lyric;
       this.language = this.language || this.languages[1] || this.languages[0];
-      if (/翻译|双语/.test(this.language) && lyric[0].tlyric)
-        FormatComment(lyric[0].tlyric, this.select, this.fix, this.shields);
-      if (/原文|双语/.test(this.language) && lyric[0].lyric)
-        FormatComment(lyric[0].lyric, this.select, this.fix, this.shields);
-      this.ChangeSong({ stamp: this.stamp + 1 });
+      if (/翻译|双语/.test(this.language) && lyric[index].tlyric)
+        FormatComment(lyric[index].tlyric, this.select, this.fix, this.shields);
+      if (/原文|双语/.test(this.language) && this.lyric[index].lyric)
+        FormatComment(lyric[index].lyric, this.select, this.fix, this.shields);
+      this.ChangeSong({ stamp: index });
       this.send.stamp = Date.now();
-      const target = this.$refs.lyric;
       this.$vuetify.goTo(this.stamp * this.languages.height, {
-        container: target,
+        container: this.$refs.lyric,
         offset: 128 - this.languages.height,
         easing: "easeInOutCubic",
       });
-      if (lyric.length <= 1) {
-        this.send.timer = null;
-        this.active = false;
-        this.ChangeSong({ stamp: -1 });
+      if (index === lyric.length - 1) {
+        this.reset();
         return;
       }
-      this.send.timer = setTimeout(() => {
-        clearTimeout(this.send.timer);
-        this.send(lyric.slice(1));
-      }, lyric[1].stamp - lyric[0].stamp);
+      this.send.timer =
+        this.active &&
+        setTimeout(() => {
+          clearTimeout(this.send.timer);
+          this.send(index + 1);
+        }, lyric[index + 1].stamp - lyric[index].stamp);
     },
     next() {
       clearTimeout(this.send.timer);
-      this.send(this.lyric.slice(this.stamp + 1));
+      this.send(this.stamp + 1);
     },
     jump() {
       clearTimeout(this.send.timer);
@@ -189,31 +184,31 @@ export default {
       const count = Math.floor(
         (target.scrollTop + target.clientHeight / 2) / this.languages.height
       );
+      this.active = true;
       this.ChangeSong({ stamp: count - 1 });
-      this.send(this.lyric.slice(count));
+      this.send(count - 1);
     },
     track({ target }) {
-      if (this.active) {
-        const now = Date.now();
+      const now = Date.now();
+      clearTimeout(this.send.timer);
+      const multiple = parseFloat(target.innerText) > 0 ? 1 : -1;
+      let time =
+        this.lyric[this.stamp + 1].stamp - this.lyric[this.stamp].stamp;
+      time -= now - this.send.stamp - 500 * multiple;
+      this.send.stamp -= 500 * multiple;
+      this.send.timer = setTimeout(() => {
         clearTimeout(this.send.timer);
-        const multiple = parseFloat(target.innerText) > 0 ? 1 : -1;
-        let time =
-          this.lyric[this.stamp + 1].stamp - this.lyric[this.stamp].stamp;
-        time -= now - this.send.stamp - 500 * multiple;
-        this.send.stamp -= 500 * multiple;
-        this.send.timer = setTimeout(() => {
-          clearTimeout(this.send.timer);
-          this.send(this.lyric.slice(this.stamp + 1));
-        }, time);
-      }
+        this.send(this.stamp + 1);
+      }, time);
     },
     reset() {
       clearTimeout(this.send.timer);
       this.send.timer = null;
-      this.$vuetify.goTo(0, {
-        container: this.$refs.lyric,
-        easing: "easeInOutCubic",
-      });
+      this.$refs.lyric &&
+        this.$vuetify.goTo(0, {
+          container: this.$refs.lyric,
+          easing: "easeInOutCubic",
+        });
       this.ChangeSong({ stamp: -1 });
       this.active = false;
     },

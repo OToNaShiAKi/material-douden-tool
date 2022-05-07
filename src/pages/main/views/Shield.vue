@@ -9,13 +9,7 @@
     <section class="d-flex align-center">
       <v-text-field class="mr-3" v-model="shield" label="屏蔽词" />
       <v-text-field class="mr-3" v-model="handle" label="处理后" />
-      <v-btn
-        :disabled="!(shield && handle)"
-        outlined
-        small
-        color="primary"
-        @click="add"
-      >
+      <v-btn :disabled="!shield" outlined small color="primary" @click="add">
         添加
       </v-btn>
     </section>

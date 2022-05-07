@@ -47,7 +47,7 @@ import HtmlToCanvas from "html2canvas";
 import { read, utils } from "xlsx";
 
 export default {
-  name: "App",
+  name: "Candy",
   components: { Card },
   data: () => ({
     direction: "column",

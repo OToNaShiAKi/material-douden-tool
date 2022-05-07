@@ -46,7 +46,7 @@ export default {
       const cuts = this.$store.state.shortcuts;
       const result = [];
       for (let key in cuts) result.push({ key, phrase: cuts[key] });
-      return result;
+      return result.sort((a, b) => (a.key >= b.key ? -1 : 1));
     },
   },
   data: () => ({

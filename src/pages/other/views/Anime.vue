@@ -1,4 +1,3 @@
-fi
 <template>
   <v-container>
     <v-text-field
@@ -76,7 +75,7 @@ const Mapping = Object.freeze({
 });
 
 export default {
-  name: "App",
+  name: "Anime",
   data: () => ({
     keyword: "",
     loading: false,

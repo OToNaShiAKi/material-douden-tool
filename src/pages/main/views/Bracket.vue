@@ -10,13 +10,7 @@
       <v-text-field class="mr-3" v-model="prefix" label="前缀" />
       <v-text-field class="mr-3" v-model="suffix" label="后缀" />
       <v-select class="mr-3" :items="scopes" v-model="scope" label="作用域" />
-      <v-btn
-        :disabled="!(prefix && suffix && scope)"
-        outlined
-        small
-        color="primary"
-        @click="add"
-      >
+      <v-btn :disabled="!scope" outlined small color="primary" @click="add">
         添加
       </v-btn>
     </section>

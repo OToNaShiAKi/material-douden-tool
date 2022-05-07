@@ -75,7 +75,7 @@ export default {
     },
     receive(roomid, message) {
       this.comments[roomid].push(message);
-      if (roomid === +this.show) {
+      if (roomid === this.show) {
         const target = this.$refs.danmu;
         this.$vuetify.goTo(target.scrollHeight, {
           container: target,
@@ -100,16 +100,7 @@ export default {
         const result = await ipcRenderer.invoke("GetWebSocket", sockets);
         this.uid = result[0] ? result[0].uid : "";
         for (const item of result) {
-          const first = item.host_list.pop();
-          const socket = new Socket(
-            first.host,
-            first.wss_port,
-            +item.roomid,
-            item.token,
-            item.admin,
-            item.comments,
-            this.receive
-          );
+          const socket = new Socket(item, this.receive.bind(this));
           this.sockets[item.roomid] = socket;
           comments[item.roomid] = item.comments;
         }

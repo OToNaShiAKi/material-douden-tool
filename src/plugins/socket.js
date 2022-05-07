@@ -2,14 +2,16 @@ import { Certification, HandleMessage } from "./utils";
 import { ipcRenderer } from "electron";
 
 export default class Socket {
-  constructor(host, port, roomid, token, admin, comments, receive) {
-    const socket = new WebSocket(`wss://${host}:${port}/sub`);
+  constructor({ host_list, uid, roomid, token, admin, comments }, receive) {
+    const host = host_list.pop();
+    const socket = new WebSocket(`wss://${host.host}:${host.wss_port}/sub`);
     this.socket = socket;
     this.roomid = roomid;
     this.token = token;
     this.timer = null;
     this.comments = comments;
     this.admin = admin;
+    this.uid = uid;
     this.receive = receive;
 
     socket.addEventListener("open", this.Open);
@@ -20,8 +22,8 @@ export default class Socket {
     this.socket.send(
       Certification(
         JSON.stringify({
-          uid: 0,
-          roomid: this.roomid,
+          uid: this.uid,
+          roomid: +this.roomid,
           protover: 3,
           platform: "web",
           type: 2,
