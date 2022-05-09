@@ -2,17 +2,53 @@ import { Certification, HandleMessage } from "./utils";
 import { ipcRenderer } from "electron";
 
 export default class Socket {
-  constructor({ host_list, uid, roomid, token, admin, comments }, receive) {
+  static Command = {
+    DANMU_MSG: async ({ info }) => {
+      const text = await ipcRenderer.invoke("CutWord", info[1]);
+      return {
+        info: info[1],
+        uid: info[2][0],
+        nickname: info[2][1],
+        text,
+      };
+    },
+    SUPER_CHAT_MESSAGE: async ({ data }) => {
+      const text = await ipcRenderer.invoke("CutWord", data.message);
+      return {
+        info: data.message,
+        uid: data.uid,
+        nickname: data.user_info.uname,
+        style: { color: data.background_bottom_color },
+        text,
+      };
+    },
+    POPULARITY_RED_POCKET_START: async ({ data }, socket) => {
+      const result = ipcRenderer.invoke(
+        "ClickRedPocket",
+        socket.ruid,
+        socket.roomid,
+        data.lot_id
+      );
+      return {
+        info: "自动点击红包" + (result ? "成功" : "失败"),
+        uid: socket.uid,
+        nickname: "System",
+        class: "primary--text",
+      };
+    },
+  };
+
+  constructor({ host_list, uid, ruid, roomid, token, admin }, receive) {
     const host = host_list.pop();
     const socket = new WebSocket(`wss://${host.host}:${host.wss_port}/sub`);
     this.socket = socket;
     this.roomid = roomid;
     this.token = token;
     this.timer = null;
-    this.comments = comments;
     this.admin = admin;
     this.uid = uid;
     this.receive = receive;
+    this.ruid = ruid;
 
     socket.addEventListener("open", this.Open);
     socket.addEventListener("message", this.Message);
@@ -47,14 +83,10 @@ export default class Socket {
       HandleMessage(event.data, resolve)
     );
     const body = JSON.parse(result.body);
-    if (result.Type === 5 && body.cmd === "DANMU_MSG") {
-      const text = await ipcRenderer.invoke("CutWord", body.info[1]);
-      this.receive(this.roomid, {
-        info: body.info[1],
-        uid: body.info[2][0],
-        nickname: body.info[2][1],
-        text,
-      });
-    }
+    const comment =
+      Socket.Command[body.cmd] && (await Socket.Command[body.cmd](body, this));
+    comment && this.receive(this.roomid, comment);
   };
 }
+
+Socket.Command.SUPER_CHAT_MESSAGE_JPN = Socket.Command.SUPER_CHAT_MESSAGE;

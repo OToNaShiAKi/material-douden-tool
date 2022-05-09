@@ -24,9 +24,9 @@
         >
           禁言
         </v-chip>
-        <span class="font-weight-medium ml-3">{{ v.nickname }}</span>
+        <span class="ml-2">{{ v.nickname }}</span>
         ：
-        <span>{{ v.info }}</span>
+        <span :class="v.class" :style="v.style">{{ v.info }}</span>
         <span v-show="translate && v.text">（{{ v.text }}）</span>
       </div>
     </section>

@@ -22,6 +22,7 @@
 
 <script>
 import { ipcRenderer } from "electron";
+import { mapMutations } from "vuex";
 
 export default {
   name: "Silent",
@@ -38,10 +39,12 @@ export default {
     this.query();
   },
   methods: {
+    ...mapMutations(["Notify"]),
     async remove({ target: { dataset } }) {
       const { value, id } = this.silents[dataset.key];
       const result = await ipcRenderer.invoke("RemoveSilentUser", id, +value);
       if (result) this.silents.splice(dataset.key, 1);
+      else this.Notify(`删除用户失败${id}失败`);
     },
     async query() {
       this.loading = true;

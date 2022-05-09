@@ -1,47 +1,37 @@
 <template>
   <section class="relative">
     <Pack>登录Bilibili</Pack>
-    <v-tabs v-model="tab" centered>
-      <v-tab href="#qrcode">扫码</v-tab>
-      <v-tab href="#cookie">输入</v-tab>
-    </v-tabs>
-    <v-tabs-items v-model="tab">
-      <v-tab-item value="qrcode">
-        <v-img
-          @click="login"
-          :src="code"
-          eager
-          class="mx-auto"
-          style="cursor: pointer"
-          width="240"
-          height="240"
+    <v-img
+      @click="login"
+      :src="code"
+      eager
+      class="mx-auto"
+      style="cursor: pointer"
+      width="240"
+      height="240"
+    >
+      <template>
+        <section
+          v-if="!code"
+          class="fill-height caption primary--text d-flex flex-column align-center justify-center"
         >
-          <template>
-            <section
-              v-if="!code"
-              class="fill-height caption primary--text d-flex flex-column align-center justify-center"
-            >
-              <v-icon color="primary" large>mdi-refresh</v-icon>
-              <span>二维码已失效</span>
-              <span>点击重新获取</span>
-            </section>
-          </template>
-        </v-img>
-        <p class="caption text-center">使用Bilibili扫码即可</p>
-      </v-tab-item>
-      <v-tab-item value="cookie">
-        <v-textarea
-          v-model="cookie"
-          label="Bilibili Cookie"
-          auto-grow
-          outlined
-          :spellcheck="false"
-          clearable
-          class="rounded-tl-xl rounded-br-xl mt-3"
-          @input="ChangeCookie"
-        />
-      </v-tab-item>
-    </v-tabs-items>
+          <v-icon color="primary" large>mdi-refresh</v-icon>
+          <span>二维码已失效</span>
+          <span>点击重新获取</span>
+        </section>
+      </template>
+    </v-img>
+    <p class="caption text-center">使用Bilibili扫码即可</p>
+    <v-textarea
+      v-model="cookie"
+      label="Bilibili Cookie"
+      auto-grow
+      outlined
+      :spellcheck="false"
+      clearable
+      class="rounded-tl-xl rounded-br-xl mt-3"
+      @input="ChangeCookie"
+    />
   </section>
 </template>
 
@@ -58,7 +48,6 @@ export default {
     this.cookie || this.login();
     ipcRenderer.on("Login", (event, result) => {
       if (result.status) {
-        this.tab = "cookie";
         this.code = "";
         this.cookie = result.query;
         this.ChangeCookie(this.cookie);
@@ -69,7 +58,6 @@ export default {
   data: ({ $store: { state } }) => ({
     cookie: state.cookie,
     code: "",
-    tab: state.cookie ? "cookie" : "qrcode",
   }),
   methods: {
     ...mapMutations(["ChangeCookie", "Notify"]),

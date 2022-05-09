@@ -15,6 +15,7 @@ import {
   GetDynamic,
   GetQRCode,
   GetLoginInfo,
+  ClickRedPocket,
 } from "./plugins/axios";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -195,3 +196,5 @@ ipcMain.handle("BilibiliLogin", async () => {
   if (!(url && oauthKey)) clearInterval(timer);
   return url;
 });
+
+ipcMain.handle("ClickRedPocket", ClickRedPocket);

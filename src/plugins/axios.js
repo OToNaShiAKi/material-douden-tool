@@ -28,6 +28,9 @@ export const GetWebSocket = async (roomid) => {
       {
         badge: { is_room_admin = false },
         info: { uid = "" },
+        medal: {
+          up_medal: { uid: ruid },
+        },
       },
     ] = await Promise.all([
       Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
@@ -51,6 +54,7 @@ export const GetWebSocket = async (roomid) => {
       admin: is_room_admin,
       roomid,
       uid,
+      ruid,
     };
   } catch (error) {
     return { host_list: [], comments: [], admin: false, roomid };
@@ -294,5 +298,27 @@ export const GetLoginInfo = async (oauthKey) => {
     return result;
   } catch (error) {
     return { status: false, data: null };
+  }
+};
+
+export const ClickRedPocket = async (event, ruid, room_id, lot_id) => {
+  try {
+    await Bilibili.post(
+      "/xlive/lottery-interface/v1/popularityRedPocket/RedPocketDraw",
+      QS.stringify({
+        ruid,
+        room_id,
+        lot_id,
+        spm_id: "444.8.red_envelope.extract",
+        jump_from: "",
+        session_id: "",
+        visit_id: "",
+        csrf: Bilibili.defaults.data.csrf,
+        csrf_token: Bilibili.defaults.data.csrf_token,
+      })
+    );
+    return true;
+  } catch (error) {
+    return false;
   }
 };
