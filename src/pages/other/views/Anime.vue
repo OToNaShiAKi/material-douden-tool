@@ -31,7 +31,7 @@
         v-model="config"
         value="duration_desc"
       />
-      <v-checkbox class="mr-6" label="推荐" v-model="config" value="uname" />
+      <v-checkbox class="mr-6" label="推荐人" v-model="config" value="uname" />
       <v-checkbox
         class="mr-6"
         label="发布"
@@ -71,7 +71,7 @@ const Mapping = Object.freeze({
   bvid: "链接",
   duration_desc: "时长",
   time_desc: "发布",
-  uname: "推荐",
+  uname: "推荐人",
 });
 
 export default {
@@ -83,6 +83,7 @@ export default {
       { text: "标题", value: "title" },
       { text: "链接", value: "bvid" },
       { text: "时长", value: "duration_desc" },
+      { text: "推荐人", value: "uname" },
       { text: "发布", value: "time_desc" },
       { text: "操作", value: "actions", sortable: false },
     ],

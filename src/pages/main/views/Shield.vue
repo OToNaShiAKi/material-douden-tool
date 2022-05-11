@@ -13,6 +13,9 @@
         添加
       </v-btn>
     </section>
+    <p class="caption">
+      被屏蔽词汇记录保存在项目文件夹下的forbidden-words.txt中
+    </p>
   </section>
 </template>
 

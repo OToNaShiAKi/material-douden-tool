@@ -25,6 +25,7 @@ Bilibili.interceptors.response.use((response) => {
     }
     throw data;
   }
+  data.data.message = data.message || data.msg;
   return data.data;
 });
 

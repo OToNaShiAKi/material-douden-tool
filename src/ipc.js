@@ -1,7 +1,7 @@
 import { Bilibili, API } from "./plugins/config";
 import createWindow from "./background";
 import { e, Replies } from "./plugins/utils";
-import { ipcMain, BrowserWindow, dialog, screen } from "electron";
+import { ipcMain, BrowserWindow, dialog, screen, app } from "electron";
 import {
   SendComment,
   GetWebSocket,
@@ -20,21 +20,39 @@ import {
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
-const Stacks = { RoomIds: [], timer: null };
+const Stacks = {
+  RoomIds: [],
+  timer: null,
+  interval: async () => {
+    const roomid = Stacks.RoomIds.shift();
+    if (roomid) {
+      const { code, message } = await SendComment(roomid.id, roomid.msg);
+      if (code === 10030) {
+        clearInterval(Stacks.timer);
+        Stacks.RoomIds.unshift({ id: roomid, msg });
+        Stacks.timer = setInterval(Stacks.interval, 1000);
+      } else if (message === "f") {
+        await writeFile(
+          join(app.getPath("exe"), "../forbidden-words.txt"),
+          `屏蔽词：${roomid.msg} 房间：${
+            roomid.id
+          } 时间：${new Date().toLocaleString()}\n`,
+          { flag: "a+" }
+        );
+      }
+    } else {
+      clearInterval(Stacks.timer);
+      Stacks.timer = null;
+    }
+  },
+};
 
 ipcMain.on("SendComment", (event, msg, roomids) => {
+  Stacks.RoomIds = Stacks.RoomIds.concat(roomids.map((id) => ({ id, msg })));
   if (!Stacks.timer) {
-    SendComment(roomids.shift(), msg);
-    Stacks.timer = setInterval(() => {
-      const roomid = Stacks.RoomIds.shift();
-      if (roomid) SendComment(roomid.id, roomid.msg);
-      else {
-        clearInterval(Stacks.timer);
-        Stacks.timer = null;
-      }
-    }, 1000);
+    Stacks.interval();
+    Stacks.timer = setInterval(Stacks.interval, 1000);
   }
-  Stacks.RoomIds = Stacks.RoomIds.concat(roomids.map((v) => ({ id: v, msg })));
 });
 
 ipcMain.on("ChangeCookie", (event, cookie, csrf) => {
@@ -61,7 +79,7 @@ ipcMain.handle("GetWebSocket", async (event, roomids) => {
 });
 
 ipcMain.handle("GetMusic", async (event, keyword) => {
-  const match = /\[(\d{1,2}):([0-9\.]{1,6})\](.*)\n?/g;
+  const match = /\[(\d{1,2}):([0-9.]{1,8})\](.*)\n?/g;
   const result = (await GetMusic(keyword)).filter(
     ({ lyric }) => lyric && match.test(lyric)
   );
@@ -160,7 +178,7 @@ ipcMain.on("SaveFiles", async (event, Datas, name, encoding = "buffer") => {
     if (isArray) {
       await mkdir(filePath);
       for (let i = 0; i < Datas.length; i++) {
-        writeFile(join(filePath, `./${i}.png`), Datas[i], {
+        writeFile(join(filePath, `./${name}-${i}.png`), Datas[i], {
           encoding,
         });
       }
@@ -187,7 +205,7 @@ ipcMain.handle("BilibiliLogin", async () => {
         data.url
           .slice(data.url.indexOf("?") + 1)
           .replace(/\?/g, "")
-          .replace(/\&/g, ";");
+          .replace(/&/g, ";");
       const wins = BrowserWindow.getAllWindows();
       const win = wins[wins.length - 1];
       win.webContents.send("Login", { status, data, query });
@@ -197,4 +215,8 @@ ipcMain.handle("BilibiliLogin", async () => {
   return url;
 });
 
-ipcMain.handle("ClickRedPocket", ClickRedPocket);
+ipcMain.handle("ClickRedPocket", (event, ...ids) => {
+  clearTimeout(Stacks.timer);
+  ClickRedPocket(...ids);
+  Stacks.timer = setInterval(Stacks.interval, 1000);
+});

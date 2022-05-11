@@ -1,9 +1,10 @@
+import axios from "axios";
 import QS from "qs";
 import { Bilibili, Music163, MusicQQ, Baidu, API, Login } from "./config";
 
 export const SendComment = async (roomid, msg) => {
   try {
-    await Bilibili.post(
+    return await Bilibili.post(
       "/msg/send",
       QS.stringify({
         roomid,
@@ -28,9 +29,7 @@ export const GetWebSocket = async (roomid) => {
       {
         badge: { is_room_admin = false },
         info: { uid = "" },
-        medal: {
-          up_medal: { uid: ruid },
-        },
+        medal: { up_medal },
       },
     ] = await Promise.all([
       Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
@@ -54,7 +53,7 @@ export const GetWebSocket = async (roomid) => {
       admin: is_room_admin,
       roomid,
       uid,
-      ruid,
+      ruid: up_medal && up_medal.uid,
     };
   } catch (error) {
     return { host_list: [], comments: [], admin: false, roomid };
@@ -63,7 +62,7 @@ export const GetWebSocket = async (roomid) => {
 
 export const SilentUser = async (event, tuid, room_id) => {
   try {
-    await Bilibili.post(
+    return await Bilibili.post(
       "/xlive/web-ucenter/v1/banned/AddSilentUser",
       QS.stringify({
         room_id,
@@ -73,7 +72,6 @@ export const SilentUser = async (event, tuid, room_id) => {
         csrf_token: Bilibili.defaults.data.csrf_token,
       })
     );
-    return true;
   } catch (error) {
     return false;
   }
@@ -109,7 +107,7 @@ export const GetUserRoomMode = async (room_id) => {
 
 export const SetUserRoomMode = async (event, room_id, color, mode) => {
   try {
-    await Bilibili.post(
+    return await Bilibili.post(
       "/xlive/web-room/v1/dM/AjaxSetConfig",
       QS.stringify({
         room_id,
@@ -119,7 +117,6 @@ export const SetUserRoomMode = async (event, room_id, color, mode) => {
         csrf_token: Bilibili.defaults.data.csrf_token,
       })
     );
-    return true;
   } catch (error) {
     return false;
   }
@@ -127,7 +124,7 @@ export const SetUserRoomMode = async (event, room_id, color, mode) => {
 
 export const GetSilentUser = async (room_id) => {
   try {
-    const result = await Bilibili.post(
+    const { data } = await Bilibili.post(
       "/xlive/web-ucenter/v1/banned/GetSilentUserList",
       QS.stringify({
         room_id,
@@ -137,7 +134,7 @@ export const GetSilentUser = async (room_id) => {
         csrf_token: Bilibili.defaults.data.csrf_token,
       })
     );
-    return result.data;
+    return data;
   } catch (error) {
     return [];
   }
@@ -145,7 +142,7 @@ export const GetSilentUser = async (room_id) => {
 
 export const RemoveSilentUser = async (event, id, roomid) => {
   try {
-    await Bilibili.post(
+    return await Bilibili.post(
       "/banned_service/v1/Silent/del_room_block_user",
       QS.stringify({
         roomid,
@@ -155,7 +152,6 @@ export const RemoveSilentUser = async (event, id, roomid) => {
         visit_id: "",
       })
     );
-    return true;
   } catch (error) {
     return false;
   }
@@ -274,6 +270,14 @@ export const GetVideoDurantion = async (key) => {
         params: { bvid: key.match(/(BV[A-Za-z0-9_-]*)/)[0] },
       });
       return duration;
+    } else {
+      const {
+        request: { path },
+      } = await axios.get(key, {
+        withCredentials: API.defaults.withCredentials,
+        headers: API.defaults.headers,
+      });
+      return await GetVideoDurantion(path);
     }
   } catch (error) {
     return null;
@@ -291,19 +295,15 @@ export const GetQRCode = async () => {
 
 export const GetLoginInfo = async (oauthKey) => {
   try {
-    const result = await Login.post(
-      "/qrcode/getLoginInfo",
-      QS.stringify({ oauthKey })
-    );
-    return result;
+    return await Login.post("/qrcode/getLoginInfo", QS.stringify({ oauthKey }));
   } catch (error) {
     return { status: false, data: null };
   }
 };
 
-export const ClickRedPocket = async (event, ruid, room_id, lot_id) => {
+export const ClickRedPocket = async (ruid, room_id, lot_id) => {
   try {
-    await Bilibili.post(
+    return await Bilibili.post(
       "/xlive/lottery-interface/v1/popularityRedPocket/RedPocketDraw",
       QS.stringify({
         ruid,
@@ -317,7 +317,6 @@ export const ClickRedPocket = async (event, ruid, room_id, lot_id) => {
         csrf_token: Bilibili.defaults.data.csrf_token,
       })
     );
-    return true;
   } catch (error) {
     return false;
   }
