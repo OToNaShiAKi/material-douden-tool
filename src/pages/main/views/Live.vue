@@ -3,6 +3,13 @@
     <Pack>弹幕捕获</Pack>
     <section class="d-flex">
       <v-switch inset class="mr-3 ml-1" label="翻译" v-model="translate" />
+      <v-switch
+        inset
+        class="mr-3 ml-1"
+        label="抽红包"
+        @change="AutoClick"
+        v-model="auto"
+      />
       <v-select
         hint="用户名称、弹幕、翻译均可点击复制"
         :items="rooms"
@@ -56,6 +63,7 @@ export default {
     show: state.select[0],
     translate: true,
     uid: "",
+    auto: Socket.AutoClickRedPocket,
   }),
   methods: {
     ...mapMutations(["Notify"]),
@@ -82,6 +90,9 @@ export default {
           easing: "easeInOutCubic",
         });
       }
+    },
+    AutoClick(value) {
+      Socket.AutoClickRedPocket = value;
     },
   },
   watch: {

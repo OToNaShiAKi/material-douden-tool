@@ -13,14 +13,16 @@ export default class Socket {
       };
     },
     SUPER_CHAT_MESSAGE: async ({ data }) => {
-      const text = await ipcRenderer.invoke("CutWord", data.message);
-      return {
-        info: data.message,
-        uid: data.uid,
-        nickname: data.user_info.uname,
-        style: { color: data.background_bottom_color },
-        text,
-      };
+      if (Socket.AutoClickRedPocket) {
+        const text = await ipcRenderer.invoke("CutWord", data.message);
+        return {
+          info: data.message,
+          uid: data.uid,
+          nickname: data.user_info.uname,
+          style: { color: data.background_bottom_color },
+          text,
+        };
+      }
     },
     POPULARITY_RED_POCKET_START: async ({ data }, socket) => {
       const result = ipcRenderer.invoke(
@@ -37,6 +39,7 @@ export default class Socket {
       };
     },
   };
+  static AutoClickRedPocket = true;
 
   constructor({ host_list, uid, ruid, roomid, token, admin }, receive) {
     const host = host_list.pop();

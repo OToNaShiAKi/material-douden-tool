@@ -216,7 +216,7 @@ ipcMain.handle("BilibiliLogin", async () => {
 });
 
 ipcMain.handle("ClickRedPocket", (event, ...ids) => {
-  clearTimeout(Stacks.timer);
+  clearInterval(Stacks.timer);
   ClickRedPocket(...ids);
   Stacks.timer = setInterval(Stacks.interval, 1000);
 });
