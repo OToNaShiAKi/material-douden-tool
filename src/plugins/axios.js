@@ -1,6 +1,7 @@
 import axios from "axios";
 import QS from "qs";
 import { Bilibili, Music163, MusicQQ, Baidu, API, Login } from "./config";
+import { BrowserWindow } from "electron";
 
 export const SendComment = async (roomid, msg) => {
   try {
@@ -56,6 +57,9 @@ export const GetWebSocket = async (roomid) => {
       ruid: up_medal && up_medal.uid,
     };
   } catch (error) {
+    const wins = BrowserWindow.getAllWindows();
+    const win = wins[wins.length - 1];
+    win.webContents.send("CookieOverdue");
     return { host_list: [], comments: [], admin: false, roomid };
   }
 };

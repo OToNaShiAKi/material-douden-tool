@@ -1,5 +1,4 @@
 import axios from "axios";
-import { BrowserWindow } from "electron";
 
 export const Bilibili = axios.create({
   baseURL: "https://api.live.bilibili.com/",
@@ -13,16 +12,8 @@ export const Bilibili = axios.create({
 });
 
 Bilibili.interceptors.response.use((response) => {
-  const {
-    data,
-    config: { url },
-  } = response;
+  const { data } = response;
   if (data.code !== 0 && data.code !== 1200000) {
-    if (!url.includes("send")) {
-      const wins = BrowserWindow.getAllWindows();
-      const win = wins[wins.length - 1];
-      win.webContents.send("CookieOverdue");
-    }
     throw data;
   }
   data.data.message = data.message || data.msg;

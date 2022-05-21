@@ -29,8 +29,8 @@ const Stacks = {
       const { code, message } = await SendComment(roomid.id, roomid.msg);
       if (code === 10030) {
         clearInterval(Stacks.timer);
-        Stacks.RoomIds.unshift({ id: roomid, msg });
-        Stacks.timer = setInterval(Stacks.interval, 1000);
+        Stacks.RoomIds.unshift(roomid);
+        Stacks.timer = setInterval(Stacks.interval, 1750);
       } else if (message === "f") {
         await writeFile(
           join(app.getPath("exe"), "../forbidden-words.txt"),
