@@ -1,7 +1,7 @@
-import BrotliDecode from "brotli/decompress";
 import { GetVideoDurantion } from "./axios";
 import { ipcRenderer } from "electron";
 import { writeFileXLSX, utils } from "xlsx";
+import BrotliDecode from "brotli/decompress";
 
 export const FormatComment = (content, select = [], fix = {}, shield = []) => {
   if (content.length <= 0 || select.length <= 0)
@@ -13,11 +13,8 @@ export const FormatComment = (content, select = [], fix = {}, shield = []) => {
   }
   ipcRenderer.send("SendComment", content.slice(0, 20), select);
   if (content.length > 20) {
-    FormatComment(
-      content.slice(20, content.length - suffix.length),
-      select,
-      fix
-    );
+    content = content.slice(20, content.length - suffix.length);
+    FormatComment(content, select, fix);
   }
 };
 
@@ -37,69 +34,41 @@ export const Certification = (certify) => {
 };
 
 export const HandleMessage = (blob, resolve) => {
+  const Decoder = new TextDecoder();
   const reader = new FileReader();
-  reader.addEventListener("load", ({ target: { result: buffer } }) => {
-    const decoder = new TextDecoder();
-    const view = new DataView(buffer);
-    let offset = 0;
-    const packet = {};
-    const result = [];
-    while (offset < buffer.byteLength) {
-      const PacketLength = view.getUint32(offset + 0);
-      const HeadLength = view.getUint16(offset + 4);
-      const PacketVersion = view.getUint16(offset + 6);
-      const PacketType = view.getUint32(offset + 8);
-      const number = view.getUint32(12);
-      if (PacketVersion == 3) {
-        const BufferFrom = BrotliDecode(
-          new Uint8Array(buffer, offset + HeadLength, PacketLength - HeadLength)
-        );
-        const view = new DataView(BufferFrom.buffer);
-        let OffsetVersion3 = 0;
-        while (OffsetVersion3 < BufferFrom.byteLength) {
-          const PacketLength = view.getUint32(OffsetVersion3 + 0);
-          const HeadLength = view.getUint16(OffsetVersion3 + 4);
-          const PacketVersion = view.getUint16(OffsetVersion3 + 6);
-          const PacketType = view.getUint32(OffsetVersion3 + 8);
-          const number = view.getUint32(12);
-          packet.Length = PacketLength;
-          packet.HeadLength = HeadLength;
-          packet.Version = PacketVersion;
-          packet.Type = PacketType;
-          packet.Number = number;
-          const dataArray = new Uint8Array(
-            BufferFrom.buffer,
-            OffsetVersion3 + HeadLength,
-            PacketLength - HeadLength
-          );
-          packet.body = decoder.decode(dataArray);
-          result.push(packet);
-          OffsetVersion3 += PacketLength;
-        }
-      } else {
-        packet.Length = PacketLength;
-        packet.HeadLength = HeadLength;
-        packet.Version = PacketVersion;
-        packet.Type = PacketType;
-        packet.Number = number;
-        if (PacketType == 3) {
-          packet.body = new DataView(
-            buffer,
+  reader.addEventListener("load", ({ target }) => {
+    const view = new DataView(target.result);
+    const result = {
+      PacketLength: view.getUint32(0),
+      HeadLength: view.getUint16(4),
+      PacketVersion: view.getUint16(6),
+      Operation: view.getUint32(8),
+      Sequence: view.getUint32(12),
+      body: [],
+    };
+    if (result.Operation === 5) {
+      const buffer = BrotliDecode(
+        new Uint8Array(
+          target.result,
+          result.HeadLength,
+          result.PacketLength - result.HeadLength
+        )
+      );
+      let offset = 0;
+      const data = new DataView(buffer.buffer);
+      while (offset < buffer.byteLength) {
+        const PacketLength = data.getUint32(offset + 0);
+        const HeadLength = data.getUint16(offset + 4);
+        const text = Decoder.decode(
+          new Uint8Array(
+            buffer.buffer,
             offset + HeadLength,
             PacketLength - HeadLength
-          ).getUint32(0);
-        } else {
-          packet.body = decoder.decode(
-            new Uint8Array(
-              buffer,
-              offset + HeadLength,
-              PacketLength - HeadLength
-            )
-          );
-        }
-        result.push(packet);
+          )
+        );
+        result.body.push(JSON.parse(text));
+        offset += PacketLength;
       }
-      offset += PacketLength;
     }
     resolve(result);
   });
@@ -243,4 +212,14 @@ export const Replies = async (replies = []) => {
     result = result.concat(await Replies(item.replies || []));
   }
   return result;
+};
+
+export const FormatTime = (date) => {
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, "0");
+  const d = date.getDate().toString().padStart(2, "0");
+  const h = date.getHours().toString().padStart(2, "0");
+  const t = date.getMinutes().toString().padStart(2, "0");
+  const s = date.getSeconds().toString().padStart(2, "0");
+  return `${y}-${m}-${d} ${h}:${t}:${s}`;
 };

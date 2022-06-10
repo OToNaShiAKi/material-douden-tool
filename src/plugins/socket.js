@@ -1,5 +1,12 @@
 import { Certification, HandleMessage } from "./utils";
 import { ipcRenderer } from "electron";
+import { writeFile } from "fs/promises";
+const AutoClickRedPocket =
+  localStorage.getItem("AutoClickRedPocket") === "false";
+const CommentLog = localStorage.getItem("CommentLog") === "true";
+const filters = JSON.parse(localStorage.getItem("filters")) || [
+  "老板大气！点点红包抽礼物！",
+];
 
 export default class Socket {
   static Command = {
@@ -39,9 +46,12 @@ export default class Socket {
       };
     },
   };
-  static AutoClickRedPocket = true;
+  static AutoClickRedPocket = !AutoClickRedPocket;
+  static CommentLog = CommentLog;
+  static plugin = null;
+  static filters = filters;
 
-  constructor({ host_list, uid, ruid, roomid, token, admin }, receive) {
+  constructor({ host_list, uid, ruid, roomid, token, admin, comments }) {
     const host = host_list.pop();
     const socket = new WebSocket(`wss://${host.host}:${host.wss_port}/sub`);
     this.socket = socket;
@@ -50,8 +60,8 @@ export default class Socket {
     this.timer = null;
     this.admin = admin;
     this.uid = uid;
-    this.receive = receive;
     this.ruid = ruid;
+    this.comments = comments;
 
     socket.addEventListener("open", this.Open);
     socket.addEventListener("message", this.Message);
@@ -82,14 +92,29 @@ export default class Socket {
     }, 30000);
   };
   Message = async (event) => {
-    const [result] = await new Promise((resolve) =>
+    const message = await new Promise((resolve) =>
       HandleMessage(event.data, resolve)
     );
-    const body = JSON.parse(result.body);
-    const comment =
-      Socket.Command[body.cmd] && (await Socket.Command[body.cmd](body, this));
-    comment && this.receive(this.roomid, comment);
+    for (const body of message.body) {
+      const comment =
+        Socket.Command[body.cmd] &&
+        (await Socket.Command[body.cmd](body, this));
+      if (comment && !Socket.filters.includes(comment.info)) {
+        await this.receive(comment);
+      }
+    }
   };
+  async receive(message) {
+    this.comments.push(message);
+    const { show, $vuetify, $refs } = Socket.plugin;
+    if (this.roomid === show) {
+      const target = $refs.danmu;
+      $vuetify.goTo(target.scrollHeight, {
+        container: target,
+        easing: "easeInOutCubic",
+      });
+    }
+  }
 }
 
 Socket.Command.SUPER_CHAT_MESSAGE_JPN = Socket.Command.SUPER_CHAT_MESSAGE;

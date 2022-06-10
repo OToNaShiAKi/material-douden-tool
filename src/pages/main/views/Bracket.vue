@@ -3,7 +3,7 @@
     <Pack>标识符</Pack>
     <v-data-table :items="fixes" :headers="headers">
       <template v-slot:item.actions="{ index }">
-        <v-icon small @click="remove" :data-key="index"> mdi-delete </v-icon>
+        <v-icon small @click="remove" :data-key="index">mdi-delete</v-icon>
       </template>
     </v-data-table>
     <section class="d-flex align-center">

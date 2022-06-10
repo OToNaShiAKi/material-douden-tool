@@ -3,7 +3,7 @@
     <Pack>屏蔽词</Pack>
     <v-data-table :items="shields" :headers="headers">
       <template v-slot:item.actions="{ index }">
-        <v-icon small @click="remove" :data-key="index"> mdi-delete </v-icon>
+        <v-icon small @click="remove" :data-key="index">mdi-delete</v-icon>
       </template>
     </v-data-table>
     <section class="d-flex align-center">
@@ -13,9 +13,7 @@
         添加
       </v-btn>
     </section>
-    <p class="caption">
-      被屏蔽词汇记录保存在项目文件夹下的forbidden-words.txt中
-    </p>
+    <p class="caption">被屏蔽词汇记录保存在安装目录下的forbidden-words.txt中</p>
   </section>
 </template>
 

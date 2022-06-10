@@ -3,15 +3,8 @@
     <Pack>弹幕捕获</Pack>
     <section class="d-flex">
       <v-switch inset class="mr-3 ml-1" label="翻译" v-model="translate" />
-      <v-switch
-        inset
-        class="mr-3 ml-1"
-        label="抽红包"
-        @change="AutoClick"
-        v-model="auto"
-      />
       <v-select
-        hint="用户名称、弹幕、翻译均可点击复制"
+        hint="用户名称、弹幕、翻译均可点击复制；详细设置在设置页面"
         :items="rooms"
         v-model="show"
       />
@@ -63,8 +56,10 @@ export default {
     show: state.select[0],
     translate: true,
     uid: "",
-    auto: Socket.AutoClickRedPocket,
   }),
+  created() {
+    Socket.plugin = this;
+  },
   methods: {
     ...mapMutations(["Notify"]),
     async copy({ target }) {
@@ -80,19 +75,6 @@ export default {
         clipboard.writeText(innerText);
         this.Notify("已复制：" + innerText);
       }
-    },
-    receive(roomid, message) {
-      this.comments[roomid].push(message);
-      if (roomid === this.show) {
-        const target = this.$refs.danmu;
-        this.$vuetify.goTo(target.scrollHeight, {
-          container: target,
-          easing: "easeInOutCubic",
-        });
-      }
-    },
-    AutoClick(value) {
-      Socket.AutoClickRedPocket = value;
     },
   },
   watch: {
@@ -111,7 +93,7 @@ export default {
         const result = await ipcRenderer.invoke("GetWebSocket", sockets);
         this.uid = result[0] ? result[0].uid : "";
         for (const item of result) {
-          const socket = new Socket(item, this.receive.bind(this));
+          const socket = new Socket(item);
           this.sockets[item.roomid] = socket;
           comments[item.roomid] = item.comments;
         }

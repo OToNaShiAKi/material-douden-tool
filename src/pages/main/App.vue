@@ -71,7 +71,7 @@ export default {
       { icon: "mdi-code-brackets", to: "bracket" },
       { icon: "mdi-cookie", to: "cookie" },
       { icon: "mdi-shield-remove", to: "shield" },
-      { icon: "mdi-palette", to: "theme" },
+      { icon: "mdi-cog", to: "theme" },
     ],
     message: "",
     record: [],

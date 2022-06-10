@@ -21,7 +21,7 @@ const beforeEnter = (to, from, next) => {
 };
 
 const routes = [
-  { path: "/theme", name: "Theme", component: Theme, meta: { height: 360 } },
+  { path: "/theme", name: "Theme", component: Theme, meta: { height: 660 } },
   { path: "/cookie", name: "Cookie", component: Cookie, meta: { height: 660 } },
   { path: "/shield", name: "Shield", component: Shield, meta: { height: 660 } },
   {

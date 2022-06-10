@@ -7,7 +7,7 @@ import "@mdi/font/css/materialdesignicons.css";
 Vue.use(Vuetify);
 
 const primary = localStorage.getItem("primary") || "#fa7298";
-const model = localStorage.getItem("model") == "true";
+const mode = localStorage.getItem("mode") == "true";
 
 export default new Vuetify({
   lang: {
@@ -15,7 +15,7 @@ export default new Vuetify({
     current: "zhHans",
   },
   theme: {
-    dark: model,
+    dark: mode,
     themes: {
       light: { primary },
       dark: { primary },

@@ -1,6 +1,6 @@
 import { Bilibili, API } from "./plugins/config";
 import createWindow from "./background";
-import { e, Replies } from "./plugins/utils";
+import { e, Replies, FormatTime } from "./plugins/utils";
 import { ipcMain, BrowserWindow, dialog, screen, app } from "electron";
 import {
   SendComment,
@@ -32,13 +32,11 @@ const Stacks = {
         Stacks.RoomIds.unshift(roomid);
         Stacks.timer = setInterval(Stacks.interval, 1750);
       } else if (message === "f") {
-        await writeFile(
-          join(app.getPath("exe"), "../forbidden-words.txt"),
-          `屏蔽词：${roomid.msg} 房间：${
-            roomid.id
-          } 时间：${new Date().toLocaleString()}\n`,
-          { flag: "a+" }
-        );
+        const data = `屏蔽词：${roomid.msg} 房间：${
+          roomid.id
+        } 时间：${FormatTime(new Date())}\n`;
+        const file = join(app.getPath("exe"), "../forbidden-words.txt");
+        await writeFile(file, data, { flag: "a+" });
       }
     } else {
       clearInterval(Stacks.timer);
