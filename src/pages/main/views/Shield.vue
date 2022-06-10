@@ -1,7 +1,7 @@
 <template>
   <section>
     <Pack>屏蔽词</Pack>
-    <v-data-table :items="shields" :headers="headers">
+    <v-data-table :items-per-page="5" :items="shields" :headers="headers">
       <template v-slot:item.actions="{ index }">
         <v-icon small @click="remove" :data-key="index">mdi-delete</v-icon>
       </template>

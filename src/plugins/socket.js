@@ -1,6 +1,5 @@
 import { Certification, HandleMessage } from "./utils";
 import { ipcRenderer } from "electron";
-import { writeFile } from "fs/promises";
 const AutoClickRedPocket =
   localStorage.getItem("AutoClickRedPocket") === "false";
 const CommentLog = localStorage.getItem("CommentLog") === "true";
