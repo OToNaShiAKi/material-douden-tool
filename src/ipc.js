@@ -1,6 +1,6 @@
 import { Bilibili, API } from "./plugins/config";
-import createWindow from "./background";
-import { e, Replies, FormatTime } from "./plugins/utils";
+import createWindow, { AllWindows } from "./background";
+import { e, Replies, FormatTime } from "./plugins/handle";
 import { ipcMain, BrowserWindow, dialog, screen, app } from "electron";
 import {
   SendComment,
@@ -16,6 +16,7 @@ import {
   GetQRCode,
   GetLoginInfo,
   ClickRedPocket,
+  GetTrackLiveInfo,
 } from "./plugins/axios";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -140,8 +141,7 @@ ipcMain.handle("GetSilentUser", async (event, roomids) => {
 ipcMain.handle("RemoveSilentUser", RemoveSilentUser);
 
 ipcMain.on("WindowSize", (event, height) => {
-  const wins = BrowserWindow.getAllWindows();
-  const win = wins[wins.length - 1];
+  const win = BrowserWindow.fromId(AllWindows.index);
   const [width] = win.getSize();
   win.setSize(width, height, true);
 });
@@ -153,9 +153,9 @@ ipcMain.handle("CutWord", async (event, phrase) => {
 });
 
 ipcMain.on("OtherWindow", (event, page) => {
-  const wins = BrowserWindow.getAllWindows();
+  const win = AllWindows.other && BrowserWindow.fromId(AllWindows.other);
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  if (wins.length < 2)
+  !win &&
     createWindow(page, {
       width,
       height,
@@ -204,8 +204,7 @@ ipcMain.handle("BilibiliLogin", async () => {
           .slice(data.url.indexOf("?") + 1)
           .replace(/\?/g, "")
           .replace(/&/g, ";");
-      const wins = BrowserWindow.getAllWindows();
-      const win = wins[wins.length - 1];
+      const win = BrowserWindow.fromId(AllWindows.index);
       win.webContents.send("Login", { status, data, query });
     }
   }, 3000);
@@ -213,8 +212,16 @@ ipcMain.handle("BilibiliLogin", async () => {
   return url;
 });
 
-ipcMain.handle("ClickRedPocket", (event, ...ids) => {
+ipcMain.handle("ClickRedPocket", async (event, ...ids) => {
   clearInterval(Stacks.timer);
-  ClickRedPocket(...ids);
+  const result = await ClickRedPocket(...ids);
   Stacks.timer = setInterval(Stacks.interval, 1000);
+  return result;
+});
+
+ipcMain.handle("TrackLive", GetTrackLiveInfo);
+
+ipcMain.on("Live", (event, roomid) => {
+  const win = AllWindows.other && BrowserWindow.fromId(AllWindows.other);
+  win && win.webContents.send("Live", roomid);
 });

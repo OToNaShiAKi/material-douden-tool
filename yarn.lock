@@ -4211,6 +4211,11 @@ es6-error@^4.1.1:
   resolved "https://registry.yarnpkg.com/es6-error/-/es6-error-4.1.1.tgz#9e3af407459deed47e9a91f9b885a84eb05c561d"
   integrity sha512-Um/+FxMr9CISWh0bi5Zv0iOD+4cFh5qLeks1qhAopKVAJw3drgKbKySikp7wGhDL0HPeaja0P5ULZrxLkniUVg==
 
+es6-promise@^4.2.5:
+  version "4.2.8"
+  resolved "https://pkgs.d.xiaomi.net:443/artifactory/api/npm/mi-npm/es6-promise/-/es6-promise-4.2.8.tgz#4eb21594c972bc40553d276e510539143db53e0a"
+  integrity sha1-TrIVlMlyvEBVPSduUQU5FD21Pgo=
+
 escalade@^3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/escalade/-/escalade-3.1.1.tgz#d8cfdc7000965c5a0174b4a82eaa5c0552742e40"
@@ -6821,6 +6826,14 @@ move-concurrently@^1.0.1:
     mkdirp "^0.5.1"
     rimraf "^2.5.4"
     run-queue "^1.0.3"
+
+mpegts.js@^1.6.10:
+  version "1.6.10"
+  resolved "https://pkgs.d.xiaomi.net:443/artifactory/api/npm/mi-npm/mpegts.js/-/mpegts.js-1.6.10.tgz#a2ff64039283e62a9e50223f4ce02adea1ffd132"
+  integrity sha1-ov9kA5KD5iqeUCI/TOAq3qH/0TI=
+  dependencies:
+    es6-promise "^4.2.5"
+    webworkify-webpack "^2.1.5"
 
 ms@2.0.0:
   version "2.0.0"
@@ -10266,6 +10279,11 @@ websocket-extensions@>=0.1.1:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/websocket-extensions/-/websocket-extensions-0.1.4.tgz#7f8473bc839dfd87608adb95d7eb075211578a42"
   integrity sha512-OqedPIGOfsDlo31UNwYbCFMSaO9m9G/0faIHj5/dZFDMFqPTcx6UwqyOy3COEaEOg/9VsGIpdqn62W5KhoKSpg==
+
+webworkify-webpack@^2.1.5:
+  version "2.1.5"
+  resolved "https://pkgs.d.xiaomi.net:443/artifactory/api/npm/mi-npm/webworkify-webpack/-/webworkify-webpack-2.1.5.tgz#bf4336624c0626cbe85cf1ffde157f7aa90b1d1c"
+  integrity sha1-v0M2YkwGJsvoXPH/3hV/eqkLHRw=
 
 which-boxed-primitive@^1.0.2:
   version "1.0.2"

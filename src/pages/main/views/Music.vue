@@ -141,6 +141,9 @@ export default {
     },
     async choose(item) {
       this.tab = "lyric";
+      this.language = this.languages.includes(this.language)
+        ? this.language
+        : this.languages[1] || this.languages[0];
       this.reset();
       this.ChangeSong({ song: item, stamp: -1 });
     },
@@ -151,7 +154,6 @@ export default {
     },
     send(index) {
       const lyric = this.lyric;
-      this.language = this.language || this.languages[1] || this.languages[0];
       if (/翻译|双语/.test(this.language) && lyric[index].tlyric)
         FormatComment(lyric[index].tlyric, this.select, this.fix, this.shields);
       if (/原文|双语/.test(this.language) && this.lyric[index].lyric)

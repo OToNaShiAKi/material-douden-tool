@@ -30,6 +30,9 @@
         <span v-show="translate && v.text">（{{ v.text }}）</span>
       </div>
     </section>
+    <p class="caption ma-0">
+      可在<v-icon small>mdi-seed</v-icon>页面中进行直播追帧
+    </p>
   </section>
 </template>
 

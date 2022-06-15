@@ -3,7 +3,7 @@
     <Pack>设置</Pack>
     <v-radio-group row v-model="theme" @change="change">
       <v-radio
-        v-for="item in themes"
+        v-for="item of themes"
         :key="item.value"
         :label="item.label"
         :color="item.value"
@@ -18,15 +18,13 @@
         label="Dark"
       />
     </v-radio-group>
-    <section class="ml-1 d-flex">
-      <v-switch
-        v-model="AutoClickRedPocket"
-        inset
-        class="flex-grow-1"
-        label="自动抽红包"
-        @change="setting"
-      />
-    </section>
+    <v-switch
+      v-model="AutoClickRedPocket"
+      inset
+      class="ml-1"
+      label="自动抽红包"
+      @change="setting"
+    />
     <v-data-table :items-per-page="5" :items="filters" :headers="headers">
       <template v-slot:item.actions="{ index }">
         <v-icon small :data-key="index" @click="remove">mdi-delete</v-icon>
@@ -63,7 +61,6 @@ export default {
     ],
     dark: theme.dark,
     AutoClickRedPocket: Socket.AutoClickRedPocket,
-    CommentLog: Socket.CommentLog,
     headers: [
       { text: "过滤弹幕", value: "filter" },
       { text: "操作", value: "actions", sortable: false },

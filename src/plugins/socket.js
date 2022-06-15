@@ -2,7 +2,6 @@ import { Certification, HandleMessage } from "./utils";
 import { ipcRenderer } from "electron";
 const AutoClickRedPocket =
   localStorage.getItem("AutoClickRedPocket") === "false";
-const CommentLog = localStorage.getItem("CommentLog") === "true";
 const filters = JSON.parse(localStorage.getItem("filters")) || [
   "老板大气！点点红包抽礼物！",
 ];
@@ -19,34 +18,37 @@ export default class Socket {
       };
     },
     SUPER_CHAT_MESSAGE: async ({ data }) => {
+      const text = await ipcRenderer.invoke("CutWord", data.message);
+      return {
+        info: data.message,
+        uid: data.uid,
+        nickname: data.user_info.uname,
+        style: { color: data.background_bottom_color },
+        text,
+      };
+    },
+    POPULARITY_RED_POCKET_START: async ({ data }, socket) => {
       if (Socket.AutoClickRedPocket) {
-        const text = await ipcRenderer.invoke("CutWord", data.message);
+        const result = ipcRenderer.invoke(
+          "ClickRedPocket",
+          socket.ruid,
+          socket.roomid,
+          data.lot_id
+        );
         return {
-          info: data.message,
-          uid: data.uid,
-          nickname: data.user_info.uname,
-          style: { color: data.background_bottom_color },
-          text,
+          info: "自动点击红包" + (result ? "成功" : "失败"),
+          uid: socket.uid,
+          nickname: "System",
+          class: "primary--text",
         };
       }
     },
-    POPULARITY_RED_POCKET_START: async ({ data }, socket) => {
-      const result = ipcRenderer.invoke(
-        "ClickRedPocket",
-        socket.ruid,
-        socket.roomid,
-        data.lot_id
-      );
-      return {
-        info: "自动点击红包" + (result ? "成功" : "失败"),
-        uid: socket.uid,
-        nickname: "System",
-        class: "primary--text",
-      };
+    room_admin_entrance: ({ uid }, socket) => {
+      socket.admin = socket.uid === uid;
     },
+    Live: ({ roomid }) => ipcRenderer.send("Live", roomid),
   };
   static AutoClickRedPocket = !AutoClickRedPocket;
-  static CommentLog = CommentLog;
   static plugin = null;
   static filters = filters;
 
@@ -79,6 +81,7 @@ export default class Socket {
         })
       )
     );
+    ipcRenderer.send("Live", this.roomid);
     this.timer = setInterval(() => {
       const buffer = new ArrayBuffer(16);
       const i = new DataView(buffer);
@@ -115,5 +118,3 @@ export default class Socket {
     }
   }
 }
-
-Socket.Command.SUPER_CHAT_MESSAGE_JPN = Socket.Command.SUPER_CHAT_MESSAGE;

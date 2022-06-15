@@ -12,10 +12,12 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true } },
 ]);
 
+export const AllWindows = {};
+
 const createWindow = async (page = "index", options = {}) => {
   Menu.setApplicationMenu(null);
   // Create the browser window.
-  let win = new BrowserWindow({
+  const win = new BrowserWindow({
     width: 650,
     height: 180,
     alwaysOnTop: true,
@@ -28,7 +30,7 @@ const createWindow = async (page = "index", options = {}) => {
     },
     ...options,
   });
-
+  AllWindows[page] = win.id;
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL + page);

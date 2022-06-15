@@ -4,7 +4,7 @@
       <v-list dense nav>
         <v-list-item
           color="primary"
-          v-for="item in items"
+          v-for="item of items"
           :key="item.to"
           :to="item.to"
         >
@@ -30,7 +30,8 @@ export default {
   name: "App",
   data: () => ({
     items: [
-      { title: "棉花糖", icon: "mdi-candy", to: "/" },
+      { title: "直播追帧", icon: "mdi-video", to: "/" },
+      { title: "棉花糖", icon: "mdi-candy", to: "/candy" },
       { title: "禁言用户", icon: "mdi-account-cancel", to: "silent" },
       { title: "动画鉴赏", icon: "mdi-microsoft-excel", to: "anime" },
     ],
@@ -41,5 +42,16 @@ export default {
 <style>
 *::-webkit-scrollbar {
   width: 0;
+}
+video {
+  width: 100%;
+}
+video::-webkit-media-controls-timeline {
+  display: none;
+}
+.thumbnail {
+  position: absolute;
+  right: 0;
+  bottom: 0;
 }
 </style>

@@ -176,7 +176,7 @@ export default {
   left: 14px;
 }
 #danmu {
-  height: 360px;
+  height: 350px;
   overflow: auto;
 }
 </style>

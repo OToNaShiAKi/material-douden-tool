@@ -2,6 +2,7 @@ import axios from "axios";
 import QS from "qs";
 import { Bilibili, Music163, MusicQQ, Baidu, API, Login } from "./config";
 import { BrowserWindow } from "electron";
+import { AllWindows } from "../background";
 
 export const SendComment = async (roomid, msg) => {
   try {
@@ -57,8 +58,7 @@ export const GetWebSocket = async (roomid) => {
       ruid: up_medal && up_medal.uid,
     };
   } catch (error) {
-    const wins = BrowserWindow.getAllWindows();
-    const win = wins[wins.length - 1];
+    const win = BrowserWindow.fromId(AllWindows.index);
     win.webContents.send("CookieOverdue");
     return { host_list: [], comments: [], admin: false, roomid };
   }
@@ -323,5 +323,53 @@ export const ClickRedPocket = async (ruid, room_id, lot_id) => {
     );
   } catch (error) {
     return false;
+  }
+};
+
+export const GetTrackLiveInfo = async (event, room_id) => {
+  try {
+    const {
+      live_time,
+      live_status,
+      playurl_info: {
+        playurl: {
+          g_qn_desc,
+          stream: [
+            {
+              format: [
+                {
+                  format_name,
+                  codec: [{ base_url, accept_qn, current_qn, url_info }],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    } = await Bilibili.get("/xlive/web-room/v2/index/getRoomPlayInfo", {
+      params: {
+        room_id,
+        protocol: "0,1",
+        format: "0,1,2",
+        codec: "0,1",
+        qn: 0,
+        platform: "web",
+        ptype: 8,
+        dolby: 5,
+      },
+    });
+    return {
+      live_time,
+      live_status,
+      room_id,
+      g_qn_desc,
+      base_url,
+      accept_qn,
+      current_qn,
+      url_info,
+      format_name,
+    };
+  } catch (error) {
+    return { room_id, live_status: 0 };
   }
 };
