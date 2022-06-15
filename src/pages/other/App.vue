@@ -34,6 +34,7 @@ export default {
       { title: "棉花糖", icon: "mdi-candy", to: "/candy" },
       { title: "禁言用户", icon: "mdi-account-cancel", to: "silent" },
       { title: "动画鉴赏", icon: "mdi-microsoft-excel", to: "anime" },
+      { title: "反馈", icon: "mdi-chart-bubble", to: "sponsor" },
     ],
   }),
 };

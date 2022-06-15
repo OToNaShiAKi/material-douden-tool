@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <video controls poster="/public/favicon.png" id="tracing" />
+    <video controls id="tracing" />
     <section class="d-flex align-center">
       <v-select class="mr-3" :items="rooms" v-model="selected" @change="live" />
       <v-btn
