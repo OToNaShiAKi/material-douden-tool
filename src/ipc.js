@@ -152,17 +152,18 @@ ipcMain.handle("CutWord", async (event, phrase) => {
   return text;
 });
 
-ipcMain.on("OtherWindow", (event, page) => {
-  const win = AllWindows.other && BrowserWindow.fromId(AllWindows.other);
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  !win &&
-    createWindow(page, {
+ipcMain.on("OtherWindow", async (event, page) => {
+  let win = AllWindows.other && BrowserWindow.fromId(AllWindows.other);
+  if (!win) {
+    const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+    win = await createWindow(page, {
       width,
       height,
       x: 0,
       y: 0,
       alwaysOnTop: false,
     });
+  }
 });
 
 ipcMain.on("SaveFiles", async (event, Datas, name, encoding = "buffer") => {

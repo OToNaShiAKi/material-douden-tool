@@ -86,9 +86,7 @@ export default {
     const select = (localStorage.getItem("select") || "").split(",");
     this.video = document.getElementById("tracing");
     this.selected = select[0];
-    ipcRenderer.on("Live", (event, roomid) => {
-      this.live(roomid);
-    });
+    ipcRenderer.on("Live", (event, roomid) => this.live(roomid));
     select[0] && this.live(select[0]);
   },
   data: () => ({

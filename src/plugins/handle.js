@@ -1,4 +1,5 @@
 import { GetVideoDurantion } from "./axios";
+import { FormatDuration } from "./utils";
 
 const i = "320305.131321201";
 

@@ -1,6 +1,6 @@
 "use strict";
 
-import { app, protocol, BrowserWindow, Menu } from "electron";
+import { app, protocol, BrowserWindow, Menu, session } from "electron";
 import { autoUpdater } from "electron-updater";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
@@ -72,6 +72,10 @@ app.on("ready", async () => {
     }
   }
   createWindow();
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    details.requestHeaders["referer"] = "https://live.bilibili.com";
+    callback({ requestHeaders: details.requestHeaders });
+  });
 });
 
 // Exit cleanly on request from parent process in development mode.
