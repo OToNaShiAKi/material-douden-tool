@@ -54,23 +54,24 @@ const CreatePlayer = (result, Tracing) => {
       url: result.url_info[0].host + result.base_url + result.url_info[0].extra,
     },
     {
+      enableWorker: true,
       enableStashBuffer: false,
       autoCleanupSourceBuffer: true,
     }
   );
-  player.attachMediaElement(Tracing);
+  player.attachMediaElement(Tracing.video);
   player.load();
   player.play();
   player.on(mpegts.Events.ERROR, () => {
     player.unload();
     player.detachMediaElement();
     player.destroy();
-    CreatePlayer(result);
+    Tracing.player = CreatePlayer(result, Tracing);
   });
   player.on(mpegts.Events.STATISTICS_INFO, () => {
     const end = player.buffered.end(0);
     const current = player.currentTime;
-    Tracing.playbackRate = end - current > 1.5 ? 1.5 : 1;
+    Tracing.video.playbackRate = end - current > 1.5 ? 1.5 : 1;
   });
   player.roomid = result.room_id;
   return player;
@@ -79,6 +80,11 @@ const CreatePlayer = (result, Tracing) => {
 const mseLivePlayback = mpegts.getFeatureList().mseLivePlayback;
 const canvas = document.createElement("canvas");
 const ctx = canvas.getContext("2d");
+canvas.width = 1920;
+canvas.height = 1080;
+ctx.fillStyle = "red";
+ctx.font = "normal normal 600 150px/200px Robot";
+ctx.textBaseline = "top";
 
 export default {
   name: "Video",
@@ -111,7 +117,7 @@ export default {
           this.player.detachMediaElement();
           this.player.destroy();
         }
-        this.player = CreatePlayer(live, this.video);
+        this.player = CreatePlayer(live, this);
         this.timer = live.live_time;
       }
       const rooms = JSON.parse(localStorage.getItem("rooms"));
@@ -119,11 +125,6 @@ export default {
       this.rooms = rooms.filter(({ value }) => select.includes(value));
     },
     screenshot() {
-      canvas.width = this.video.clientWidth;
-      canvas.height = this.video.clientHeight;
-      ctx.fillStyle = "red";
-      ctx.font = "normal normal 600 120px/180px Robot";
-      ctx.textBaseline = "top";
       const key = Date.now();
       const time = FormatDuration(Math.floor(key / 1000 - this.timer), true);
       ctx.drawImage(this.video, 0, 0, canvas.width, canvas.height);
