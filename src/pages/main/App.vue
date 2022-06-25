@@ -65,11 +65,11 @@ export default {
     fix: undefined,
     pages: [
       { icon: "mdi-chat", to: "live" },
-      { icon: "mdi-video", to: "room" },
+      { icon: "mdi-home", to: "room" },
       { icon: "mdi-music", to: "music" },
       { icon: "mdi-flash", to: "shortcut" },
       { icon: "mdi-code-brackets", to: "bracket" },
-      { icon: "mdi-cookie", to: "cookie" },
+      { icon: "mdi-account", to: "cookie" },
       { icon: "mdi-shield-remove", to: "shield" },
       { icon: "mdi-cog", to: "theme" },
     ],

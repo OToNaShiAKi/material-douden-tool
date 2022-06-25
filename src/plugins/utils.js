@@ -100,3 +100,10 @@ export const FormatDuration = (value, hour = false) => {
   } else time = m.toString().padStart(2, "0") + time;
   return time;
 };
+
+export const Colors = {
+  container: "#f3969a",
+  background: "#ffffff",
+  text: "#333333",
+  tip: "#aaaaaa",
+};

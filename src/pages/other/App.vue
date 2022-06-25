@@ -55,4 +55,8 @@ video::-webkit-media-controls-timeline {
   right: 0;
   bottom: 0;
 }
+.sponsor {
+  width: 210px !important;
+  display: inline-block !important;
+}
 </style>

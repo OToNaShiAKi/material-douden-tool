@@ -27,6 +27,7 @@ const createWindow = async (page = "index", options = {}) => {
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
       nodeIntegration: true,
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
+      webSecurity: false,
     },
     ...options,
   });

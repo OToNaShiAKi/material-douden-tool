@@ -1,21 +1,43 @@
 <template>
-  <section class="card-container">
-    <div class="card-body">
+  <section
+    class="card-container"
+    :style="{ backgroundColor: colors.container }"
+  >
+    <div class="card-body" :style="{ backgroundColor: colors.background }">
       <div class="card-wrap">
-        <div contenteditable="true" class="card-text"><slot /></div>
+        <div
+          contenteditable="true"
+          :style="{ color: colors.text, fontSize: size[1] + 'px' }"
+          class="card-text"
+        >
+          <slot />
+        </div>
       </div>
-      <div class="card-brand">{{ tip }}</div>
+      <div
+        class="card-brand"
+        contenteditable="true"
+        :style="{ color: colors.tip, fontSize: size[0] + 'px' }"
+      >
+        {{ tip }}
+      </div>
     </div>
     <div class="card-logo">
-      <img src="/candy.png" class="card-image" />
+      <img :src="logo" class="card-image" />
     </div>
   </section>
 </template>
 
 <script>
+import { Colors } from "../plugins/utils";
+
 export default {
   name: "Card",
-  props: { tip: String },
+  props: {
+    tip: String,
+    colors: { type: Object, default: () => ({ ...Colors }) },
+    logo: { type: String, default: "/candy.png" },
+    size: Array,
+  },
 };
 </script>
 
@@ -26,6 +48,7 @@ export default {
   text-align: center;
   width: 600px;
   margin: "auto";
+  font-family: "CandyCustom";
 }
 .card-body {
   background-color: #fff;
@@ -36,8 +59,8 @@ export default {
   padding: 5px 0;
 }
 .card-image {
-  width: 40px;
-  height: 40px;
+  max-width: 100%;
+  max-height: 40px;
   vertical-align: middle;
   margin: auto;
 }

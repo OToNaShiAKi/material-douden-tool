@@ -152,9 +152,11 @@ ipcMain.handle("CutWord", async (event, phrase) => {
   return text;
 });
 
-ipcMain.on("OtherWindow", async (event, page) => {
+ipcMain.on("OtherWindow", async (event, page, DevTools = false) => {
   let win = AllWindows.other && BrowserWindow.fromId(AllWindows.other);
-  if (!win) {
+  if (win && DevTools) {
+    win.webContents.openDevTools();
+  } else if (!win) {
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
     win = await createWindow(page, {
       width,
