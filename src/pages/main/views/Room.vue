@@ -40,15 +40,8 @@
         添加
       </v-btn>
     </section>
-    <v-subheader>弹幕颜色、模式</v-subheader>
     <section class="d-flex align-center">
-      <v-select
-        class="mr-3"
-        :messages="message"
-        :items="rooms"
-        v-model="id"
-        label="房间"
-      />
+      <v-select class="mr-3" :items="rooms" v-model="id" label="房间" />
       <v-select
         class="mr-3"
         :items="modes[id].colors"
@@ -71,6 +64,16 @@
         提交
       </v-btn>
     </section>
+    <v-chip-group
+      column
+      color="primary"
+      @change="change"
+      :value="medals[0] && medals[0].value"
+    >
+      <v-chip v-for="v of medals" outlined :value="v.value" :key="v.value">
+        {{ v.medal_name }}
+      </v-chip>
+    </v-chip-group>
   </section>
 </template>
 
@@ -88,7 +91,7 @@ export default {
     name: "",
     id: "",
     modes: { "": { colors: [], modes: [] } },
-    message: "房间配置正在请求",
+    medals: [],
   }),
   computed: {
     ...mapState(["rooms"]),
@@ -104,7 +107,8 @@ export default {
       )
     );
     for (const item of modes) this.modes[item.roomid] = item;
-    this.message = "";
+    const uid = this.$store.state.cookie.match(/DedeUserID=([^;]+);/);
+    this.medals = await ipcRenderer.invoke("MedalWall", uid[1]);
   },
   methods: {
     ...mapMutations(["ChangeSelect", "ChangeRooms", "Notify"]),
@@ -132,6 +136,9 @@ export default {
         mode
       );
       this.Notify(`房间${this.id}设置${result ? "成功" : "失败"}`);
+    },
+    change(value) {
+      value && ipcRenderer.send("ChangeMedal", value);
     },
   },
 };

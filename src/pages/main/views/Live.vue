@@ -62,6 +62,8 @@ export default {
   }),
   created() {
     Socket.plugin = this;
+    const uid = this.$store.state.cookie.match(/DedeUserID=([^;]+);/);
+    this.uid = uid[1];
   },
   methods: {
     ...mapMutations(["Notify"]),
@@ -94,7 +96,6 @@ export default {
           } else sockets.splice(index, 1);
         }
         const result = await ipcRenderer.invoke("GetWebSocket", sockets);
-        this.uid = result[0] ? result[0].uid : "";
         for (const item of result) {
           const socket = new Socket(item);
           this.sockets[item.roomid] = socket;

@@ -43,10 +43,10 @@ export default class Socket {
         };
       }
     },
-    room_admin_entrance: ({ uid }, socket) => {
+    ROOM_ADMIN_ENTRANCE: ({ uid }, socket) => {
       socket.admin = socket.uid === uid;
     },
-    Live: ({ roomid }) => ipcRenderer.send("Live", roomid),
+    LIVE: ({ roomid }) => ipcRenderer.send("Live", roomid),
   };
   static AutoClickRedPocket = !AutoClickRedPocket;
   static plugin = null;

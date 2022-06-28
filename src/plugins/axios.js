@@ -373,3 +373,34 @@ export const GetTrackLiveInfo = async (event, room_id) => {
     return { room_id, live_status: 0 };
   }
 };
+
+export const MedalWall = async (event, target_id) => {
+  try {
+    const { list } = await Bilibili.get("/xlive/web-ucenter/user/MedalWall", {
+      params: { target_id },
+    });
+    return list
+      .sort((a, b) => b.wearing_status - a.wearing_status)
+      .map(({ medal_info }) => ({
+        value: medal_info.medal_id,
+        medal_name: medal_info.medal_name,
+      }));
+  } catch (error) {
+    return [];
+  }
+};
+
+export const ChangeMedal = async (event, medal_id) => {
+  try {
+    return await Bilibili.post(
+      "/xlive/app-ucenter/v1/fansMedal/wear",
+      QS.stringify({
+        medal_id,
+        csrf: Bilibili.defaults.data.csrf,
+        csrf_token: Bilibili.defaults.data.csrf_token,
+      })
+    );
+  } catch (error) {
+    return false;
+  }
+};

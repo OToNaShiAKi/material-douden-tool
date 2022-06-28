@@ -17,6 +17,8 @@ import {
   GetLoginInfo,
   ClickRedPocket,
   GetTrackLiveInfo,
+  MedalWall,
+  ChangeMedal,
 } from "./plugins/axios";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -228,3 +230,7 @@ ipcMain.on("Live", (event, roomid) => {
   const win = AllWindows.other && BrowserWindow.fromId(AllWindows.other);
   win && win.webContents.send("Live", roomid);
 });
+
+ipcMain.handle("MedalWall", MedalWall);
+
+ipcMain.on("ChangeMedal", ChangeMedal);
