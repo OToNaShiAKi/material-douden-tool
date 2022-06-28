@@ -379,12 +379,11 @@ export const MedalWall = async (event, target_id) => {
     const { list } = await Bilibili.get("/xlive/web-ucenter/user/MedalWall", {
       params: { target_id },
     });
-    return list
-      .sort((a, b) => b.wearing_status - a.wearing_status)
-      .map(({ medal_info }) => ({
-        value: medal_info.medal_id,
-        medal_name: medal_info.medal_name,
-      }));
+    return list.map(({ medal_info }) => ({
+      value: medal_info.medal_id,
+      medal_name: medal_info.medal_name,
+      wearing_status: medal_info.wearing_status,
+    }));
   } catch (error) {
     return [];
   }

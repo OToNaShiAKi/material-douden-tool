@@ -64,12 +64,7 @@
         提交
       </v-btn>
     </section>
-    <v-chip-group
-      column
-      color="primary"
-      @change="change"
-      :value="medals[0] && medals[0].value"
-    >
+    <v-chip-group column color="primary" @change="change" v-model="medal">
       <v-chip v-for="v of medals" outlined :value="v.value" :key="v.value">
         {{ v.medal_name }}
       </v-chip>
@@ -92,6 +87,7 @@ export default {
     id: "",
     modes: { "": { colors: [], modes: [] } },
     medals: [],
+    medal: null,
   }),
   computed: {
     ...mapState(["rooms"]),
@@ -109,6 +105,12 @@ export default {
     for (const item of modes) this.modes[item.roomid] = item;
     const uid = this.$store.state.cookie.match(/DedeUserID=([^;]+);/);
     this.medals = await ipcRenderer.invoke("MedalWall", uid[1]);
+    for (const item of this.medals) {
+      if (item.wearing_status) {
+        this.medal = item.value;
+        break;
+      }
+    }
   },
   methods: {
     ...mapMutations(["ChangeSelect", "ChangeRooms", "Notify"]),
