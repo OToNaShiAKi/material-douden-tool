@@ -42,10 +42,10 @@ export default {
   components: { Pack },
   name: "Shortcut",
   computed: {
-    shortcuts() {
-      const cuts = this.$store.state.shortcuts;
+    shortcuts: ({ $store: { state } }) => {
       const result = [];
-      for (let key in cuts) result.push({ key, phrase: cuts[key] });
+      for (let key in state.shortcuts)
+        result.push({ key, phrase: state.shortcuts[key] });
       return result.sort((a, b) => (a.key >= b.key ? -1 : 1));
     },
   },

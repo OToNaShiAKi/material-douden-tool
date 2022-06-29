@@ -29,7 +29,7 @@ export default class Socket {
     },
     POPULARITY_RED_POCKET_START: async ({ data }, socket) => {
       if (Socket.AutoClickRedPocket) {
-        const result = ipcRenderer.invoke(
+        const result = await ipcRenderer.invoke(
           "ClickRedPocket",
           socket.ruid,
           socket.roomid,

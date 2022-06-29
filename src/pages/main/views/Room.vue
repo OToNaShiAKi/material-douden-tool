@@ -91,10 +91,8 @@ export default {
   }),
   computed: {
     ...mapState(["rooms"]),
-    select() {
-      const select = this.$store.state.select || [];
-      return this.multiple ? select : select[0];
-    },
+    select: ({ $store: { state }, multiple }) =>
+      multiple ? state.select : state.select[0],
   },
   async created() {
     const modes = await Promise.all(

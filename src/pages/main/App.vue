@@ -85,10 +85,8 @@ export default {
       "stamp",
       "song",
     ]),
-    fixes() {
-      const all = this.$store.state.fixes;
-      return all.filter((v) => v.scope !== "歌曲");
-    },
+    fixes: ({ $store: { state } }) =>
+      state.fixes.filter((v) => v.scope !== "歌曲"),
   },
   created() {
     const cookie = localStorage.getItem("cookie");

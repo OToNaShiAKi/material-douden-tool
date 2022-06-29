@@ -24,8 +24,7 @@
         >
           禁言
         </v-chip>
-        <span class="ml-2">{{ v.nickname }}</span>
-        ：
+        <span class="ml-2">{{ v.nickname }}：</span>
         <span :class="v.class" :style="v.style">{{ v.info }}</span>
         <span v-show="translate && v.text">（{{ v.text }}）</span>
       </div>
@@ -47,11 +46,8 @@ export default {
   name: "Live",
   computed: {
     ...mapState(["select"]),
-    rooms() {
-      return this.$store.state.rooms.filter(({ value }) =>
-        this.select.includes(value)
-      );
-    },
+    rooms: ({ $store: { state } }) =>
+      state.rooms.filter(({ value }) => state.select.includes(value)),
   },
   data: ({ $store: { state } }) => ({
     sockets: {},
@@ -76,7 +72,7 @@ export default {
         const result = await ipcRenderer.invoke("SilentUser", uid, this.show);
         this.Notify(result ? "已禁言：" + nickname : "禁言失败");
       } else if (innerText && !/\n/.test(innerText)) {
-        innerText = innerText.replace(/（|）/g, "");
+        innerText = innerText.replace(/（|）|：/g, "");
         clipboard.writeText(innerText);
         this.Notify("已复制：" + innerText);
       }

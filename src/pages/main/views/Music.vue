@@ -107,19 +107,13 @@ export default {
   }),
   computed: {
     ...mapState(["select", "shields", "stamp"]),
-    fixes() {
-      const all = this.$store.state.fixes;
-      return all.filter((v) => v.scope !== "同传");
-    },
-    lyric() {
-      const { stamp = [] } = this.$store.state.song;
-      return stamp;
-    },
-    languages() {
+    fixes: ({ $store: { state } }) =>
+      state.fixes.filter((v) => v.scope !== "同传"),
+    lyric: ({ $store: { state } }) => state.song.stamp || [],
+    languages: ({ $store: { state } }) => {
       const result = ["原文"];
       result.height = 40;
-      const song = this.$store.state.song;
-      if (song.lyric && song.tlyric) {
+      if (state.song.lyric && state.song.tlyric) {
         result.push("翻译", "双语");
         result.height = 64;
       }
