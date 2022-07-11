@@ -101,6 +101,16 @@ export const FormatDuration = (value, hour = false) => {
   return time;
 };
 
+export const FormatTime = (date) => {
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, "0");
+  const d = date.getDate().toString().padStart(2, "0");
+  const h = date.getHours().toString().padStart(2, "0");
+  const t = date.getMinutes().toString().padStart(2, "0");
+  const s = date.getSeconds().toString().padStart(2, "0");
+  return `${y}-${m}-${d} ${h}:${t}:${s}`;
+};
+
 export const Colors = {
   container: "#f3969a",
   background: "#ffffff",

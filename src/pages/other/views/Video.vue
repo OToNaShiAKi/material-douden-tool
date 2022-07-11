@@ -1,6 +1,18 @@
 <template>
   <v-container>
     <video controls id="tracing" />
+    <p class="d-flex justify-space-between mb-0 caption align-center">
+      <span>直播开始时间：{{ new Date(timer * 1000) | FormatTime }}</span>
+      <v-btn
+        fab
+        outlined
+        small
+        color="primary"
+        @click="() => live(selected, true)"
+      >
+        <v-icon>mdi-refresh</v-icon>
+      </v-btn>
+    </p>
     <section class="d-flex align-center">
       <v-select class="mr-3" :items="rooms" v-model="selected" @change="live" />
       <v-btn
@@ -44,9 +56,9 @@
 <script>
 import mpegts from "mpegts.js";
 import { ipcRenderer } from "electron";
-import { FormatDuration } from "../../../plugins/utils";
+import { FormatDuration, FormatTime } from "../../../plugins/utils";
 
-const CreatePlayer = (result, Tracing) => {
+const CreatePlayer = (result, video) => {
   const player = mpegts.createPlayer(
     {
       type: result.format_name,
@@ -59,19 +71,19 @@ const CreatePlayer = (result, Tracing) => {
       autoCleanupSourceBuffer: true,
     }
   );
-  player.attachMediaElement(Tracing.video);
+  player.attachMediaElement(video);
   player.load();
   player.play();
   player.on(mpegts.Events.ERROR, () => {
     player.unload();
     player.detachMediaElement();
     player.destroy();
-    Tracing.player = CreatePlayer(result, Tracing);
+    CreatePlayer.player = CreatePlayer(result, video);
   });
   player.on(mpegts.Events.STATISTICS_INFO, () => {
     const end = player.buffered.end(0);
     const current = player.currentTime;
-    Tracing.video.playbackRate = end - current > 1.5 ? 1.5 : 1;
+    video.playbackRate = end - current > 1.5 ? 1.5 : 1;
   });
   player.roomid = result.room_id;
   return player;
@@ -99,25 +111,26 @@ export default {
     selected: null,
     rooms: [],
     video: null,
-    player: null,
     timer: 0,
     images: [],
   }),
   methods: {
-    async live(roomid) {
+    async live(roomid = this.selected, refresh = false) {
       const live = await ipcRenderer.invoke("TrackLive", roomid);
+      this.timer = 0;
       if (
-        roomid == this.selected &&
-        live.live_status &&
-        mseLivePlayback &&
-        (!this.player || roomid != this.player.roomid)
+        refresh ||
+        (roomid == this.selected &&
+          live.live_status &&
+          mseLivePlayback &&
+          (!CreatePlayer.player || roomid != CreatePlayer.player.roomid))
       ) {
-        if (this.player) {
-          this.player.unload();
-          this.player.detachMediaElement();
-          this.player.destroy();
+        if (CreatePlayer.player) {
+          CreatePlayer.player.unload();
+          CreatePlayer.player.detachMediaElement();
+          CreatePlayer.player.destroy();
         }
-        this.player = CreatePlayer(live, this);
+        CreatePlayer.player = CreatePlayer(live, this.video);
         this.timer = live.live_time;
       }
       const rooms = JSON.parse(localStorage.getItem("rooms"));
@@ -145,6 +158,10 @@ export default {
       );
       ipcRenderer.send("SaveFiles", datas, Date.now().toString(), "base64");
     },
+  },
+  filters: {
+    FormatTime: (timer) =>
+      timer > 0 ? FormatTime(timer) : "未开播（监控开播中）",
   },
 };
 </script>
