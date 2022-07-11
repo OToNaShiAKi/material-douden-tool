@@ -107,10 +107,10 @@ export default {
     async live(roomid) {
       const live = await ipcRenderer.invoke("TrackLive", roomid);
       if (
-        roomid === this.selected &&
+        roomid == this.selected &&
         live.live_status &&
         mseLivePlayback &&
-        (!this.player || roomid !== this.player.roomid)
+        (!this.player || roomid != this.player.roomid)
       ) {
         if (this.player) {
           this.player.unload();

@@ -181,8 +181,8 @@ export default {
         (target.scrollTop + target.clientHeight / 2) / this.languages.height
       );
       this.active = true;
-      this.ChangeSong({ stamp: count - 1 });
-      this.send(count - 1);
+      this.ChangeSong({ stamp: count });
+      this.send(count);
     },
     track({ target }) {
       const now = Date.now();

@@ -2,8 +2,10 @@
   <section>
     <Pack>屏蔽词</Pack>
     <v-data-table :items-per-page="5" :items="shields" :headers="headers">
-      <template v-slot:item.actions="{ index }">
-        <v-icon small @click="remove" :data-key="index">mdi-delete</v-icon>
+      <template v-slot:item.actions="{ item }">
+        <v-icon small @click="remove" :data-key="item.shield">
+          mdi-delete
+        </v-icon>
       </template>
     </v-data-table>
     <section class="d-flex align-center">
@@ -13,7 +15,7 @@
         添加
       </v-btn>
     </section>
-    <p class="caption">被屏蔽词汇记录保存在安装目录下的forbidden-words.txt中</p>
+    <p class="caption">被屏蔽弹幕记录保存在安装目录下的forbidden-words.txt中</p>
   </section>
 </template>
 
@@ -37,18 +39,24 @@ export default {
   methods: {
     ...mapMutations(["ChangeShields"]),
     add() {
-      this.shields.push({
-        shield: this.shield,
-        handle: this.handle,
-      });
+      const find = this.shields.find((item) => item.shield === this.shield);
+      if (!find) {
+        this.shields.push({
+          shield: this.shield,
+          handle: this.handle,
+        });
+      } else {
+        find.handle = this.handle;
+      }
       this.shield = "";
       this.handle = "";
       this.ChangeShields(this.shields);
     },
     remove({ target: { dataset } }) {
-      const { key } = dataset;
-      this.shields.splice(key, 1);
-      this.ChangeShields(this.shields);
+      const shields = this.shields.filter(
+        (item) => item.shield !== dataset.key
+      );
+      this.ChangeShields(shields);
     },
   },
 };

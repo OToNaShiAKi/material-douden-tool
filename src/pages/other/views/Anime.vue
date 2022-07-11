@@ -15,8 +15,8 @@
       :headers="headers"
       :items="comments"
     >
-      <template v-slot:item.actions="{ index }">
-        <v-icon small @click="remove" :data-key="index">mdi-delete</v-icon>
+      <template v-slot:item.actions="{ item }">
+        <v-icon small @click="remove" :data-key="item.bvid">mdi-delete</v-icon>
       </template>
       <template v-slot:item.bvid="{ value }">
         <a :href="value" @click.prevent="open">{{ value }}</a>
@@ -100,7 +100,7 @@ export default {
     },
     remove({ target: { dataset } }) {
       const { key } = dataset;
-      this.comments.splice(key, 1);
+      this.comments = this.comments.filter((item) => item.bvid !== key);
     },
     excel() {
       let total = 0;

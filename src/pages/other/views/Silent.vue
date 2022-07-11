@@ -1,8 +1,8 @@
 <template>
   <v-container>
     <v-data-table :loading="loading" :items="silents" :headers="headers">
-      <template v-slot:item.actions="{ index }">
-        <v-icon small @click="remove" :data-key="index">mdi-delete</v-icon>
+      <template v-slot:item.actions="{ item }">
+        <v-icon small @click="remove" :data-key="item.id">mdi-delete</v-icon>
       </template>
     </v-data-table>
     <v-btn
@@ -41,10 +41,14 @@ export default {
   methods: {
     ...mapMutations(["Notify"]),
     async remove({ target: { dataset } }) {
-      const { value, id } = this.silents[dataset.key];
-      const result = await ipcRenderer.invoke("RemoveSilentUser", id, +value);
-      if (result) this.silents.splice(dataset.key, 1);
-      else this.Notify(`删除用户失败${id}失败`);
+      const find = this.silents.find((item) => item.id == dataset.key);
+      const result = await ipcRenderer.invoke(
+        "RemoveSilentUser",
+        find.id,
+        +find.value
+      );
+      if (result) this.silents = this.silents.filter((item) => item !== find);
+      else this.Notify(`删除用户失败${find.id}失败`);
     },
     async query() {
       this.loading = true;

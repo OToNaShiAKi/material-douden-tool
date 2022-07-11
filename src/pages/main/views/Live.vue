@@ -16,7 +16,7 @@
         class="caption d-flex align-baseline"
       >
         <v-chip
-          v-if="sockets[show] && sockets[show].admin && v.uid !== uid"
+          v-if="sockets[show] && sockets[show].admin && v.uid != uid"
           x-small
           outlined
           :data-uid="v.uid"

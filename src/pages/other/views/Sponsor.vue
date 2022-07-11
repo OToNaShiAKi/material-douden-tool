@@ -6,7 +6,7 @@
       <li>Bilibili: https://space.bilibili.com/13616635</li>
       <li>Mail: 1362446747@qq.com</li>
     </ul>
-    <v-subheader>软件版本：1.1.9</v-subheader>
+    <v-subheader>软件版本：{{ version }}</v-subheader>
     <p class="caption ml-4">如遇闪退，表明已自动更新（懒得做更新弹窗）。</p>
     <v-subheader>赏米：</v-subheader>
     <p class="caption ml-4">感激不尽(′▽`ʃ♡ƪ)</p>
@@ -22,5 +22,7 @@
 </template>
 
 <script>
-export default { name: "Sponsor" };
+import Package from "../../../../package.json";
+
+export default { name: "Sponsor", data: () => ({ version: Package.version }) };
 </script>

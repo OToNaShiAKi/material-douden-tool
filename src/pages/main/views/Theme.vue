@@ -26,8 +26,10 @@
       @change="setting"
     />
     <v-data-table :items-per-page="5" :items="filters" :headers="headers">
-      <template v-slot:item.actions="{ index }">
-        <v-icon small :data-key="index" @click="remove">mdi-delete</v-icon>
+      <template v-slot:item.actions="{ item }">
+        <v-icon small :data-key="item.filter" @click="remove">
+          mdi-delete
+        </v-icon>
       </template>
     </v-data-table>
     <v-text-field
@@ -83,16 +85,17 @@ export default {
       localStorage.setItem(key, value);
     },
     remove({ target: { dataset } }) {
-      const { key } = dataset;
-      this.filters.splice(key, 1);
-      Socket.filters.splice(key, 1);
+      Socket.filters = Socket.filters.filter((item) => item !== dataset.key);
+      this.filters = Socket.filters.map((filter) => ({ filter }));
       localStorage.setItem("filters", JSON.stringify(Socket.filters));
     },
     add() {
-      this.filters.push({ filter: this.filter });
-      Socket.filters.push(this.filter);
+      if (!Socket.filters.includes(this.filter)) {
+        Socket.filters.push(this.filter);
+        this.filters = Socket.filters.map((filter) => ({ filter }));
+        localStorage.setItem("filters", JSON.stringify(Socket.filters));
+      }
       this.filter = "";
-      localStorage.setItem("filters", JSON.stringify(Socket.filters));
     },
   },
 };

@@ -2,8 +2,8 @@
   <section>
     <Pack>标识符</Pack>
     <v-data-table :items-per-page="5" :items="fixes" :headers="headers">
-      <template v-slot:item.actions="{ index }">
-        <v-icon small @click="remove" :data-key="index">mdi-delete</v-icon>
+      <template v-slot:item.actions="{ item }">
+        <v-icon small @click="remove" :data-key="item.text">mdi-delete</v-icon>
       </template>
     </v-data-table>
     <section class="d-flex align-center">
@@ -40,21 +40,24 @@ export default {
   methods: {
     ...mapMutations(["ChangeFixes"]),
     add() {
-      this.fixes.push({
-        prefix: this.prefix,
-        suffix: this.suffix,
-        text: this.prefix + " " + this.suffix,
-        scope: this.scope,
-      });
-      this.ChangeFixes(this.fixes);
+      const text = this.prefix + " " + this.suffix;
+      const find = this.fixes.find((item) => item.text === text);
+      if (!find) {
+        this.fixes.push({
+          prefix: this.prefix,
+          suffix: this.suffix,
+          text,
+          scope: this.scope,
+        });
+        this.ChangeFixes(this.fixes);
+      }
       this.prefix = "";
       this.suffix = "";
       this.scope = "全部";
     },
     remove({ target: { dataset } }) {
-      const { key } = dataset;
-      this.fixes.splice(key, 1);
-      this.ChangeFixes(this.fixes);
+      const fixes = this.fixes.filter((item) => item.text !== dataset.key);
+      this.ChangeFixes(fixes);
     },
   },
 };
