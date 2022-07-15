@@ -4,7 +4,7 @@
 
 任何使用问题、bug、功能需求可以提 issue。
 
-右侧 release 中下载 exe 即可，因为没有 mac 设备所以没法打包 mac 版本，如有需要可阅读 development.md 自行打包。
+右侧 release 中下载最新版即可，Windows 系统下载 exe 安装包，MacOS 系统下载 dmg 安装包，网络可稳定连接 Github 时软件支持自动更新，自动更新时会闪退。
 
 ## 使用介绍
 
