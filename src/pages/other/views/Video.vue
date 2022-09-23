@@ -98,6 +98,8 @@ ctx.fillStyle = "red";
 ctx.font = "normal normal 600 150px/200px Robot";
 ctx.textBaseline = "top";
 
+const screenshot = JSON.parse(localStorage.getItem("screenshot")) || []
+
 export default {
   name: "Video",
   mounted() {
@@ -112,7 +114,7 @@ export default {
     rooms: [],
     video: null,
     timer: 0,
-    images: [],
+    images: screenshot,
   }),
   methods: {
     async live(roomid = this.selected, refresh = false) {
@@ -147,10 +149,12 @@ export default {
         time,
         key: key.toString(),
       });
+      localStorage.setItem("screenshot", JSON.stringify(this.images))
     },
     remove({ target: { dataset } }) {
       const { key } = dataset;
       this.images = this.images.filter((v) => v.key !== key);
+      localStorage.setItem("screenshot", JSON.stringify(this.images))
     },
     save() {
       const datas = this.images.map(({ src }) =>

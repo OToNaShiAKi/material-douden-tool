@@ -379,11 +379,22 @@ export const MedalWall = async (event, target_id) => {
     const { list } = await Bilibili.get("/xlive/web-ucenter/user/MedalWall", {
       params: { target_id },
     });
-    return list.map(({ medal_info }) => ({
-      value: medal_info.medal_id,
-      medal_name: medal_info.medal_name,
-      wearing_status: medal_info.wearing_status,
-    }));
+    const result = [];
+    for (const { medal_info } of list) {
+      const roomid = await API.get("/x/space/acc/info", {
+        params: { mid: medal_info.target_id },
+      })
+        .then(({ live_room: { roomid } }) => roomid)
+        .catch(() => "");
+      result.push({
+        value: medal_info.medal_id,
+        medal_name: medal_info.medal_name,
+        wearing_status: medal_info.wearing_status,
+        target_id: medal_info.target_id,
+        roomid: `${roomid}`,
+      });
+    }
+    return result;
   } catch (error) {
     return [];
   }

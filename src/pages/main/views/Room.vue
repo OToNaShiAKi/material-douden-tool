@@ -94,6 +94,22 @@ export default {
     select: ({ $store: { state }, multiple }) =>
       multiple ? state.select : state.select[0],
   },
+  watch: {
+    select() {
+      const { AutoChangeMedal = true, select = [] } = this.$store.state;
+      if (AutoChangeMedal) {
+        loop: for (const item of select) {
+          for (const medal of this.medals) {
+            if (item === medal.roomid) {
+              this.medal = medal.value;
+              this.change(medal.value);
+              break loop;
+            }
+          }
+        }
+      }
+    },
+  },
   async created() {
     const modes = await Promise.all(
       this.rooms.map(({ value }) =>
@@ -114,9 +130,6 @@ export default {
     ...mapMutations(["ChangeSelect", "ChangeRooms", "Notify"]),
     async add() {
       this.rooms.push({ value: this.roomid, text: this.name });
-      this.ChangeSelect(
-        this.multiple ? [...this.select, this.roomid] : [this.roomid]
-      );
       this.ChangeRooms(this.rooms);
       const result = await ipcRenderer.invoke("GetUserRoomMode", this.roomid);
       this.roomid = "";
@@ -138,6 +151,7 @@ export default {
       this.Notify(`房间${this.id}设置${result ? "成功" : "失败"}`);
     },
     change(value) {
+      this.medal = value;
       value && ipcRenderer.send("ChangeMedal", value);
     },
   },

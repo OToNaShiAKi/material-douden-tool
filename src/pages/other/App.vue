@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer app expand-on-hover>
+    <v-navigation-drawer app expand-on-hover permanent>
       <v-list dense nav>
         <v-list-item
           color="primary"

@@ -18,13 +18,22 @@
         label="Dark"
       />
     </v-radio-group>
-    <v-switch
-      v-model="AutoClickRedPocket"
-      inset
-      class="ml-1"
-      label="自动抽红包"
-      @change="setting"
-    />
+    <section class="d-flex ml-1">
+      <v-switch
+        v-model="AutoClickRedPocket"
+        inset
+        class="auto-switch"
+        label="自动抽红包"
+        @change="setting"
+      />
+      <v-switch
+        v-model="AutoChangeMedal"
+        @change="ChangeMedal"
+        class="auto-switch"
+        inset
+        label="自动换牌子"
+      />
+    </section>
     <v-data-table :items-per-page="5" :items="filters" :headers="headers">
       <template v-slot:item.actions="{ item }">
         <v-icon small :data-key="item.filter" @click="remove">
@@ -44,13 +53,14 @@
 </template>
 
 <script>
+import { mapMutations } from "vuex";
 import Pack from "../../../components/Pack.vue";
 import Socket from "../../../plugins/socket";
 
 export default {
   name: "Theme",
   components: { Pack },
-  data: ({ $vuetify: { theme } }) => ({
+  data: ({ $vuetify: { theme }, $store: { state } }) => ({
     theme: theme.currentTheme.primary,
     themes: [
       { label: "少女", value: "#fa7298" },
@@ -63,6 +73,7 @@ export default {
     ],
     dark: theme.dark,
     AutoClickRedPocket: Socket.AutoClickRedPocket,
+    AutoChangeMedal: state.AutoChangeMedal,
     headers: [
       { text: "过滤弹幕", value: "filter" },
       { text: "操作", value: "actions", sortable: false },
@@ -71,6 +82,7 @@ export default {
     filter: "",
   }),
   methods: {
+    ...mapMutations(["ChangeMedal"]),
     change(value) {
       this.$vuetify.theme.themes.light.primary = value;
       this.$vuetify.theme.themes.dark.primary = value;

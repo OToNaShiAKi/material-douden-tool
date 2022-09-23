@@ -5,16 +5,7 @@
         <v-icon small @click="remove" :data-key="item.id">mdi-delete</v-icon>
       </template>
     </v-data-table>
-    <v-btn
-      fab
-      absolute
-      outlined
-      small
-      right
-      fixed
-      color="primary"
-      @click="query"
-    >
+    <v-btn fab outlined small right fixed color="primary" @click="query">
       <v-icon>mdi-refresh</v-icon>
     </v-btn>
   </v-container>

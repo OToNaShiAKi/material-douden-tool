@@ -9,29 +9,35 @@
         v-model="show"
       />
     </section>
-    <section id="danmu" ref="danmu" @click="copy">
-      <div
-        v-for="(v, k) of comments[show]"
-        :key="k"
-        class="caption d-flex align-baseline"
-      >
+    <v-virtual-scroll
+      :items="comments[show]"
+      id="danmu"
+      ref="danmu"
+      class="caption"
+      @click="copy"
+      item-height="20"
+    >
+      <template v-slot:default="{ item }">
         <v-chip
-          v-if="sockets[show] && sockets[show].admin && v.uid != uid"
+          v-if="sockets[show] && sockets[show].admin && item.uid != uid"
           x-small
           outlined
-          :data-uid="v.uid"
-          :data-nickname="v.nickname"
+          :data-uid="item.uid"
+          :data-nickname="item.nickname"
         >
           禁言
         </v-chip>
-        <span class="ml-2">{{ v.nickname }}：</span>
-        <span :class="v.class" :style="v.style">{{ v.info }}</span>
-        <span v-show="translate && v.text">（{{ v.text }}）</span>
-      </div>
-    </section>
+        <span class="ml-2">{{ item.nickname }}：</span>
+        <span :class="item.class" :style="item.style">{{ item.info }}</span>
+        <span v-show="translate && item.text">（{{ item.text }}）</span>
+      </template>
+    </v-virtual-scroll>
     <p class="caption ma-1">
       可在<v-icon small>mdi-seed</v-icon>页面中进行直播追帧
     </p>
+    <v-btn fab outlined x-small right bottom fixed color="primary" @click="top">
+      <v-icon>mdi-arrow-up-bold</v-icon>
+    </v-btn>
   </section>
 </template>
 
@@ -57,7 +63,6 @@ export default {
     uid: "",
   }),
   created() {
-    Socket.plugin = this;
     const uid = this.$store.state.cookie.match(/DedeUserID=([^;]+);/);
     this.uid = uid[1];
   },
@@ -77,6 +82,12 @@ export default {
         this.Notify("已复制：" + innerText);
       }
     },
+    top() {
+      this.$vuetify.goTo(0, {
+        container: this.$refs.danmu,
+        easing: "easeInOutCubic",
+      });
+    },
   },
   watch: {
     select: {
@@ -86,6 +97,7 @@ export default {
         for (const key in this.sockets) {
           const index = sockets.indexOf(key);
           if (index < 0) {
+            this.sockets[key].reconnect = false;
             this.sockets[key].socket.close();
             delete this.sockets[key];
             delete comments[key];

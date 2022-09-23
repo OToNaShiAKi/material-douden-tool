@@ -26,6 +26,11 @@ const ChangeFixes = (state, fixes = []) => {
   state.fixes = [...fixes];
 };
 
+const ChangeMedal = (state, value = true) => {
+  state.AutoChangeMedal = value;
+  localStorage.setItem("AutoChangeMedal", value);
+};
+
 const ChangeRooms = (state, rooms = []) => {
   localStorage.setItem("rooms", JSON.stringify(rooms));
   state.rooms = [...rooms];
@@ -62,5 +67,6 @@ export default {
   ChangeRooms,
   ChangeSong,
   ChangeShields,
+  ChangeMedal,
   Notify,
 };

@@ -18,6 +18,7 @@
           <v-icon color="primary" large>mdi-refresh</v-icon>
           <span>二维码已失效</span>
           <span>点击重新获取</span>
+          <span>Cookie存在即登陆成功</span>
         </section>
       </template>
     </v-img>

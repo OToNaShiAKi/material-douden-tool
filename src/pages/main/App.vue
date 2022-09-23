@@ -44,8 +44,9 @@
         color="primary"
         app
         shaped
+        centered
         outlined
-        :timeout="1000"
+        :timeout="1800"
       >
         {{ snackbar.text }}
       </v-snackbar>
@@ -176,5 +177,12 @@ export default {
 #danmu {
   height: 350px;
   overflow: auto;
+}
+.auto-switch {
+  width: 50%;
+}
+.v-virtual-scroll__item {
+  display: flex;
+  align-items: center;
 }
 </style>

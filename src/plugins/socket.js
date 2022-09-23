@@ -15,6 +15,7 @@ export default class Socket {
         uid: info[2][0],
         nickname: info[2][1],
         text,
+        id: Date.now(),
       };
     },
     SUPER_CHAT_MESSAGE: async ({ data }) => {
@@ -25,6 +26,7 @@ export default class Socket {
         nickname: data.user_info.uname,
         style: { color: data.background_bottom_color },
         text,
+        id: Date.now(),
       };
     },
     POPULARITY_RED_POCKET_START: async ({ data }, socket) => {
@@ -40,6 +42,7 @@ export default class Socket {
           uid: socket.uid,
           nickname: "System",
           class: "primary--text",
+          id: Date.now(),
         };
       }
     },
@@ -49,25 +52,32 @@ export default class Socket {
     LIVE: ({ roomid }) => ipcRenderer.send("Live", roomid),
   };
   static AutoClickRedPocket = !AutoClickRedPocket;
-  static plugin = null;
   static filters = filters;
 
   constructor({ host_list, uid, ruid, roomid, token, admin, comments }) {
     const host = host_list.pop();
-    const socket = new WebSocket(`wss://${host.host}:${host.wss_port}/sub`);
-    this.socket = socket;
     this.roomid = roomid;
     this.token = token;
     this.timer = null;
     this.admin = admin;
     this.uid = uid;
     this.ruid = ruid;
-    this.comments = comments;
+    this.comments = comments.reverse();
+    this.reconnect = true;
 
+    this.socket = this.Connect(host);
+  }
+  Connect = (host) => {
+    const socket = new WebSocket(`wss://${host.host}:${host.wss_port}/sub`);
     socket.addEventListener("open", this.Open);
     socket.addEventListener("message", this.Message);
-    socket.addEventListener("close", () => clearInterval(this.timer));
-  }
+    socket.addEventListener("close", () =>
+      this.reconnect
+        ? (this.socket = this.Connect(host))
+        : clearInterval(this.timer)
+    );
+    return socket;
+  };
   Open = () => {
     this.socket.send(
       Certification(
@@ -82,6 +92,7 @@ export default class Socket {
       )
     );
     ipcRenderer.send("Live", this.roomid);
+    clearInterval(this.timer);
     this.timer = setInterval(() => {
       const buffer = new ArrayBuffer(16);
       const i = new DataView(buffer);
@@ -102,19 +113,8 @@ export default class Socket {
         Socket.Command[body.cmd] &&
         (await Socket.Command[body.cmd](body, this));
       if (comment && !Socket.filters.includes(comment.info)) {
-        await this.receive(comment);
+        this.comments.unshift(comment);
       }
     }
   };
-  async receive(message) {
-    this.comments.push(message);
-    const { show, $vuetify, $refs } = Socket.plugin;
-    if (this.roomid === show) {
-      const target = $refs.danmu;
-      $vuetify.goTo(target.scrollHeight, {
-        container: target,
-        easing: "easeInOutCubic",
-      });
-    }
-  }
 }
