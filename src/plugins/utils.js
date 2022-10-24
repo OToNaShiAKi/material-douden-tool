@@ -10,12 +10,18 @@ export const FormatComment = (content, select = [], fix = {}, shield = []) => {
   for (const item of shield) {
     content = content.replace(new RegExp(item.shield, "gi"), item.handle);
   }
-  ipcRenderer.send("SendComment", content.slice(0, 20), select);
-  if (content.length > 20) {
-    content = content.slice(20, content.length - suffix.length);
-    FormatComment(content, select, fix);
+  for (const item of select) {
+    const { [item]: length = FormatComment.CommentLength.default } =
+      FormatComment.CommentLength;
+    ipcRenderer.send("SendComment", content.slice(0, length), item);
+    if (content.length > length) {
+      content = content.slice(length, content.length - suffix.length);
+      FormatComment(content, [item], fix);
+    }
   }
 };
+
+FormatComment.CommentLength = { default: 20 };
 
 export const Certification = (certify) => {
   const json = new TextEncoder().encode(certify);

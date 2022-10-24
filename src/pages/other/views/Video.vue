@@ -2,7 +2,11 @@
   <v-container>
     <video controls id="tracing" />
     <p class="d-flex justify-space-between mb-0 caption align-center">
-      <span>直播开始时间：{{ new Date(timer * 1000) | FormatTime }}</span>
+      <span>
+        开始时间：{{ new Date(timer * 1000) | FormatTime }}
+        <br />
+        开播后同传输入框中按下Alt+P即可记录时点
+      </span>
       <v-btn
         fab
         outlined
@@ -20,7 +24,7 @@
         outlined
         color="primary"
         class="mr-3"
-        :disabled="timer <= 0"
+        :disabled="!timer || timer <= 0"
         @click="screenshot"
       >
         记录时点
@@ -98,7 +102,7 @@ ctx.fillStyle = "red";
 ctx.font = "normal normal 600 150px/200px Robot";
 ctx.textBaseline = "top";
 
-const screenshot = JSON.parse(localStorage.getItem("screenshot")) || []
+const Screenshot = JSON.parse(localStorage.getItem("screenshot")) || [];
 
 export default {
   name: "Video",
@@ -107,6 +111,7 @@ export default {
     this.video = document.getElementById("tracing");
     this.selected = select[0];
     ipcRenderer.on("Live", (event, roomid) => this.live(roomid));
+    ipcRenderer.on("Point", this.screenshot.bind(this));
     select[0] && this.live(select[0]);
   },
   data: () => ({
@@ -114,12 +119,11 @@ export default {
     rooms: [],
     video: null,
     timer: 0,
-    images: screenshot,
+    images: Screenshot,
   }),
   methods: {
     async live(roomid = this.selected, refresh = false) {
       const live = await ipcRenderer.invoke("TrackLive", roomid);
-      this.timer = 0;
       if (
         refresh ||
         (roomid == this.selected &&
@@ -133,28 +137,32 @@ export default {
           CreatePlayer.player.destroy();
         }
         CreatePlayer.player = CreatePlayer(live, this.video);
-        this.timer = live.live_time;
       }
+      this.timer = live.live_time;
       const rooms = JSON.parse(localStorage.getItem("rooms"));
       const select = (localStorage.getItem("select") || "").split(",");
       this.rooms = rooms.filter(({ value }) => select.includes(value));
+      if (!this.rooms.find(({ value }) => value === this.selected))
+        this.selected = this.rooms[0].value;
     },
     screenshot() {
+      if (!this.timer || this.timer <= 0) return;
       const key = Date.now();
-      const time = FormatDuration(Math.floor(key / 1000 - this.timer), true);
       ctx.drawImage(this.video, 0, 0, canvas.width, canvas.height);
-      ctx.fillText(time, 60, 60);
+      let text = FormatTime(new Date(this.timer * 1000)).split(" ")[0];
+      ctx.fillText(text, 60, 60);
+      text = FormatDuration(Math.floor(key / 1000 - this.timer), true);
+      ctx.fillText(text, 60, 240);
       this.images.push({
         src: canvas.toDataURL("image/jpg"),
-        time,
         key: key.toString(),
       });
-      localStorage.setItem("screenshot", JSON.stringify(this.images))
+      localStorage.setItem("screenshot", JSON.stringify(this.images));
     },
     remove({ target: { dataset } }) {
       const { key } = dataset;
       this.images = this.images.filter((v) => v.key !== key);
-      localStorage.setItem("screenshot", JSON.stringify(this.images))
+      localStorage.setItem("screenshot", JSON.stringify(this.images));
     },
     save() {
       const datas = this.images.map(({ src }) =>

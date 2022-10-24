@@ -90,7 +90,7 @@ import Pack from "../../../components/Pack.vue";
 export default {
   name: "Music",
   components: { Pack },
-  data: () => ({
+  data: ({ $store: { state } }) => ({
     keyword: "",
     headers: [
       { text: "歌名", value: "name" },
@@ -101,9 +101,11 @@ export default {
     loading: false,
     tab: "table",
     active: false,
-    fix: "",
+    fix: state.fixes.find(
+      ({ prefix, scope }) => prefix === "【♪" && scope !== "同传"
+    ),
     message: "",
-    language: "",
+    language: undefined,
   }),
   computed: {
     ...mapState(["select", "shields", "stamp"]),
@@ -135,11 +137,11 @@ export default {
     },
     async choose(item) {
       this.tab = "lyric";
+      this.ChangeSong({ song: item, stamp: -1 });
       this.language = this.languages.includes(this.language)
         ? this.language
         : this.languages[1] || this.languages[0];
       this.reset();
-      this.ChangeSong({ song: item, stamp: -1 });
     },
     play() {
       this.active = !this.active;

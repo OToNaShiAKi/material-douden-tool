@@ -61,9 +61,11 @@ import { mapMutations, mapState } from "vuex";
 
 export default {
   name: "App",
-  data: () => ({
+  data: ({ $store: { state } }) => ({
     content: "",
-    fix: undefined,
+    fix: state.fixes.find(
+      ({ prefix, scope }) => prefix === "【" && scope !== "歌曲"
+    ),
     pages: [
       { icon: "mdi-chat", to: "live" },
       { icon: "mdi-home", to: "room" },
@@ -99,7 +101,10 @@ export default {
     });
     if (!cookie) this.$router.push("/cookie");
     else if (this.select.length <= 0) this.$router.push("/room");
-    else this.$router.push("/live");
+    else {
+      this.$router.push("/live");
+      this.open()
+    }
   },
   methods: {
     ...mapMutations(["ChangeCookie", "Notify"]),
@@ -143,6 +148,8 @@ export default {
           .replace(/\{a\}/gi, this.song.singer)
           .replace(/\{l\}/gi, lyric.tlyric || lyric.lyric);
         FormatComment(phrase, this.select, this.fix, this.shields);
+      } else if (event.altKey && event.keyCode === 80) {
+        ipcRenderer.send("Point");
       }
     },
     open() {

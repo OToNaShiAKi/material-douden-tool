@@ -32,6 +32,9 @@ export const GetWebSocket = async (roomid) => {
         badge: { is_room_admin = false },
         info: { uid = "" },
         medal: { up_medal },
+        property: {
+          danmu: { length = 20 },
+        },
       },
     ] = await Promise.all([
       Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
@@ -56,6 +59,7 @@ export const GetWebSocket = async (roomid) => {
       roomid,
       uid,
       ruid: up_medal && up_medal.uid,
+      length,
     };
   } catch (error) {
     const win = BrowserWindow.fromId(AllWindows.index);
@@ -400,10 +404,25 @@ export const MedalWall = async (event, target_id) => {
   }
 };
 
-export const ChangeMedal = async (event, medal_id) => {
+export const ChangeMedal = async (medal_id) => {
   try {
     return await Bilibili.post(
       "/xlive/app-ucenter/v1/fansMedal/wear",
+      QS.stringify({
+        medal_id,
+        csrf: Bilibili.defaults.data.csrf,
+        csrf_token: Bilibili.defaults.data.csrf_token,
+      })
+    );
+  } catch (error) {
+    return false;
+  }
+};
+
+export const TakeOffModel = async (medal_id) => {
+  try {
+    return await Bilibili.post(
+      "/xlive/app-ucenter/v1/fansMedal/take_off",
       QS.stringify({
         medal_id,
         csrf: Bilibili.defaults.data.csrf,

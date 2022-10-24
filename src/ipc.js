@@ -19,6 +19,7 @@ import {
   GetTrackLiveInfo,
   MedalWall,
   ChangeMedal,
+  TakeOffModel,
 } from "./plugins/axios";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -46,8 +47,8 @@ const Stacks = {
   },
 };
 
-ipcMain.on("SendComment", (event, msg, roomids) => {
-  Stacks.RoomIds = Stacks.RoomIds.concat(roomids.map((id) => ({ id, msg })));
+ipcMain.on("SendComment", (event, msg, roomid) => {
+  Stacks.RoomIds.push({ msg, id: roomid });
   if (!Stacks.timer) {
     Stacks.interval();
     Stacks.timer = setInterval(Stacks.interval, 1000);
@@ -229,6 +230,13 @@ ipcMain.on("Live", (event, roomid) => {
   win && win.webContents.send("Live", roomid);
 });
 
+ipcMain.on("Point", (event) => {
+  const win = AllWindows.other && BrowserWindow.fromId(AllWindows.other);
+  win && win.webContents.send("Point");
+});
+
 ipcMain.handle("MedalWall", MedalWall);
 
-ipcMain.on("ChangeMedal", ChangeMedal);
+ipcMain.on("ChangeMedal", (event, model_id) =>
+  model_id ? ChangeMedal(model_id) : TakeOffModel(model_id)
+);

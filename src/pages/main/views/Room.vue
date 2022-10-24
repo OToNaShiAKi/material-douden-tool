@@ -76,6 +76,7 @@
 import { ipcRenderer } from "electron";
 import { mapMutations, mapState } from "vuex";
 import Pack from "../../../components/Pack.vue";
+import { FormatComment } from "../../../plugins/utils";
 
 export default {
   name: "Room",
@@ -98,27 +99,33 @@ export default {
     select() {
       const { AutoChangeMedal = true, select = [] } = this.$store.state;
       if (AutoChangeMedal) {
+        let chose = null;
         loop: for (const item of select) {
           for (const medal of this.medals) {
             if (item === medal.roomid) {
-              this.medal = medal.value;
-              this.change(medal.value);
+              chose = medal.value;
               break loop;
             }
           }
         }
+        this.medal = chose;
+        this.change(chose);
       }
     },
   },
   async created() {
-    const modes = await Promise.all(
-      this.rooms.map(({ value }) =>
-        ipcRenderer.invoke("GetUserRoomMode", value)
-      )
-    );
-    for (const item of modes) this.modes[item.roomid] = item;
     const uid = this.$store.state.cookie.match(/DedeUserID=([^;]+);/);
-    this.medals = await ipcRenderer.invoke("MedalWall", uid[1]);
+    const [medals, ...modes] = await Promise.all([
+      ipcRenderer.invoke("MedalWall", uid[1]),
+      ...this.rooms.map(({ value }) =>
+        ipcRenderer.invoke("GetUserRoomMode", value)
+      ),
+    ]);
+    for (const item of modes) {
+      this.modes[item.roomid] = item;
+      FormatComment.CommentLength[item.roomid] = item.length;
+    }
+    this.medals = medals;
     for (const item of this.medals) {
       if (item.wearing_status) {
         this.medal = item.value;
@@ -135,6 +142,7 @@ export default {
       this.roomid = "";
       this.name = "";
       this.modes[result.roomid] = result;
+      FormatComment.CommentLength[result.roomid] = result.length;
     },
     remove(index) {
       this.rooms.splice(index, 1);
@@ -152,7 +160,7 @@ export default {
     },
     change(value) {
       this.medal = value;
-      value && ipcRenderer.send("ChangeMedal", value);
+      ipcRenderer.send("ChangeMedal", value);
     },
   },
 };
