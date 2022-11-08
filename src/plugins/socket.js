@@ -2,16 +2,19 @@ import { Certification, HandleMessage } from "./utils";
 import { ipcRenderer } from "electron";
 const AutoClickRedPocket =
   localStorage.getItem("AutoClickRedPocket") === "false";
-const AutoTranslate =
-  localStorage.getItem("AutoTranslate") === "false";
+const AutoTranslate = localStorage.getItem("AutoTranslate") === "false";
 const filters = JSON.parse(localStorage.getItem("filters")) || [
   "老板大气！点点红包抽礼物！",
 ];
+const AutoChangeMedal = localStorage.getItem("AutoChangeMedal") === "false";
+const AutoCopyForbidWord =
+  localStorage.getItem("AutoCopyForbidWord") === "false";
 
 export default class Socket {
   static Command = {
     DANMU_MSG: async ({ info }) => {
-      const text = Socket.AutoTranslate && await ipcRenderer.invoke("CutWord", info[1]);
+      const text =
+        Socket.AutoTranslate && (await ipcRenderer.invoke("CutWord", info[1]));
       return {
         info: info[1],
         uid: info[2][0],
@@ -21,7 +24,9 @@ export default class Socket {
       };
     },
     SUPER_CHAT_MESSAGE: async ({ data }) => {
-      const text = Socket.AutoTranslate && await ipcRenderer.invoke("CutWord", data.message) ;
+      const text =
+        Socket.AutoTranslate &&
+        (await ipcRenderer.invoke("CutWord", data.message));
       return {
         info: data.message,
         uid: data.uid,
@@ -54,7 +59,9 @@ export default class Socket {
     LIVE: ({ roomid }) => ipcRenderer.send("Live", roomid),
   };
   static AutoClickRedPocket = !AutoClickRedPocket;
-  static AutoTranslate = !AutoTranslate
+  static AutoTranslate = !AutoTranslate;
+  static AutoChangeMedal = !AutoChangeMedal;
+  static AutoCopyForbidWord = !AutoCopyForbidWord;
   static filters = filters;
 
   constructor({ host_list, uid, ruid, roomid, token, admin, comments }) {

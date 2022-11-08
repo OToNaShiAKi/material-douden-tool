@@ -10,7 +10,6 @@ const shortcuts = JSON.parse(localStorage.getItem("shortcuts"));
 const fixes = JSON.parse(localStorage.getItem("fixes"));
 const rooms = JSON.parse(localStorage.getItem("rooms"));
 const shields = JSON.parse(localStorage.getItem("shields"));
-const AutoChangeMedal = localStorage.getItem("AutoChangeMedal") === "false";
 const stamp = [];
 stamp[-1] = { lyric: "", tlyric: "" };
 
@@ -33,7 +32,6 @@ export default new Vuex.Store({
     shields: shields || [],
     stamp: -1,
     song: { stamp, singer: "", name: "" },
-    AutoChangeMedal: !AutoChangeMedal,
   },
   mutations,
 });

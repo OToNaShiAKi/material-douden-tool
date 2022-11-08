@@ -58,6 +58,7 @@
 import { clipboard, ipcRenderer } from "electron";
 import { FormatComment } from "../../plugins/utils";
 import { mapMutations, mapState } from "vuex";
+import Socket from "../../plugins/socket";
 
 export default {
   name: "App",
@@ -99,11 +100,20 @@ export default {
       this.ChangeCookie("");
       this.Notify("当前Cookie已过期");
     });
+    ipcRenderer.on("Forbidden", (event, roomid, info) => {
+      info = info.replace(new RegExp(`${this.fix.prefix}|${this.fix.suffix}`,"ig"), "")
+      let message = `${roomid}：${info}被屏蔽`
+      if (Socket.AutoCopyForbidWord) {
+        clipboard.writeText(info);
+        message += " 已自动复制被屏蔽内容"
+      }
+      this.message = message;
+    });
     if (!cookie) this.$router.push("/cookie");
     else if (this.select.length <= 0) this.$router.push("/room");
     else {
       this.$router.push("/live");
-      this.open()
+      this.open();
     }
   },
   methods: {

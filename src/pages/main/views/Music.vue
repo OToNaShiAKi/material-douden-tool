@@ -49,33 +49,29 @@
         <v-radio-group v-model="language" class="center" row>
           <v-radio v-for="v of languages" :label="v" :value="v" :key="v" />
         </v-radio-group>
-        <v-hover v-slot="{ hover }">
-          <section class="relative">
-            <v-btn
-              v-show="hover"
-              color="primary"
-              absolute
-              icon
-              small
-              class="jump"
-              @click="jump"
-            >
-              <v-icon>mdi-play</v-icon>
-            </v-btn>
-            <section id="lyric-selected" ref="lyric">
+        <section class="relative">
+          <v-virtual-scroll
+            :items="lyric"
+            id="lyric-selected"
+            ref="lyric"
+            :item-height="languages.height"
+          >
+            <template v-slot:default="{ item, index }">
               <p
-                class="text-center"
-                :class="i === stamp && 'primary--text'"
-                v-for="(v, i) of lyric"
-                :key="v.stamp"
+                class="text-center flex-grow-1"
+                :class="index === stamp && 'primary--text'"
+                :key="item.stamp"
               >
-                <span class="text-body-1">{{ v.lyric }}</span>
+                <span class="text-body-1">{{ item.lyric }}</span>
                 <br />
-                <span class="text-body-2">{{ v.tlyric }}</span>
+                <span class="text-body-2">{{ item.tlyric }}</span>
               </p>
-            </section>
-          </section>
-        </v-hover>
+            </template>
+          </v-virtual-scroll>
+          <v-btn color="primary" absolute icon small class="jump" @click="jump">
+            <v-icon>mdi-play</v-icon>
+          </v-btn>
+        </section>
       </v-tab-item>
     </v-tabs-items>
   </section>
@@ -178,7 +174,7 @@ export default {
     },
     jump() {
       clearTimeout(this.send.timer);
-      const target = this.$refs.lyric;
+      const target = this.$refs.lyric.$el;
       const count = Math.floor(
         (target.scrollTop + target.clientHeight / 2) / this.languages.height
       );

@@ -38,6 +38,8 @@ const Stacks = {
       } else if (message === "f") {
         const data = `屏蔽词：${roomid.msg} 房间：${roomid.id}\n`;
         const file = join(app.getPath("exe"), "../forbidden-words.txt");
+        const win = BrowserWindow.fromId(AllWindows.index);
+        win.webContents.send("Forbidden", roomid.id, roomid.msg);
         await writeFile(file, data, { flag: "a+" });
       }
     } else {

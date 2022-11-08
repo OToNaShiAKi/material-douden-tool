@@ -11,9 +11,12 @@ export const Bilibili = axios.create({
   },
 });
 
-Bilibili.interceptors.response.use((response) => {
-  const { data } = response;
+Bilibili.interceptors.response.use(({ data }) => {
   if (data.code !== 0 && data.code !== 1200000) {
+    if (data.code === -111 && /csrf/ig.test(data.message)) {
+      const win = BrowserWindow.fromId(AllWindows.index);
+      win.webContents.send("CookieOverdue");
+    }
     throw data;
   }
   data.data.message = data.message || data.msg;

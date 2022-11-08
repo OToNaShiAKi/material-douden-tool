@@ -21,6 +21,7 @@
       </v-chip>
     </v-chip-group>
     <v-switch
+      hide-details
       class="ml-1"
       @change="ChangeSelect"
       v-model="multiple"
@@ -77,6 +78,7 @@ import { ipcRenderer } from "electron";
 import { mapMutations, mapState } from "vuex";
 import Pack from "../../../components/Pack.vue";
 import { FormatComment } from "../../../plugins/utils";
+import Socket from "../../../plugins/socket";
 
 export default {
   name: "Room",
@@ -97,8 +99,8 @@ export default {
   },
   watch: {
     select() {
-      const { AutoChangeMedal = true, select = [] } = this.$store.state;
-      if (AutoChangeMedal) {
+      const { select = [] } = this.$store.state;
+      if (Socket.AutoChangeMedal) {
         let chose = null;
         loop: for (const item of select) {
           for (const medal of this.medals) {
@@ -136,12 +138,18 @@ export default {
   methods: {
     ...mapMutations(["ChangeSelect", "ChangeRooms", "Notify"]),
     async add() {
+      const { code = 0 } = await ipcRenderer.invoke("TrackLive", this.roomid);
+      if (code !== 0) {
+        return this.Notify(`房间${this.roomid}不存在`);
+      } else if (this.rooms.find(({ value }) => value == this.roomid)) {
+        return this.Notify(`房间${this.roomid}已添加`);
+      }
+      const result = await ipcRenderer.invoke("GetUserRoomMode", this.roomid);
+      this.modes[result.roomid] = result;
       this.rooms.push({ value: this.roomid, text: this.name });
       this.ChangeRooms(this.rooms);
-      const result = await ipcRenderer.invoke("GetUserRoomMode", this.roomid);
       this.roomid = "";
       this.name = "";
-      this.modes[result.roomid] = result;
       FormatComment.CommentLength[result.roomid] = result.length;
     },
     remove(index) {

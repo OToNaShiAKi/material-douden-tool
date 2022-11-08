@@ -6,7 +6,7 @@ export const FormatComment = (content, select = [], fix = {}, shield = []) => {
   if (content.length <= 0 || select.length <= 0)
     return "内容及所选房间不可为空";
   const { prefix = "", suffix = "" } = fix;
-  content = prefix + content + suffix;
+  content = (prefix + content + suffix).trim();
   for (const item of shield) {
     content = content.replace(new RegExp(item.shield, "gi"), item.handle);
   }

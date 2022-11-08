@@ -1,7 +1,7 @@
 <template>
   <section>
     <Pack>设置</Pack>
-    <v-radio-group row v-model="theme" @change="change">
+    <v-radio-group row hide-details v-model="theme" @change="change">
       <v-radio
         v-for="item of themes"
         :key="item.value"
@@ -15,23 +15,21 @@
         hide-details
         @change="mode"
         inset
+        dense
         label="Dark"
       />
     </v-radio-group>
-    <section class="d-flex ml-1">
+    <section class="d-flex ml-1 flex-wrap">
       <v-switch
-        v-model="AutoClickRedPocket"
+        v-for="v of auto"
+        :key="v.key"
+        v-model="v.value"
+        hide-details
         inset
+        dense
         class="auto-switch"
-        label="自动抽红包"
-        @change="setting"
-      />
-      <v-switch
-        v-model="AutoChangeMedal"
-        @change="ChangeMedal"
-        class="auto-switch"
-        inset
-        label="自动换牌子"
+        :label="v.text"
+        @change="(value) => setting(value, v.key)"
       />
     </section>
     <v-data-table :items-per-page="5" :items="filters" :headers="headers">
@@ -53,14 +51,13 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
 import Pack from "../../../components/Pack.vue";
 import Socket from "../../../plugins/socket";
 
 export default {
   name: "Theme",
   components: { Pack },
-  data: ({ $vuetify: { theme }, $store: { state } }) => ({
+  data: ({ $vuetify: { theme } }) => ({
     theme: theme.currentTheme.primary,
     themes: [
       { label: "少女", value: "#fa7298" },
@@ -72,8 +69,23 @@ export default {
       { label: "罗兰", value: "#9c28b1" },
     ],
     dark: theme.dark,
-    AutoClickRedPocket: Socket.AutoClickRedPocket,
-    AutoChangeMedal: state.AutoChangeMedal,
+    auto: [
+      {
+        key: "AutoClickRedPocket",
+        value: Socket.AutoClickRedPocket,
+        text: "自动抽红包",
+      },
+      {
+        key: "AutoChangeMedal",
+        value: Socket.AutoChangeMedal,
+        text: "自动换牌子",
+      },
+      {
+        key: "AutoCopyForbidWord",
+        value: Socket.AutoCopyForbidWord,
+        text: "自动复制屏蔽弹幕",
+      },
+    ],
     headers: [
       { text: "过滤弹幕", value: "filter" },
       { text: "操作", value: "actions", sortable: false },
@@ -82,7 +94,6 @@ export default {
     filter: "",
   }),
   methods: {
-    ...mapMutations(["ChangeMedal"]),
     change(value) {
       this.$vuetify.theme.themes.light.primary = value;
       this.$vuetify.theme.themes.dark.primary = value;
@@ -92,7 +103,7 @@ export default {
       this.$vuetify.theme.dark = value;
       localStorage.setItem("mode", value);
     },
-    setting(value, key = "AutoClickRedPocket") {
+    setting(value, key) {
       Socket[key] = value;
       localStorage.setItem(key, value);
     },

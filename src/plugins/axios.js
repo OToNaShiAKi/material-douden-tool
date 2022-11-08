@@ -62,8 +62,6 @@ export const GetWebSocket = async (roomid) => {
       length,
     };
   } catch (error) {
-    const win = BrowserWindow.fromId(AllWindows.index);
-    win.webContents.send("CookieOverdue");
     return { host_list: [], comments: [], admin: false, roomid };
   }
 };
@@ -261,7 +259,7 @@ export const GetDynamic = async (id, next = 0) => {
           oid: comment_id_str,
         },
       });
-      if (!replies) break;
+      if (!replies || replies.length <= 0) break;
       result = result.concat(replies);
       next = cursor.next;
     } while (true);
@@ -273,9 +271,11 @@ export const GetDynamic = async (id, next = 0) => {
 
 export const GetVideoDurantion = async (key) => {
   try {
-    if (/BV.*/.test(key)) {
+    if (/(BV[A-Za-z0-9_-]*)|(av[0-9]*)/gi.test(key)) {
+      const bvid = key.match(/(BV[A-Za-z0-9_-]*)/);
+      const aid = key.match(/av([0-9]*)/);
       const [{ duration }] = await API.get("/x/player/pagelist", {
-        params: { bvid: key.match(/(BV[A-Za-z0-9_-]*)/)[0] },
+        params: { bvid: bvid && bvid[0], aid: aid && aid[1] },
       });
       return duration;
     } else {
@@ -374,7 +374,7 @@ export const GetTrackLiveInfo = async (event, room_id) => {
       format_name,
     };
   } catch (error) {
-    return { room_id, live_status: 0 };
+    return { room_id, live_status: 0, code: error.code };
   }
 };
 
