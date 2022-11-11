@@ -164,58 +164,30 @@ export const RemoveSilentUser = async (event, id, roomid) => {
 };
 
 export const GetMusic = async (keyword) => {
-  const [song163, songQQ] = await Promise.all([
-    Music163.get("/search/get/web", {
-      params: { s: keyword, type: 1 },
-    })
-      .then(({ result: { songs } }) =>
-        Promise.all(
-          songs.map(({ name, artists, id }) =>
-            Music163.get("/song/lyric", {
-              params: { id, lv: -1, tv: -1 },
-            })
-              .then(({ lrc, tlyric }) => ({
-                id,
-                name,
-                lyric: lrc ? lrc.lyric : "",
-                tlyric: tlyric ? tlyric.lyric : "",
-                singer: artists.map(({ name }) => name).join("、"),
-                origin: "网易云",
-              }))
-              .catch(() => ({ lyric: "", tlyric: "" }))
-          )
+  const song163 = await Music163.get("/search/get/web", {
+    params: { s: keyword, type: 1 },
+  })
+    .then(({ result: { songs } }) =>
+      Promise.all(
+        songs.map(({ name, artists, id, duration }) =>
+          Music163.get("/song/lyric", {
+            params: { id, lv: -1, tv: -1 },
+          })
+            .then(({ lrc, tlyric }) => ({
+              id,
+              name,
+              lyric: lrc ? lrc.lyric : "",
+              tlyric: tlyric ? tlyric.lyric : "",
+              singer: artists.map(({ name }) => name).join("、"),
+              origin: "网易云",
+              duration,
+            }))
+            .catch(() => ({ lyric: "", tlyric: "" }))
         )
       )
-      .catch(() => []),
-    MusicQQ.get("/soso/fcgi-bin/client_search_cp", {
-      params: { w: keyword, format: "json" },
-    })
-      .then(
-        ({
-          data: {
-            song: { list },
-          },
-        }) =>
-          Promise.all(
-            list.map(async ({ songmid, songname, singer }) =>
-              MusicQQ.get("/lyric/fcgi-bin/fcg_query_lyric_new.fcg", {
-                params: { songmid, nobase64: 1, g_tk: 5381, format: "json" },
-              })
-                .then(({ lyric = "", trans = "" }) => ({
-                  id: songmid,
-                  name: songname,
-                  lyric,
-                  tlyric: trans,
-                  singer: singer.map(({ name }) => name).join("、"),
-                  origin: "QQ",
-                }))
-                .catch(() => ({ lyric: "", tlyric: "" }))
-            )
-          )
-      )
-      .catch(() => []),
-  ]);
-  return [...song163, ...songQQ];
+    )
+    .catch(() => [])
+  return song163;
 };
 
 export const Translate = async (query, sign) => {

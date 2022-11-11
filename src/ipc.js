@@ -1,5 +1,5 @@
 import { Bilibili, API } from "./plugins/config";
-import createWindow, { AllWindows } from "./background";
+import CreateWindow, { AllWindows } from "./background";
 import { e, Replies } from "./plugins/handle";
 import { ipcMain, BrowserWindow, dialog, screen, app } from "electron";
 import {
@@ -23,6 +23,8 @@ import {
 } from "./plugins/axios";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+
+const option = { x: 0, y: 0, alwaysOnTop: false };
 
 const Stacks = {
   RoomIds: [],
@@ -82,9 +84,9 @@ ipcMain.handle("GetWebSocket", async (event, roomids) => {
 
 ipcMain.handle("GetMusic", async (event, keyword) => {
   const match = /\[(\d{1,2}):([0-9.]{1,8})\](.*)\n?/g;
-  const result = (await GetMusic(keyword)).filter(
-    ({ lyric }) => lyric && match.test(lyric)
-  );
+  const musics = await GetMusic(keyword);
+  console.log(JSON.stringify(musics));
+  const result = musics.filter(({ lyric }) => lyric && match.test(lyric));
   for (const item of result) {
     const lyric = [];
     item.lyric.replace(match, (l, m, s, c) => {
@@ -94,6 +96,7 @@ ipcMain.handle("GetMusic", async (event, keyword) => {
           stamp: (+m * 60 + +s) * 1000,
           lyric: c.trim(),
           tlyric: t && t[1].trim(),
+          start: `00:${m}:${s}`
         });
       }
       return "";
@@ -161,13 +164,9 @@ ipcMain.on("OtherWindow", async (event, page, DevTools = false) => {
     win.webContents.openDevTools();
   } else if (!win) {
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-    win = await createWindow(page, {
-      width,
-      height,
-      x: 0,
-      y: 0,
-      alwaysOnTop: false,
-    });
+    option.width = width;
+    option.height = height;
+    win = await CreateWindow(page, option);
   }
 });
 
@@ -227,14 +226,18 @@ ipcMain.handle("ClickRedPocket", async (event, ...ids) => {
 
 ipcMain.handle("TrackLive", GetTrackLiveInfo);
 
-ipcMain.on("Live", (event, roomid) => {
-  const win = AllWindows.other && BrowserWindow.fromId(AllWindows.other);
-  win && win.webContents.send("Live", roomid);
-});
-
-ipcMain.on("Point", (event) => {
-  const win = AllWindows.other && BrowserWindow.fromId(AllWindows.other);
-  win && win.webContents.send("Point");
+ipcMain.on("Channel", async (event, channel, ...data) => {
+  let win = AllWindows.other && BrowserWindow.fromId(AllWindows.other);
+  if (!win && channel !== "Point") {
+    const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+    option.width = width;
+    option.height = height;
+    win = await CreateWindow("other", option);
+  }
+  if (win) {
+    win.focus();
+    win.webContents.send(channel, ...data);
+  }
 });
 
 ipcMain.handle("MedalWall", MedalWall);

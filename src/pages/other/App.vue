@@ -19,22 +19,34 @@
     </v-navigation-drawer>
     <v-main>
       <keep-alive>
-        <router-view />
+        <router-view :music="music" />
       </keep-alive>
     </v-main>
   </v-app>
 </template>
 
 <script>
+import { ipcRenderer } from "electron";
+
 export default {
   name: "App",
+  created() {
+    ipcRenderer.on("ConvertLyric", async (event, music) => {
+      const video = document.getElementById("tracing");
+      video && !video.paused && video.requestPictureInPicture();
+      this.$route.name !== "Lyric" && this.$router.push("/lyric");
+      this.music = music;
+    });
+  },
   data: () => ({
+    music: null,
     items: [
       { title: "直播追帧", icon: "mdi-video", to: "/" },
       { title: "棉花糖", icon: "mdi-candy", to: "/candy" },
-      { title: "禁言用户", icon: "mdi-account-cancel", to: "silent" },
-      { title: "动画鉴赏", icon: "mdi-microsoft-excel", to: "anime" },
-      { title: "反馈", icon: "mdi-chart-bubble", to: "sponsor" },
+      { title: "禁言用户", icon: "mdi-account-cancel", to: "/silent" },
+      { title: "动画鉴赏", icon: "mdi-microsoft-excel", to: "/anime" },
+      { title: "歌词制作", icon: "mdi-playlist-music", to: "/lyric" },
+      { title: "反馈", icon: "mdi-chart-bubble", to: "/sponsor" },
     ],
   }),
 };

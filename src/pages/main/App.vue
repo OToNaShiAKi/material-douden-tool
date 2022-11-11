@@ -70,7 +70,7 @@ export default {
     pages: [
       { icon: "mdi-chat", to: "live" },
       { icon: "mdi-home", to: "room" },
-      { icon: "mdi-music", to: "music" },
+      { icon: "mdi-music-clef-treble", to: "music" },
       { icon: "mdi-flash", to: "shortcut" },
       { icon: "mdi-code-brackets", to: "bracket" },
       { icon: "mdi-account", to: "cookie" },
@@ -159,7 +159,7 @@ export default {
           .replace(/\{l\}/gi, lyric.tlyric || lyric.lyric);
         FormatComment(phrase, this.select, this.fix, this.shields);
       } else if (event.altKey && event.keyCode === 80) {
-        ipcRenderer.send("Point");
+        ipcRenderer.send("Channel", "Point");
       }
     },
     open() {

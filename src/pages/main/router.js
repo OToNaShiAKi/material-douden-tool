@@ -59,9 +59,7 @@ const routes = [
   },
 ];
 
-const router = new VueRouter({
-  routes,
-});
+const router = new VueRouter({ routes });
 
 router.afterEach((to) => {
   const { height } = to.meta;

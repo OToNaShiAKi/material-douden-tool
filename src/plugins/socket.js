@@ -56,7 +56,7 @@ export default class Socket {
     ROOM_ADMIN_ENTRANCE: ({ uid }, socket) => {
       socket.admin = socket.uid === uid;
     },
-    LIVE: ({ roomid }) => ipcRenderer.send("Live", roomid),
+    LIVE: ({ roomid }) => ipcRenderer.send("Channel", "Live", roomid),
   };
   static AutoClickRedPocket = !AutoClickRedPocket;
   static AutoTranslate = !AutoTranslate;
@@ -101,7 +101,7 @@ export default class Socket {
         })
       )
     );
-    ipcRenderer.send("Live", this.roomid);
+    ipcRenderer.send("Channel", "Live", this.roomid);
     clearInterval(this.timer);
     this.timer = setInterval(() => {
       const buffer = new ArrayBuffer(16);

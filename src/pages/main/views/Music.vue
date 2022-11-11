@@ -27,7 +27,13 @@
           :headers="headers"
           :items="musics"
           @click:row="choose"
-        />
+        >
+        <template v-slot:item.aegisub="{ item }">
+          <v-icon small @click.stop="aegisub" :data-id="item.id">
+            mdi-arrow-decision-auto
+          </v-icon>
+      </template>
+      </v-data-table>
       </v-tab-item>
       <v-tab-item value="lyric">
         <section class="d-flex justify-center align-center">
@@ -91,7 +97,8 @@ export default {
     headers: [
       { text: "歌名", value: "name" },
       { text: "歌手", value: "singer" },
-      { text: "语言", value: "language" },
+      { text: "语言", value: "language", sortable: false },
+      { text: "导出", value: "aegisub", sortable: false },
     ],
     musics: [],
     loading: false,
@@ -206,6 +213,10 @@ export default {
       this.ChangeSong({ stamp: -1 });
       this.active = false;
     },
+    aegisub({target: { dataset }}){
+      const music = this.musics.find(({id}) => id == dataset.id)
+      ipcRenderer.send("Channel", "ConvertLyric", music)
+    }
   },
 };
 </script>
