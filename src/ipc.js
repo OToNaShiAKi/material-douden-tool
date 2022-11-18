@@ -84,9 +84,9 @@ ipcMain.handle("GetWebSocket", async (event, roomids) => {
 
 ipcMain.handle("GetMusic", async (event, keyword) => {
   const match = /\[(\d{1,2}):([0-9.]{1,8})\](.*)\n?/g;
-  const musics = await GetMusic(keyword);
-  console.log(JSON.stringify(musics));
-  const result = musics.filter(({ lyric }) => lyric && match.test(lyric));
+  const result = (await GetMusic(keyword)).filter(
+    ({ lyric }) => lyric && match.test(lyric)
+  );
   for (const item of result) {
     const lyric = [];
     item.lyric.replace(match, (l, m, s, c) => {
@@ -96,7 +96,7 @@ ipcMain.handle("GetMusic", async (event, keyword) => {
           stamp: (+m * 60 + +s) * 1000,
           lyric: c.trim(),
           tlyric: t && t[1].trim(),
-          start: `00:${m}:${s}`
+          start: `00:${m}:${s}`,
         });
       }
       return "";

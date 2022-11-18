@@ -28,12 +28,12 @@
           :items="musics"
           @click:row="choose"
         >
-        <template v-slot:item.aegisub="{ item }">
-          <v-icon small @click.stop="aegisub" :data-id="item.id">
-            mdi-arrow-decision-auto
-          </v-icon>
-      </template>
-      </v-data-table>
+          <template v-slot:item.aegisub="{ item }">
+            <v-icon small @click.stop="aegisub" :data-id="item.id">
+              mdi-arrow-decision-auto
+            </v-icon>
+          </template>
+        </v-data-table>
       </v-tab-item>
       <v-tab-item value="lyric">
         <section class="d-flex justify-center align-center">
@@ -88,6 +88,7 @@ import { FormatComment } from "../../../plugins/utils";
 import { ipcRenderer } from "electron";
 import { mapMutations, mapState } from "vuex";
 import Pack from "../../../components/Pack.vue";
+import { Get } from "../../../plugins/indexedDB";
 
 export default {
   name: "Music",
@@ -135,7 +136,11 @@ export default {
       this.loading = true;
       this.tab = "table";
       this.message = "";
-      this.musics = await ipcRenderer.invoke("GetMusic", this.keyword);
+      const result = await Promise.all([
+        Get("music"),
+        ipcRenderer.invoke("GetMusic", this.keyword),
+      ]);
+      this.musics = result[0].concat(result[1]);
       this.loading = false;
     },
     async choose(item) {
@@ -213,10 +218,10 @@ export default {
       this.ChangeSong({ stamp: -1 });
       this.active = false;
     },
-    aegisub({target: { dataset }}){
-      const music = this.musics.find(({id}) => id == dataset.id)
-      ipcRenderer.send("Channel", "ConvertLyric", music)
-    }
+    aegisub({ target: { dataset } }) {
+      const music = this.musics.find(({ id }) => id == dataset.id);
+      ipcRenderer.send("Channel", "ConvertLyric", music);
+    },
   },
 };
 </script>
