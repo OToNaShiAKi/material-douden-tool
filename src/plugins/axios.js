@@ -130,17 +130,24 @@ export const SetUserRoomMode = async (event, room_id, color, mode) => {
 
 export const GetSilentUser = async (room_id) => {
   try {
-    const { data } = await Bilibili.post(
-      "/xlive/web-ucenter/v1/banned/GetSilentUserList",
-      QS.stringify({
-        room_id,
-        ps: 1,
-        visit_id: "",
-        csrf: Bilibili.defaults.data.csrf,
-        csrf_token: Bilibili.defaults.data.csrf_token,
-      })
-    );
-    return data;
+    let ps = 1;
+    let result = [];
+    do {
+      const { data, total_page } = await Bilibili.post(
+        "/xlive/web-ucenter/v1/banned/GetSilentUserList",
+        QS.stringify({
+          room_id,
+          ps,
+          visit_id: "",
+          csrf: Bilibili.defaults.data.csrf,
+          csrf_token: Bilibili.defaults.data.csrf_token,
+        })
+      );
+      result = result.concat(data);
+      ps += 1;
+      if (ps > total_page) break;
+    } while (true);
+    return result;
   } catch (error) {
     return [];
   }
@@ -164,30 +171,35 @@ export const RemoveSilentUser = async (event, id, roomid) => {
 };
 
 export const GetMusic = async (keyword) => {
-  const song163 = await Music163.get("/search/get/web", {
-    params: { s: keyword, type: 1 },
-  })
-    .then(({ result: { songs } }) =>
-      Promise.all(
-        songs.map(({ name, artists, id, duration }) =>
-          Music163.get("/song/lyric", {
+  try {
+    const {
+      result: { songs },
+    } = await Music163.get("/search/get/web", {
+      params: { s: keyword, type: 1 },
+    });
+    return await Promise.all(
+      songs.map(async ({ name, artists, id, duration }) => {
+        try {
+          const { lrc, tlyric } = await Music163.get("/song/lyric", {
             params: { id, lv: -1, tv: -1 },
-          })
-            .then(({ lrc, tlyric }) => ({
-              id,
-              name,
-              lyric: lrc ? lrc.lyric : "",
-              tlyric: tlyric ? tlyric.lyric : "",
-              singer: artists.map(({ name }) => name).join("、"),
-              origin: "网易云",
-              duration,
-            }))
-            .catch(() => ({ lyric: "", tlyric: "" }))
-        )
-      )
-    )
-    .catch(() => [])
-  return song163;
+          });
+          return {
+            id,
+            name,
+            lyric: lrc ? lrc.lyric : "",
+            tlyric: tlyric ? tlyric.lyric : "",
+            singer: artists.map(({ name }) => name).join("、"),
+            origin: "网易云",
+            duration,
+          };
+        } catch (error) {
+          return { lyric: "", tlyric: "" };
+        }
+      })
+    );
+  } catch {
+    return [];
+  }
 };
 
 export const Translate = async (query, sign) => {

@@ -128,3 +128,5 @@ export default class Socket {
     }
   };
 }
+
+Socket.Command["DANMU_MSG:4:0:2:2:2:0"] = Socket.Command.DANMU_MSG

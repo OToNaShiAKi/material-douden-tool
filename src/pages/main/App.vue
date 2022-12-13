@@ -13,16 +13,16 @@
             v-model.trim="content"
             @keyup.enter="send"
             @click:append="send"
-            @keyup.down="history"
+            @keyup.alt.down="history"
             @keydown.stop.prevent.tab="changefix"
-            @keyup.up="history"
+            @keyup.alt.up="history"
             @keyup.ctrl="phrase"
             @keyup.alt="phrase"
             autofocus
             :error-messages="message"
             class="flex-grow-1"
             append-icon="mdi-arrow-left-bottom"
-            hint="上下键可循环切换已发弹幕 TAB可循环切换前后缀"
+            hint="Alt+上下键切换已发弹幕 TAB可循环切换前后缀"
           />
         </section>
         <section class="d-flex justify-space-between align-center">
@@ -101,11 +101,11 @@ export default {
       this.Notify("当前Cookie已过期");
     });
     ipcRenderer.on("Forbidden", (event, roomid, info) => {
+      let message = `${roomid}：${info} 被屏蔽`
       info = info.replace(new RegExp(`${this.fix.prefix}|${this.fix.suffix}`,"ig"), "")
-      let message = `${roomid}：${info}被屏蔽`
       if (Socket.AutoCopyForbidWord) {
         clipboard.writeText(info);
-        message += " 已自动复制被屏蔽内容"
+        message += " 已自动复制"
       }
       this.message = message;
     });
@@ -140,7 +140,7 @@ export default {
       } else if (event.keyCode === 38) {
         this.record.index -= this.record.index <= 0 ? 0 : 1;
       }
-      this.content = this.record[this.record.index] || "";
+      this.content = this.record[this.record.index] || this.content;
     },
     phrase(event) {
       let key = "";
