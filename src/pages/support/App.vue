@@ -37,6 +37,10 @@ export default {
       this.$route.name !== "Lyric" && this.$router.push("/lyric");
       this.music = music;
     });
+    ipcRenderer.on("WindowStyle", async (event, value) => {
+      this.$vuetify.theme.themes.light.primary = value;
+      this.$vuetify.theme.themes.dark.primary = value;
+    });
   },
   data: () => ({
     music: null,
@@ -66,6 +70,7 @@ video::-webkit-media-controls-timeline {
   position: absolute;
   right: 0;
   bottom: 0;
+  cursor: pointer;
 }
 .sponsor {
   width: 210px !important;

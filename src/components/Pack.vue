@@ -1,7 +1,7 @@
 <template>
-  <v-subheader class="justify-space-between">
+  <v-subheader class="justify-space-between mt-3">
     <span><slot /></span>
-    <v-btn icon @click="pack">
+    <v-btn icon @click="Pack">
       <v-icon>mdi-chevron-up</v-icon>
     </v-btn>
   </v-subheader>
@@ -9,12 +9,13 @@
 
 <script>
 import { ipcRenderer } from "electron";
+
 export default {
   name: "Pack",
   methods: {
-    pack() {
+    Pack() {
       this.$router.replace("/");
-      ipcRenderer.send("WindowSize", 160);
+      ipcRenderer.send("WindowSize", 168);
     },
   },
 };

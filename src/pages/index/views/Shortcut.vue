@@ -1,29 +1,22 @@
 <template>
   <section>
     <Pack>快捷用语</Pack>
-    <v-data-table :items-per-page="5" :items="shortcuts" :headers="headers">
-      <template v-slot:item.actions="{ item }">
-        <v-icon small @click="remove" :data-key="item.key">mdi-delete</v-icon>
+    <DataTable :headers="headers" :items="shortcuts">
+      <template v-slot="{ item }">
+        <v-icon small @click="Remove" :data-key="item.key">mdi-delete</v-icon>
       </template>
-    </v-data-table>
-    <section class="d-flex">
-      <v-select
-        v-model="key"
-        label="快捷键"
-        :items="cuts"
-        class="select-width mr-3"
-      />
-      <v-text-field
-        v-model.trim="phrase"
-        @keyup.enter="add"
-        label="快捷用语"
-        append-icon="mdi-arrow-left-bottom"
-        hint="可配置常用问候语等，按下快捷键即可立即发送"
-        @click:append="add"
-        :error-messages="message"
-      />
+    </DataTable>
+    <section class="fix-input d-flex align-center">
+      <v-text-field v-model.trim="phrase" solo class="mr-3" dense hide-details>
+        <template v-slot:prepend-inner>
+          <v-select v-model="key" :items="cuts" dense solo hide-details />
+        </template>
+      </v-text-field>
+      <v-btn small :disabled="!phrase" icon color="primary" @click="Add">
+        <v-icon>mdi-plus</v-icon>
+      </v-btn>
     </section>
-    <p class="caption mb-0">替换符：</p>
+    <p class="caption mb-0 mt-3">替换符：</p>
     <ul class="caption">
       <li>{c}部分会被同传输入框中语句替换</li>
       <li>{v}部分会被剪切板中复制语句替换</li>
@@ -35,11 +28,12 @@
 </template>
 
 <script>
+import DataTable from "@/components/DataTable.vue";
 import { mapMutations } from "vuex";
 import Pack from "../../../components/Pack.vue";
 
 export default {
-  components: { Pack },
+  components: { Pack, DataTable },
   name: "Shortcut",
   computed: {
     shortcuts: ({ $store: { state } }) => {
@@ -77,26 +71,22 @@ export default {
       { text: "快捷用语", value: "phrase" },
       { text: "操作", value: "actions", sortable: false },
     ],
-    key: "",
+    key: "Alt+1",
     phrase: "",
-    message: "",
   }),
   methods: {
     ...mapMutations(["ChangeShortcuts"]),
-    add() {
-      if (this.key.length <= 0 || this.phrase.length <= 0) {
-        this.message = "快捷键或短语不可为空";
-        return;
-      }
+    Add() {
       this.ChangeShortcuts({ key: this.key, value: this.phrase });
-      this.key = "";
+      this.key = "Alt+1";
       this.phrase = "";
-      this.message = "";
     },
-    remove({ target: { dataset } }) {
+    Remove({ target: { dataset } }) {
       const { key } = dataset;
       this.ChangeShortcuts({ key, value: "" });
     },
   },
 };
 </script>
+
+<style></style>

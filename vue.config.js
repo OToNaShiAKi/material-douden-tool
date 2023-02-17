@@ -1,4 +1,5 @@
-module.exports = {
+const { defineConfig } = require("@vue/cli-service");
+module.exports = defineConfig({
   transpileDependencies: ["vuetify"],
   pluginOptions: {
     electronBuilder: {
@@ -21,7 +22,7 @@ module.exports = {
     },
   },
   pages: {
-    index: "./src/pages/main/main.js",
-    other: "./src/pages/other/main.js",
+    index: "./src/pages/index/main.js",
+    support: "./src/pages/support/main.js",
   },
-};
+});

@@ -1,0 +1,84 @@
+:root {
+  --color-tertiary-white: #fff;
+  --color-tertiary-gray-light: #f0f0f3;
+  --color-rgb-white: 255 255 255;
+  --color-rgb-blue: 174 174 192;
+  --field-box-shadow-base: -1px -1px 3px rgb(var(--color-rgb-white) / 25%),
+    1px 1px 3px rgb(var(--color-rgb-blue) / 40%),
+    4px 4px 8px rgb(var(--color-rgb-blue) / 40%),
+    -4px -4px 12px var(--color-tertiary-white);
+  --field-box-shadow-base-inset: -1px -1px 3px rgb(var(--color-rgb-white) / 25%)
+      inset,
+    1px 1px 3px rgb(var(--color-rgb-blue) / 40%) inset,
+    4px 4px 8px rgb(var(--color-rgb-blue) / 40%) inset,
+    -4px -4px 12px var(--color-tertiary-white) inset;
+  --field-box-shadow-disabled: -1px -1px 3px rgb(var(--color-rgb-white) / 25%),
+    1px 1px 3px rgb(var(--color-rgb-blue) / 40%);
+}
+
+#app {
+  border-radius: 8px !important;
+}
+
+*:focus::selection {
+  color: white;
+  background-color: var(--v-primary-base) !important;
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+}
+
+#app,
+#app .v-system-bar {
+  background-color: var(--color-tertiary-gray-light) !important;
+}
+
+.fix-input .v-input__slot,
+.link-tab .v-btn-toggle,
+.link-tab button.v-btn--icon,
+#setting .v-input--radio-group,
+#setting .v-item-group,
+.v-data-table,
+nav .v-pagination button,
+.fix-input .v-btn,
+.v-tabs .v-tabs-bar .v-tab,
+.v-menu__content,
+#lyric-control .v-btn,
+#lyric-control .v-btn.v-btn--active::before {
+  background-color: var(--color-tertiary-gray-light) !important;
+  box-shadow: var(--field-box-shadow-base) !important;
+}
+
+.v-input__prepend-inner .v-input__slot,
+.link-tab .v-btn-toggle .v-btn--active,
+nav .v-pagination .v-pagination__item--active,
+.v-tabs .v-tabs-bar .v-tab--active {
+  background-color: var(--color-tertiary-gray-light) !important;
+  box-shadow: var(--field-box-shadow-base-inset) !important;
+}
+
+nav .v-pagination .v-pagination__item--active {
+  color: var(--v-primary-base) !important;
+}
+
+.link-tab .v-btn-toggle .v-btn--active::before,
+.v-tabs .v-tabs-bar,
+.v-menu__content .v-select-list {
+  background-color: var(--color-tertiary-gray-light) !important;
+}
+
+.v-snack__wrapper {
+  box-shadow: var(--field-box-shadow-base) !important;
+}
+
+.v-pagination button:disabled,
+.v-btn:disabled,
+.fix-input .v-btn:disabled {
+  box-shadow: var(--field-box-shadow-disabled) !important;
+}
+
+.v-window.v-tabs-items {
+  overflow: visible !important;
+  background-color: var(--color-tertiary-gray-light) !important;
+}

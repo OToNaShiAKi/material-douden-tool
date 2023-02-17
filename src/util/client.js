@@ -1,18 +1,18 @@
 import { ipcRenderer } from "electron";
-import { writeFileXLSX, utils } from "xlsx";
+// import { writeFileXLSX, utils } from "xlsx";
 import BrotliDecode from "brotli/decompress";
 
+export const CommentLength = { default: 20 };
+
 export const FormatComment = (content, select = [], fix = {}, shield = []) => {
-  if (content.length <= 0 || select.length <= 0)
-    return "内容及所选房间不可为空";
+  if (content.length <= 0 || select.length <= 0) return;
   const { prefix = "", suffix = "" } = fix;
   content = (prefix + content + suffix).trim();
   for (const item of shield) {
     content = content.replace(new RegExp(item.shield, "gi"), item.handle);
   }
   for (const item of select) {
-    const { [item]: length = FormatComment.CommentLength.default } =
-      FormatComment.CommentLength;
+    const { [item]: length = CommentLength.default } = CommentLength;
     ipcRenderer.send("SendComment", content.slice(0, length), item);
     if (content.length > length) {
       content = content.slice(length, content.length - suffix.length);
@@ -20,8 +20,6 @@ export const FormatComment = (content, select = [], fix = {}, shield = []) => {
     }
   }
 };
-
-FormatComment.CommentLength = { default: 20 };
 
 export const Certification = (certify) => {
   const json = new TextEncoder().encode(certify);
@@ -64,62 +62,21 @@ export const HandleMessage = (blob, resolve) => {
       while (offset < buffer.byteLength) {
         const PacketLength = data.getUint32(offset + 0);
         const HeadLength = data.getUint16(offset + 4);
-        const text = Decoder.decode(
-          new Uint8Array(
-            buffer.buffer,
-            offset + HeadLength,
-            PacketLength - HeadLength
+        const text = JSON.parse(
+          Decoder.decode(
+            new Uint8Array(
+              buffer.buffer,
+              offset + HeadLength,
+              PacketLength - HeadLength
+            )
           )
         );
-        result.body.push(JSON.parse(text));
+        text.cmd = /DANMU_MSG/.test(text.cmd) ? "DANMU_MSG" : text.cmd;
+        result.body.push(text);
         offset += PacketLength;
       }
     }
-    resolve(result);
+    resolve(result.body);
   });
   reader.readAsArrayBuffer(blob);
-};
-
-export const ExportExcel = (body, header, name, title, config = {}) => {
-  const sheet = utils.json_to_sheet(body, { header });
-  const workbook = utils.book_new();
-  sheet["!cols"] = config.cols;
-  sheet["!rows"] = config.rows || new Array(body.length + 1).fill({ hpt: 20 });
-  utils.book_append_sheet(workbook, sheet, title || name);
-  name += ".xlsx";
-  writeFileXLSX(workbook, name);
-};
-
-export const FormatDuration = (value, hour = false) => {
-  if (!value) return "";
-  let m = Math.floor(value / 60);
-  let s = value - m * 60;
-  let time = ":" + s.toString().padStart(2, "0");
-  if (hour) {
-    let h = Math.floor(m / 60);
-    m -= h * 60;
-    time =
-      h.toString().padStart(2, "0") +
-      ":" +
-      m.toString().padStart(2, "0") +
-      time;
-  } else time = m.toString().padStart(2, "0") + time;
-  return time;
-};
-
-export const FormatTime = (date) => {
-  const y = date.getFullYear();
-  const m = (date.getMonth() + 1).toString().padStart(2, "0");
-  const d = date.getDate().toString().padStart(2, "0");
-  const h = date.getHours().toString().padStart(2, "0");
-  const t = date.getMinutes().toString().padStart(2, "0");
-  const s = date.getSeconds().toString().padStart(2, "0");
-  return `${y}-${m}-${d} ${h}:${t}:${s}`;
-};
-
-export const Colors = {
-  container: "#f3969a",
-  background: "#ffffff",
-  text: "#333333",
-  tip: "#aaaaaa",
 };

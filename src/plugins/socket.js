@@ -1,91 +1,62 @@
-import { Certification, HandleMessage } from "./utils";
 import { ipcRenderer } from "electron";
-const AutoClickRedPocket =
-  localStorage.getItem("AutoClickRedPocket") === "false";
-const AutoTranslate = localStorage.getItem("AutoTranslate") === "false";
-const filters = JSON.parse(localStorage.getItem("filters")) || [
-  "老板大气！点点红包抽礼物！",
-];
-const AutoChangeMedal = localStorage.getItem("AutoChangeMedal") === "false";
-const AutoCopyForbidWord =
-  localStorage.getItem("AutoCopyForbidWord") === "false";
+import { Certification,  HandleMessage } from "../util/client";
+import GoTo from "vuetify/lib/services/goto";
 
 export default class Socket {
   static Command = {
-    DANMU_MSG: async ({ info }) => {
-      const text =
-        Socket.AutoTranslate && (await ipcRenderer.invoke("CutWord", info[1]));
+    DANMU_MSG: async ({ info, cmd }, uid) => {
+      if (info[0][9] || info[0][12] === 1) return;
+      const translate = await Socket.Translate(info[1].trim());
       return {
-        info: info[1],
-        uid: info[2][0],
-        nickname: info[2][1],
-        text,
-        id: Date.now(),
+        id: cmd + "-" + info[0][4],
+        message: info[1],
+        title: info[2][1],
+        translate,
+        admin: info[2][2] || uid == info[2][0],
       };
     },
-    SUPER_CHAT_MESSAGE: async ({ data }) => {
-      const text =
-        Socket.AutoTranslate &&
-        (await ipcRenderer.invoke("CutWord", data.message));
+    SUPER_CHAT_MESSAGE_JPN: async ({ data, cmd }) => {
+      const translate =
+        data.message_jpn || (await Socket.Translate(data.message));
       return {
-        info: data.message,
-        uid: data.uid,
-        nickname: data.user_info.uname,
+        id: cmd + "-" + data.id,
+        message: data.message,
+        title: data.user_info.uname,
+        translate,
         style: { color: data.background_bottom_color },
-        text,
-        id: Date.now(),
       };
     },
-    POPULARITY_RED_POCKET_START: async ({ data }, socket) => {
-      if (Socket.AutoClickRedPocket) {
-        const result = await ipcRenderer.invoke(
-          "ClickRedPocket",
-          socket.ruid,
-          socket.roomid,
-          data.lot_id
-        );
-        return {
-          info: "自动点击红包" + (result ? "成功" : "失败"),
-          uid: socket.uid,
-          nickname: "System",
-          class: "primary--text",
-          id: Date.now(),
-        };
-      }
-    },
-    ROOM_ADMIN_ENTRANCE: ({ uid }, socket) => {
-      socket.admin = socket.uid === uid;
-    },
-    LIVE: ({ roomid }) => ipcRenderer.send("Channel", "Live", roomid),
   };
-  static AutoClickRedPocket = !AutoClickRedPocket;
-  static AutoTranslate = !AutoTranslate;
-  static AutoChangeMedal = !AutoChangeMedal;
-  static AutoCopyForbidWord = !AutoCopyForbidWord;
-  static filters = filters;
-
-  constructor({ host_list, uid, ruid, roomid, token, admin, comments }) {
-    const host = host_list.pop();
-    this.roomid = roomid;
-    this.token = token;
+  static AutoUp = true;
+  static AutoTranslate = localStorage.getItem("AutoTranslate") === "true";
+  static AutoClickRedPocket = localStorage.getItem("AutoClickRedPocket") !== "false";
+  static AutoChangeMedal = localStorage.getItem("AutoChangeMedal") !== "false";
+  static AutoCopyForbidWord = localStorage.getItem("AutoCopyForbidWord") !== "false";
+  static target = document.getElementById("comment");
+  constructor(host) {
     this.timer = null;
-    this.admin = admin;
-    this.uid = uid;
-    this.ruid = ruid;
-    this.comments = comments.reverse();
+    this.comments = [];
+    this.uid = host.uid;
+    this.admin = host.admin;
+    this.ruid = host.ruid;
     this.reconnect = true;
-
-    this.socket = this.Connect(host);
   }
+  static GoToBottom = () =>
+    GoTo(Socket.target.scrollHeight, { easing: "easeInOutCubic" });
+  static Translate = (text) =>
+    Socket.AutoTranslate
+      ? ipcRenderer.invoke("Translate", text, Socket.language)
+      : "";
   Connect = (host) => {
-    const socket = new WebSocket(`wss://${host.host}:${host.wss_port}/sub`);
+    const socket = new WebSocket(host.host);
     socket.addEventListener("open", this.Open);
     socket.addEventListener("message", this.Message);
-    socket.addEventListener("close", () =>
-      this.reconnect
-        ? (this.socket = this.Connect(host))
-        : clearInterval(this.timer)
-    );
+    socket.addEventListener("close", () => {
+      clearInterval(this.timer);
+      if (this.reconnect) {
+        this.socket = this.Connect(host);
+      }
+    });
     return socket;
   };
   Open = () => {
@@ -114,19 +85,18 @@ export default class Socket {
       this.socket.send(buffer);
     }, 30000);
   };
-  Message = async (event) => {
-    const message = await new Promise((resolve) =>
-      HandleMessage(event.data, resolve)
-    );
-    for (const body of message.body) {
+  Message = async ({ data }) => {
+    const messages = await new Promise((resolve) =>
+      HandleMessage(data, resolve)
+    )(data);
+    for (const item of messages) {
       const comment =
-        Socket.Command[body.cmd] &&
-        (await Socket.Command[body.cmd](body, this));
-      if (comment && !Socket.filters.includes(comment.info)) {
-        this.comments.unshift(comment);
+        Socket.Command[item.cmd] &&
+        (await Socket.Command[item.cmd](item, this.ruid));
+      if (comment) {
+        this.comments.push(comment);
+        Socket.AutoUp && Socket.GoToBottom();
       }
     }
   };
 }
-
-Socket.Command["DANMU_MSG:4:0:2:2:2:0"] = Socket.Command.DANMU_MSG

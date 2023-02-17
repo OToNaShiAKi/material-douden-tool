@@ -4,7 +4,6 @@ import { app, protocol, BrowserWindow, Menu, session } from "electron";
 import { autoUpdater } from "electron-updater";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
-import "./ipc";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Scheme must be registered before the app is ready
@@ -14,23 +13,30 @@ protocol.registerSchemesAsPrivileged([
 
 export const AllWindows = {};
 
-const createWindow = async (page = "index", options = {}) => {
+const CreateWindow = async (page = "index", options = {}) => {
   Menu.setApplicationMenu(null);
   // Create the browser window.
   const win = new BrowserWindow({
     width: 650,
-    height: 180,
+    height: 168,
     alwaysOnTop: true,
     icon: "./public/favicon.png",
+    center: true,
+    frame: false,
+    titleBarStyle: "hidden",
+    titleBarOverlay: { color: "#ffffff00", symbolColor: "rgba(0, 0, 0, 0.54)" },
+    autoHideMenuBar: true,
+    transparent: true,
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
-      nodeIntegration: true,
+      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
       webSecurity: false,
     },
     ...options,
   });
+
   AllWindows[page] = win.id;
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
@@ -57,7 +63,7 @@ app.on("window-all-closed", () => {
 app.on("activate", () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  if (BrowserWindow.getAllWindows().length === 0) CreateWindow();
 });
 
 // This method will be called when Electron has finished
@@ -72,7 +78,7 @@ app.on("ready", async () => {
       console.error("Vue Devtools failed to install:", e.toString());
     }
   }
-  createWindow();
+  CreateWindow();
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
     details.requestHeaders["referer"] = "https://live.bilibili.com";
     callback({ requestHeaders: details.requestHeaders });
@@ -94,4 +100,6 @@ if (isDevelopment) {
   }
 }
 
-export default createWindow;
+import "./ipc";
+
+export default CreateWindow;
