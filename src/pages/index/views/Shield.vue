@@ -51,8 +51,6 @@ export default {
     ],
     shield: "",
     handle: "",
-    page: 1,
-    count: 0,
   }),
   computed: { ...mapState(["shields"]) },
   methods: {

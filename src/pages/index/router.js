@@ -1,16 +1,14 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 
+import Live from "./views/Live.vue";
+import Room from "./views/Room.vue";
 import Music from "./views/Music.vue";
 import Shortcut from "./views/Shortcut.vue";
 import Bracket from "./views/Bracket.vue";
 import Cookie from "./views/Cookie.vue";
 import Shield from "./views/Shield.vue";
 import Setting from "./views/Setting.vue";
-/* 
-import Live from "./views/Live.vue";
-import Room from "./views/Room.vue";
- */
 
 import { ipcRenderer } from "electron";
 
@@ -23,7 +21,21 @@ const beforeEnter = (to, from, next) => {
 };
 
 const routes = [
-  { path: "/music", name: "Music", component: Music, beforeEnter },
+  { path: "/live", name: "Live", component: Live, beforeEnter },
+  {
+    path: "/room",
+    name: "Room",
+    component: Room,
+    beforeEnter,
+    meta: { height: 658 },
+  },
+  {
+    path: "/music",
+    name: "Music",
+    component: Music,
+    beforeEnter,
+    meta: { height: 668 },
+  },
   {
     path: "/shortcut",
     name: "Shortcut",
@@ -44,10 +56,6 @@ const routes = [
     component: Setting,
     meta: { height: 468 },
   },
-  /*   
-  { path: "/live", name: "Live", component: Live, beforeEnter },
-  { path: "/room", name: "Room", component: Room, beforeEnter },
-   */
 ];
 
 const router = new VueRouter({ routes });

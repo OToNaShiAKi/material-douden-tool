@@ -1,29 +1,27 @@
 import { Bilibili, Login } from "./plugins/headers";
 import CreateWindow, { AllWindows } from "./background";
-// import { e, Replies } from "./plugins/handle";
-import { ipcMain, BrowserWindow, dialog, screen, app } from "electron";
+import { ipcMain, BrowserWindow, screen } from "electron";
 import {
-  GetWebSocket,
-  GetMusic,
-  SilentUser,
-  Translate,
-  GetUserRoomMode,
-  SetUserRoomMode,
-  GetSilentUser,
-  RemoveSilentUser,
-  GetDynamic,
   GetQRCode,
   GetLoginInfo,
-  ClickRedPocket,
-  GetTrackLiveInfo,
-  MedalWall,
+  GetUserRoomMode,
+  SearchLive,
+  SearchUser,
+  GetMedalWall,
   ChangeMedal,
   TakeOffModel,
+  GetFollowLive,
+  SetUserRoomMode,
+  GetMusic,
 } from "./plugins/axios";
-// import { writeFile, mkdir } from "fs/promises";
-// import { join } from "path";
 import { Stacks } from "./util/server";
-// import FontList from "font-list";
+
+const options = {
+  alwaysOnTop: false,
+  frame: true,
+  titleBarStyle: "default",
+  transparent: false,
+};
 
 ipcMain.on("WindowSize", (event, height) => {
   const win = BrowserWindow.fromId(AllWindows.index);
@@ -37,19 +35,20 @@ ipcMain.on("OtherWindow", async (event, page, DevTools = false) => {
     win.webContents.openDevTools();
   } else if (!win) {
     const size = screen.getPrimaryDisplay().workAreaSize;
-    win = await CreateWindow(page, {
-      ...size,
-      alwaysOnTop: false,
-      frame: true,
-      titleBarStyle: "default",
-      transparent: false,
-    });
+    win = await CreateWindow(page, { ...size, ...options });
   }
 });
 
-ipcMain.on("Channel", async (event, channel, ...data) => {
-  const win = AllWindows.support && BrowserWindow.fromId(AllWindows.support);
-  win && win.webContents.send(channel, ...data);
+ipcMain.on("Channel", async (event, channel, data, create = false) => {
+  let win = AllWindows.support && BrowserWindow.fromId(AllWindows.support);
+  if (!win && create) {
+    const size = screen.getPrimaryDisplay().workAreaSize;
+    win = await CreateWindow("support", { ...size, ...options });
+  }
+  if (win) {
+    win.focus();
+    win.webContents.send(channel, data);
+  }
 });
 
 ipcMain.on("SendComment", (event, message, roomid) => {
@@ -88,4 +87,66 @@ ipcMain.on("ChangeCookie", (event, cookie, csrf) => {
     csrf_token: csrf,
     rnd: Math.floor(Date.now() / 1000),
   };
+});
+
+ipcMain.handle("SearchLive", async (event, keyword) => {
+  const match = /^\d+$/.test(keyword);
+  const [search, uid] = await Promise.all([
+    SearchLive(keyword),
+    match && SearchUser(keyword),
+  ]);
+  uid && search.unshift(uid);
+  return search;
+});
+
+ipcMain.handle("GetUserRoomMode", async (event, roomid) => {
+  const result = await GetUserRoomMode(roomid);
+  let colors = [];
+  result.modes = result.modes
+    .filter(({ status }) => status)
+    .map(({ name, mode }) => ({ text: name, value: mode }));
+  for (const { color } of result.colors) {
+    colors = colors.concat(
+      color
+        .filter(({ status }) => status)
+        .map(({ color_hex, name }) => ({ text: name, value: color_hex }))
+    );
+  }
+  result.colors = colors;
+  return result;
+});
+
+ipcMain.handle("SetUserRoomMode", SetUserRoomMode);
+
+ipcMain.handle("GetFollowLive", GetFollowLive);
+
+ipcMain.handle("GetMedalWall", GetMedalWall);
+
+ipcMain.on("ChangeMedal", (event, model_id) =>
+  model_id ? ChangeMedal(model_id) : TakeOffModel(model_id)
+);
+
+ipcMain.handle("GetMusic", async (event, keyword) => {
+  const match = /\[(\d{1,2}):([0-9.]{1,8})\](.*)\n?/g;
+  const result = await GetMusic(keyword);
+  for (const item of result) {
+    if (item.lyric && match.test(item.lyric)) {
+      const lyric = [];
+      item.lyric.replace(match, (l, m, s, c) => {
+        if (c && (!/:|：/.test(c) || lyric.length > 0)) {
+          const t = item.tlyric.match(new RegExp(`\\[${m}:${s}\\](.*)\n?`));
+          lyric.push({
+            stamp: (+m * 60 + +s) * 1000,
+            lyric: c.trim(),
+            tlyric: t && t[1].trim(),
+            start: `00:${m}:${s}`,
+          });
+        }
+        return "";
+      });
+      item.stamps = lyric;
+      item.language = match.test(item.tlyric) ? "双语" : "单语";
+    }
+  }
+  return result.filter(({ stamps }) => stamps && stamps.length > 0);
 });

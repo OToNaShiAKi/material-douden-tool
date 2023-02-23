@@ -2,8 +2,6 @@ import axios from "axios";
 import { BrowserWindow } from "electron";
 import { AllWindows } from "../background";
 
-const Response = (response) => response.data;
-
 export const Bilibili = axios.create({
   baseURL: "https://api.live.bilibili.com/",
   withCredentials: true,
@@ -16,7 +14,7 @@ export const Bilibili = axios.create({
 });
 Bilibili.interceptors.response.use(({ data }) => {
   if (data.code !== 0 && data.code !== 1200000) {
-    if (data.code === -111 && /csrf/gi.test(data.message)) {
+    if (data.code === -111 && /csrf/i.test(data.message)) {
       const win = BrowserWindow.fromId(AllWindows.index);
       win.webContents.send("CookieOverdue");
     }
@@ -27,6 +25,7 @@ Bilibili.interceptors.response.use(({ data }) => {
 });
 
 export const Login = axios.create({
+  baseURL: "https://api.bilibili.com/",
   withCredentials: true,
   headers: {
     origin: "https://www.bilibili.com/",
@@ -37,4 +36,19 @@ export const Login = axios.create({
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
   },
 });
-Login.interceptors.response.use(Response);
+Login.interceptors.response.use(({ data, status }) => {
+  data.status = status;
+  return data;
+});
+
+export const Music163 = axios.create({
+  baseURL: "https://music.163.com/api/",
+  withCredentials: true,
+  headers: {
+    origin: "https://music.163.com",
+    referer: "https://music.163.com",
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
+  },
+});
+Music163.interceptors.response.use((response) => response.data);

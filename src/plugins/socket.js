@@ -1,5 +1,5 @@
 import { ipcRenderer } from "electron";
-import { Certification,  HandleMessage } from "../util/client";
+import { Certification, HandleMessage } from "../util/client";
 import GoTo from "vuetify/lib/services/goto";
 
 export default class Socket {
@@ -24,14 +24,17 @@ export default class Socket {
         title: data.user_info.uname,
         translate,
         style: { color: data.background_bottom_color },
+        admin: 1,
       };
     },
   };
   static AutoUp = true;
   static AutoTranslate = localStorage.getItem("AutoTranslate") === "true";
-  static AutoClickRedPocket = localStorage.getItem("AutoClickRedPocket") !== "false";
+  static AutoClickRedPocket =
+    localStorage.getItem("AutoClickRedPocket") !== "false";
   static AutoChangeMedal = localStorage.getItem("AutoChangeMedal") !== "false";
-  static AutoCopyForbidWord = localStorage.getItem("AutoCopyForbidWord") !== "false";
+  static AutoCopyForbidWord =
+    localStorage.getItem("AutoCopyForbidWord") !== "false";
   static target = document.getElementById("comment");
   constructor(host) {
     this.timer = null;

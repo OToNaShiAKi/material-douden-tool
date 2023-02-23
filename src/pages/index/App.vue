@@ -45,7 +45,7 @@
         </keep-alive>
       </v-container>
       <v-snackbar
-        :value="snackbar.value"
+        v-model="snackbar.value"
         color="primary"
         app
         text
@@ -86,7 +86,14 @@ export default {
     ],
   }),
   computed: {
-    ...mapState(["select", "shortcuts", "snackbar", "shields", "song"]),
+    ...mapState([
+      "select",
+      "shortcuts",
+      "snackbar",
+      "shields",
+      "song",
+      "stamp",
+    ]),
     fixes: ({ $store: { state } }) =>
       state.fixes.filter((v) => v.scope !== "歌曲"),
   },
@@ -152,7 +159,7 @@ export default {
       key += event.key;
       let phrase = this.shortcuts[key];
       if (phrase) {
-        const lyric = this.song.stamps[this.current];
+        const lyric = this.song.stamps[this.stamp];
         phrase = phrase
           .replace(/\{c\}/gi, this.content)
           .replace(/\{v\}/gi, clipboard.readText())
@@ -172,14 +179,15 @@ export default {
 </script>
 
 <style>
-.fix-input .v-input__prepend-inner {
-  max-width: 24%;
+.relative {
+  position: relative;
 }
 
 #app .v-system-bar {
   -webkit-app-region: drag;
   -webkit-user-drag: none;
   border-radius: 8px !important;
+  color: #8d7ca6;
 }
 
 #setting .v-input--radio-group,
@@ -190,20 +198,45 @@ export default {
   border-radius: 8px;
 }
 
-#lyric-control .v-btn {
-  border-width: 0px !important;
+em.keyword {
+  font-style: normal !important;
+  color: var(--v-primary-base);
 }
-#lyric-control {
-  background-color: transparent;
+.v-autocomplete__content {
+  margin-top: 28px;
+}
+.living-border {
+  border-width: 3px;
+  border-color: var(--v-primary-base);
+  border-style: solid;
 }
 
-#lyric-control .v-btn::after {
+.medal-border {
+  width: 20px;
+  height: 20px;
+  text-align: center;
+  line-height: 20px;
+}
+.medal-title {
+  width: 36px;
+}
+.medal-image.v-chip--pill .v-avatar {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.lyric-control .relative::before {
   content: "";
   position: absolute;
-  height: 100%;
+  top: 128px;
+  left: 0;
   width: 100%;
-  left: 100%;
-  top: 0%;
-  background-color: var(--color-tertiary-gray-light) !important;
+  height: 64px;
+  border-radius: 4px;
+}
+
+.lyric-control .relative .step-button {
+  top: 50%;
+  transform: translateY(-50%);
 }
 </style>

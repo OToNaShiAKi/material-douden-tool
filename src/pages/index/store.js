@@ -38,8 +38,16 @@ const ChangeSelect = (state, select = []) => {
 };
 
 const ChangeConfig = (state, { key, config = [] }) => {
-  localStorage.setItem(key, JSON.stringify(config));
   state[key] = [...config];
+  if (key === "rooms") {
+    config = config.map((item) => ({
+      value: item.value,
+      text: item.text,
+      uid: item.uid,
+      avatar: item.avatar,
+    }));
+  }
+  localStorage.setItem(key, JSON.stringify(config));
 };
 
 const ChangeShortcuts = (state, { key, value }) => {
@@ -50,9 +58,9 @@ const ChangeShortcuts = (state, { key, value }) => {
   localStorage.setItem("shortcuts", JSON.stringify(shortcuts));
 };
 
-const ChangeSong = (state, current = -1, song = state.song) => {
+const ChangeSong = (state, { stamp = -1, song = state.song }) => {
   song.stamps[-1] = { lyric: "", tlyric: "" };
-  song.current = current;
+  state.stamp = stamp;
   state.song = song;
 };
 
@@ -73,7 +81,8 @@ export default new Vuex.Store({
     rooms,
     shields,
     snackbar: { value: false, text: "" },
-    song: { stamps, singer: "", name: "", current: -1 },
+    song: { stamps, singer: "", name: "" },
+    stamp: -1,
   },
   mutations: {
     ChangeCookie,

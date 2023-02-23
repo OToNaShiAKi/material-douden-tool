@@ -17,6 +17,7 @@ module.exports = defineConfig({
           allowElevation: true,
           allowToChangeInstallationDirectory: true,
           createStartMenuShortcut: true,
+          deleteAppDataOnUninstall: true,
         },
       },
     },

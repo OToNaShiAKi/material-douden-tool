@@ -35,36 +35,54 @@
 }
 
 .fix-input .v-input__slot,
+.fix-input .v-btn,
 .link-tab .v-btn-toggle,
 .link-tab button.v-btn--icon,
 #setting .v-input--radio-group,
 #setting .v-item-group,
-.v-data-table,
+.v-data-table .v-data-table__wrapper,
 nav .v-pagination button,
-.fix-input .v-btn,
 .v-tabs .v-tabs-bar .v-tab,
 .v-menu__content,
-#lyric-control .v-btn,
-#lyric-control .v-btn.v-btn--active::before {
+.lyric-control .v-btn-toggle .v-btn,
+.lyric-control .v-btn-toggle .v-btn.v-btn--active::before,
+.v-chip-group .v-chip,
+.lyric-control .relative::before  {
   background-color: var(--color-tertiary-gray-light) !important;
   box-shadow: var(--field-box-shadow-base) !important;
+}
+
+.fix-input .v-input__prepend-inner {
+  max-width: 24%;
+}
+
+.lyric-control .v-btn-toggle .v-btn {
+  border-width: 0px !important;
+  margin-left: 4px;
+  margin-right: 4px;
 }
 
 .v-input__prepend-inner .v-input__slot,
 .link-tab .v-btn-toggle .v-btn--active,
 nav .v-pagination .v-pagination__item--active,
-.v-tabs .v-tabs-bar .v-tab--active {
+.v-tabs .v-tabs-bar .v-tab--active,
+.v-chip-group .v-chip.v-chip--active,
+.lyric-control .v-btn-toggle .v-btn.v-size--small.v-btn--active {
   background-color: var(--color-tertiary-gray-light) !important;
   box-shadow: var(--field-box-shadow-base-inset) !important;
 }
 
+.lyric-control .v-btn-toggle .v-btn.v-size--small.v-btn--active i,
 nav .v-pagination .v-pagination__item--active {
   color: var(--v-primary-base) !important;
 }
 
+.v-chip-group .v-chip.v-chip--active::before,
 .link-tab .v-btn-toggle .v-btn--active::before,
 .v-tabs .v-tabs-bar,
-.v-menu__content .v-select-list {
+.v-menu__content .v-select-list,
+.lyric-control .v-btn-toggle,
+.v-data-table {
   background-color: var(--color-tertiary-gray-light) !important;
 }
 
@@ -74,7 +92,8 @@ nav .v-pagination .v-pagination__item--active {
 
 .v-pagination button:disabled,
 .v-btn:disabled,
-.fix-input .v-btn:disabled {
+.fix-input .v-btn:disabled,
+.lyric-control .v-btn-toggle .v-btn:disabled {
   box-shadow: var(--field-box-shadow-disabled) !important;
 }
 
