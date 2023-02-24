@@ -47,13 +47,28 @@ nav .v-pagination button,
 .lyric-control .v-btn-toggle .v-btn,
 .lyric-control .v-btn-toggle .v-btn.v-btn--active::before,
 .v-chip-group .v-chip,
-.lyric-control .relative::before  {
+.lyric-control .relative::before,
+.honour-avatar.v-avatar,
+.qrcode,
+.v-navigation-drawer,
+button.fix-button,
+.fix-input .v-image,
+video {
   background-color: var(--color-tertiary-gray-light) !important;
   box-shadow: var(--field-box-shadow-base) !important;
 }
 
 .fix-input .v-input__prepend-inner {
   max-width: 24%;
+}
+.input-avatar .v-input__prepend-outer ,
+.input-avatar .v-input__append-outer {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.v-navigation-drawer {
+  height: inherit !important;
 }
 
 .lyric-control .v-btn-toggle .v-btn {
@@ -67,7 +82,8 @@ nav .v-pagination button,
 nav .v-pagination .v-pagination__item--active,
 .v-tabs .v-tabs-bar .v-tab--active,
 .v-chip-group .v-chip.v-chip--active,
-.lyric-control .v-btn-toggle .v-btn.v-size--small.v-btn--active {
+.lyric-control .v-btn-toggle .v-btn.v-size--small.v-btn--active,
+.v-navigation-drawer .v-list-item--active  {
   background-color: var(--color-tertiary-gray-light) !important;
   box-shadow: var(--field-box-shadow-base-inset) !important;
 }
@@ -82,6 +98,7 @@ nav .v-pagination .v-pagination__item--active {
 .v-tabs .v-tabs-bar,
 .v-menu__content .v-select-list,
 .lyric-control .v-btn-toggle,
+.v-navigation-drawer .v-list-item--link::before ,
 .v-data-table {
   background-color: var(--color-tertiary-gray-light) !important;
 }

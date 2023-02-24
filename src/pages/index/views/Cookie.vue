@@ -1,41 +1,38 @@
 <template>
   <section>
     <Pack>登录</Pack>
-    <v-tabs v-model="tab" centered>
-      <v-tab href="#Bilibili">Bilibili</v-tab>
-      <v-tab href="#QQMusic">QQMusic</v-tab>
-    </v-tabs>
-    <v-tabs-items v-model="tab" class="fix-input">
-      <v-tab-item value="Bilibili" transition="fade-transition">
-        <v-hover v-slot="{ hover }">
-          <v-img height="210" :src="code">
-            <template>
-              <v-img contain width="240" :src="hint" v-if="hover && code" />
-              <section
-                v-else-if="!code"
-                class="fill-height caption d-flex flex-column align-center justify-center"
-              >
-                <v-icon color="primary" large>mdi-refresh</v-icon>
-                <span>二维码已失效</span>
-                <span>点击重新获取</span>
-                <span>Cookie存在即登陆成功</span>
-              </section>
-            </template>
-          </v-img>
-        </v-hover>
-        <v-textarea
-          v-model="cookie"
-          label="Bilibili Cookie"
-          auto-grow
-          hide-details
-          solo
-          :spellcheck="false"
-          clearable
-          @input="ChangeCookie"
-        />
-      </v-tab-item>
-      <v-tab-item value="QQMusic" transition="fade-transition"> </v-tab-item>
-    </v-tabs-items>
+    <HonourAvatar class="mx-auto d-block" v-if="cookie" :size="150" />
+    <v-img
+      class="mx-auto qrcode"
+      content-class="d-flex justify-center align-center"
+      height="150"
+      width="150"
+      contain
+      v-else
+      :src="code"
+    >
+      <section
+        v-if="!code"
+        class="fill-height caption d-flex flex-column align-center justify-center"
+      >
+        <v-btn @click="Login" class="mb-2" large icon color="primary">
+          <v-icon>mdi-refresh</v-icon>
+        </v-btn>
+        <span>二维码已失效</span>
+        <span>点击刷新</span>
+      </section>
+    </v-img>
+    <v-textarea
+      v-model="cookie"
+      label="Bilibili Cookie"
+      auto-grow
+      class="mt-6 fix-input"
+      hide-details
+      solo
+      :spellcheck="false"
+      clearable
+      @input="ChangeCookie"
+    />
   </section>
 </template>
 
@@ -44,15 +41,16 @@ import { ipcRenderer } from "electron";
 import { mapMutations } from "vuex";
 import Pack from "../../../components/Pack.vue";
 import QRCode from "qrcode";
+import HonourAvatar from "../../../components/HonourAvatar.vue";
 
 export default {
   name: "Cookie",
-  components: { Pack },
+  components: { Pack, HonourAvatar },
   data: ({ $store: { state } }) => ({
     cookie: state.cookie,
+    tab: "QQMusic",
     code: "",
-    tab: "Bilibili",
-    hint: "https://s1.hdslb.com/bfs/seed/jinkela/short/mini-login-v2/img/qr-tips.74063ae1.png",
+    music: "",
   }),
   created() {
     !this.cookie && this.Login();

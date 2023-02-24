@@ -1,6 +1,6 @@
-import { Bilibili, Login } from "./plugins/headers";
+import { Baidu, Bilibili, Login } from "./plugins/headers";
 import CreateWindow, { AllWindows } from "./background";
-import { ipcMain, BrowserWindow, screen } from "electron";
+import { ipcMain, BrowserWindow, dialog, screen } from "electron";
 import {
   GetQRCode,
   GetLoginInfo,
@@ -12,9 +12,18 @@ import {
   TakeOffModel,
   GetFollowLive,
   SetUserRoomMode,
-  GetMusic,
+  CheckLogin,
+  GetWebSocket,
+  SearchMusic163,
+  SearchMusicQQ,
+  SilentUser,
+  GetAuthen,
+  Translate,
+  GetLiveInfo,
 } from "./plugins/axios";
-import { Stacks } from "./util/server";
+import { e, Stacks, TranslateResult } from "./util/server";
+import { writeFile, mkdir } from "fs/promises";
+import { join } from "path";
 
 const options = {
   alwaysOnTop: false,
@@ -79,7 +88,7 @@ ipcMain.handle("BilibiliLogin", async () => {
   return url;
 });
 
-ipcMain.on("ChangeCookie", (event, cookie, csrf) => {
+ipcMain.handle("Cookie", async (event, cookie, csrf) => {
   Bilibili.defaults.headers["Cookie"] = cookie;
   Login.defaults.headers["Cookie"] = cookie;
   Bilibili.defaults.data = {
@@ -87,6 +96,7 @@ ipcMain.on("ChangeCookie", (event, cookie, csrf) => {
     csrf_token: csrf,
     rnd: Math.floor(Date.now() / 1000),
   };
+  return await CheckLogin();
 });
 
 ipcMain.handle("SearchLive", async (event, keyword) => {
@@ -128,7 +138,11 @@ ipcMain.on("ChangeMedal", (event, model_id) =>
 
 ipcMain.handle("GetMusic", async (event, keyword) => {
   const match = /\[(\d{1,2}):([0-9.]{1,8})\](.*)\n?/g;
-  const result = await GetMusic(keyword);
+  const [music163, musicQQ] = await Promise.all([
+    SearchMusic163(keyword),
+    SearchMusicQQ(keyword),
+  ]);
+  const result = [...music163, ...musicQQ];
   for (const item of result) {
     if (item.lyric && match.test(item.lyric)) {
       const lyric = [];
@@ -149,4 +163,48 @@ ipcMain.handle("GetMusic", async (event, keyword) => {
     }
   }
   return result.filter(({ stamps }) => stamps && stamps.length > 0);
+});
+
+ipcMain.handle("GetWebSocket", async (event, roomids) => {
+  const promise = roomids.map((roomid) => GetWebSocket(roomid));
+  return await Promise.all(promise);
+});
+
+ipcMain.handle("SilentUser", SilentUser);
+
+ipcMain.handle("Translate", async (event, phrase, to = "zh") => {
+  const sign = e(phrase),
+    key = `${sign}-${to}`;
+  if (TranslateResult[key]) return TranslateResult[key];
+  if (!Baidu.defaults.headers.Cookie) {
+    const { Cookie, token } = await GetAuthen();
+    Baidu.defaults.headers.Cookie = Cookie;
+    Translate.token = token;
+  }
+  const result = await Translate(phrase, sign, to);
+  TranslateResult[key] = result;
+  return result;
+});
+
+ipcMain.handle("TrackLive", (event, roomid) => GetLiveInfo(roomid));
+
+ipcMain.on("SaveFiles", async (event, Datas, name, encoding = "buffer") => {
+  const isArray = Array.isArray(Datas);
+  const { filePath } = await dialog.showSaveDialog({
+    defaultPath: name,
+    filters: [{ name: "All Files", extensions: ["*"] }],
+    title: isArray ? "保存文件夹" : "保存文件",
+  });
+  if (filePath) {
+    if (isArray) {
+      await mkdir(filePath);
+      for (let i = 0; i < Datas.length; i++) {
+        writeFile(join(filePath, `./${name}-${i}.png`), Datas[i], {
+          encoding,
+        });
+      }
+    } else {
+      writeFile(filePath, Datas, { encoding });
+    }
+  }
 });

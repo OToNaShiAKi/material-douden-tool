@@ -1,6 +1,7 @@
 import { ipcRenderer } from "electron";
 // import { writeFileXLSX, utils } from "xlsx";
 import BrotliDecode from "brotli/decompress";
+import mpegts from "mpegts.js";
 
 export const CommentLength = { default: 20 };
 
@@ -33,6 +34,17 @@ export const Certification = (certify) => {
   for (let r = 0; r < json.byteLength; r++) {
     view.setUint8(16 + r, json[r]);
   }
+  return buffer;
+};
+
+export const HeartBeat = () => {
+  const buffer = new ArrayBuffer(16);
+  const i = new DataView(buffer);
+  i.setUint32(0, 0);
+  i.setUint16(4, 16);
+  i.setUint16(6, 1);
+  i.setUint32(8, 2);
+  i.setUint32(12, 1);
   return buffer;
 };
 
@@ -79,4 +91,62 @@ export const HandleMessage = (blob, resolve) => {
     resolve(result.body);
   });
   reader.readAsArrayBuffer(blob);
+};
+
+export const CreatePlayer = (result, video) => {
+  const player = mpegts.createPlayer(
+    {
+      type: result.format_name,
+      isLive: true,
+      url: result.url_info[0].host + result.base_url + result.url_info[0].extra,
+    },
+    {
+      enableWorker: true,
+      enableStashBuffer: false,
+      autoCleanupSourceBuffer: true,
+    }
+  );
+  player.attachMediaElement(video);
+  player.load();
+  player.play();
+  player.on(mpegts.Events.ERROR, () => {
+    player.unload();
+    player.detachMediaElement();
+    player.destroy();
+    CreatePlayer.player = CreatePlayer(result, video);
+  });
+  player.on(mpegts.Events.STATISTICS_INFO, () => {
+    const end = player.buffered.end(0);
+    const current = player.currentTime;
+    video.playbackRate = end - current > 1.5 ? 1.5 : 1;
+  });
+  player.roomid = result.room_id;
+  return player;
+};
+
+export const FormatTime = (date) => {
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, "0");
+  const d = date.getDate().toString().padStart(2, "0");
+  const h = date.getHours().toString().padStart(2, "0");
+  const t = date.getMinutes().toString().padStart(2, "0");
+  const s = date.getSeconds().toString().padStart(2, "0");
+  return `${y}-${m}-${d} ${h}:${t}:${s}`;
+};
+
+export const FormatDuration = (value, hour = false) => {
+  if (!value) return "";
+  let m = Math.floor(value / 60);
+  let s = value - m * 60;
+  let time = ":" + s.toString().padStart(2, "0");
+  if (hour) {
+    let h = Math.floor(m / 60);
+    m -= h * 60;
+    time =
+      h.toString().padStart(2, "0") +
+      ":" +
+      m.toString().padStart(2, "0") +
+      time;
+  } else time = m.toString().padStart(2, "0") + time;
+  return time;
 };

@@ -24,19 +24,53 @@
         </v-avatar>
       </template>
     </v-select>
+    <v-virtual-scroll
+      item-height="20"
+      height="360"
+      ref="comments"
+      :items="comments[show.value]"
+      @click="Copy"
+    >
+      <template v-slot="{ item }">
+        <p class="d-flex caption ma-0 text-truncate align-center">
+          <v-chip
+            label
+            x-small
+            :data-uid="item.uid"
+            :data-name="item.name"
+            v-if="
+              sockets[show.value] && sockets[show.value].admin && !item.admin
+            "
+          >
+            禁言
+          </v-chip>
+          <span class="mx-2">{{ item.name }}:</span>
+          <span :class="item.class" :style="item.style">
+            {{ item.message }}
+          </span>
+          <span v-if="item.translate">({{ item.translate }})</span>
+        </p>
+      </template>
+    </v-virtual-scroll>
+    <v-btn class="fix-button" fab x-small right bottom fixed @click="Top">
+      <v-icon color="primary">mdi-arrow-up-bold</v-icon>
+    </v-btn>
   </section>
 </template>
 
 <script>
-// import Socket from "../../../plugins/socket";
+import Socket from "../../../plugins/socket";
+import { CommentLength } from "../../../util/client";
 import { clipboard, ipcRenderer } from "electron";
 import { mapMutations } from "vuex";
 import Pack from "../../../components/Pack.vue";
+import GoTo from "vuetify/lib/services/goto";
 
 export default {
   components: { Pack },
   name: "Live",
   data: ({ $store: { state } }) => ({
+    comments: {},
     sockets: {},
     show: state.rooms.find(({ value }) => value === state.select[0]),
   }),
@@ -49,16 +83,56 @@ export default {
     async Copy({ target }) {
       let { innerText } = target;
       const uid = target.dataset.uid || target.parentElement.dataset.uid;
-      const nickname =
-        target.dataset.nickname || target.parentElement.dataset.nickname;
+      const nickname = target.dataset.name || target.parentElement.dataset.name;
       if (uid) {
-        const result = await ipcRenderer.invoke("SilentUser", uid, this.show);
-        this.Notify(result ? "已禁言：" + nickname : "禁言失败");
+        const result = await ipcRenderer.invoke(
+          "SilentUser",
+          uid,
+          this.show.value
+        );
+        this.Notify(`禁言 ${nickname} ${result ? "成功" : "失败"}`);
       } else if (innerText && !/\n/.test(innerText)) {
-        innerText = innerText.replace(/（|）|：/g, "");
+        innerText = innerText.replace(/\(|\)|:/g, "");
         clipboard.writeText(innerText);
         this.Notify("已复制：" + innerText);
       }
+    },
+    Top() {
+      GoTo(0, {
+        container: this.$refs.comments,
+        easing: "easeInOutCubic",
+      });
+    },
+  },
+  watch: {
+    rooms: {
+      async handler(next) {
+        const sockets = next.map(({ value }) => value);
+        const comments = { ...this.comments };
+        for (const key in this.sockets) {
+          const index = sockets.indexOf(key);
+          if (index < 0) {
+            this.sockets[key].reconnect = false;
+            this.sockets[key].socket.close();
+            delete this.sockets[key];
+            delete comments[key];
+          } else {
+            sockets.splice(index, 1);
+          }
+        }
+        const result = await ipcRenderer.invoke("GetWebSocket", sockets);
+        for (const item of result) {
+          CommentLength[item.roomid] = item.length;
+          const socket = new Socket(item);
+          this.sockets[item.roomid] = socket;
+          comments[item.roomid] = socket.comments;
+        }
+        this.comments = comments;
+        if (!result.find(({ roomid }) => roomid === this.show.value)) {
+          this.show = this.rooms[0];
+        }
+      },
+      immediate: true,
     },
   },
 };

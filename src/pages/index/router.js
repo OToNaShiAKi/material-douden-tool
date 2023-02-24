@@ -21,7 +21,7 @@ const beforeEnter = (to, from, next) => {
 };
 
 const routes = [
-  { path: "/live", name: "Live", component: Live, beforeEnter },
+  { path: "/live", name: "Live", component: Live, beforeEnter,meta: { height: 652 }, },
   {
     path: "/room",
     name: "Room",
@@ -48,7 +48,7 @@ const routes = [
     component: Bracket,
     meta: { height: 526 },
   },
-  { path: "/cookie", name: "Cookie", component: Cookie },
+  { path: "/cookie", name: "Cookie", component: Cookie, meta: { height: 532 } },
   { path: "/shield", name: "Shield", component: Shield, meta: { height: 558 } },
   {
     path: "/setting",

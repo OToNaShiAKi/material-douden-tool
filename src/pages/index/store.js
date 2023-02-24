@@ -16,13 +16,13 @@ const shields = JSON.parse(localStorage.getItem("shields")) || [];
 const stamps = [];
 stamps[-1] = { lyric: "", tlyric: "" };
 
-const ChangeCookie = (state, cookie) => {
+const ChangeCookie = async (state, cookie) => {
   localStorage.setItem("cookie", cookie || "");
   state.cookie = cookie || "";
   if (cookie) {
     const bili_jct = cookie.match(/bili_jct=([^;]+);/);
     if (bili_jct) {
-      ipcRenderer.send("ChangeCookie", cookie, bili_jct[1]);
+      state.avatar = await ipcRenderer.invoke("Cookie", cookie, bili_jct[1]);
     }
   }
 };
@@ -83,6 +83,7 @@ export default new Vuex.Store({
     snackbar: { value: false, text: "" },
     song: { stamps, singer: "", name: "" },
     stamp: -1,
+    avatar: "",
   },
   mutations: {
     ChangeCookie,

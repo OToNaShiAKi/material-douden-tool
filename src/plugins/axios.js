@@ -1,12 +1,15 @@
-import { Bilibili, Login, Music163 } from "./headers.js";
+import { Baidu, Bilibili, Login, Music163, MusicQQ } from "./headers.js";
 import QS from "qs";
+import { BrowserWindow } from "electron";
+import { AllWindows } from "../background";
 import axios from "axios";
 
 const GetFollow = async (vmid) => {
   try {
-    const {
-      data: { follower },
-    } = await Login.get("/x/relation/stat", { params: { vmid } });
+    const { follower } = await Bilibili.get("/x/relation/stat", {
+      params: { vmid },
+      baseURL: "https://api.bilibili.com/",
+    });
     return follower;
   } catch (error) {
     return null;
@@ -34,9 +37,8 @@ export const SendComment = async (roomid, msg) => {
 
 export const GetQRCode = async () => {
   try {
-    return await Login.get("/qrcode/getLoginUrl", {
-      baseURL: "https://passport.bilibili.com/",
-    });
+    const { data } = await Login.get("/qrcode/getLoginUrl");
+    return data;
   } catch (error) {
     return { url: "", oauthKey: "" };
   }
@@ -44,11 +46,7 @@ export const GetQRCode = async () => {
 
 export const GetLoginInfo = async (oauthKey) => {
   try {
-    return await Login.post(
-      "/qrcode/getLoginInfo",
-      QS.stringify({ oauthKey }),
-      { baseURL: "https://passport.bilibili.com/" }
-    );
+    return await Login.post("/qrcode/getLoginInfo", QS.stringify({ oauthKey }));
   } catch (error) {
     return { status: false, data: null };
   }
@@ -56,10 +54,24 @@ export const GetLoginInfo = async (oauthKey) => {
 
 export const GetLiveInfo = async (roomid) => {
   try {
-    const {
-      live_time,
-      live_status,
-      playurl_info: {
+    const { live_time, live_status, uid, playurl_info } = await Bilibili.get(
+      "/xlive/web-room/v2/index/getRoomPlayInfo",
+      {
+        params: {
+          room_id: roomid,
+          protocol: "0,1",
+          format: "0,1,2",
+          codec: "0,1",
+          qn: 0,
+          platform: "web",
+          ptype: 8,
+          dolby: 5,
+        },
+      }
+    );
+    const result = { live_time, live_status, roomid, uid };
+    if (playurl_info) {
+      const {
         playurl: {
           g_qn_desc,
           stream: [
@@ -73,30 +85,15 @@ export const GetLiveInfo = async (roomid) => {
             },
           ],
         },
-      },
-    } = await Bilibili.get("/xlive/web-room/v2/index/getRoomPlayInfo", {
-      params: {
-        room_id: roomid,
-        protocol: "0,1",
-        format: "0,1,2",
-        codec: "0,1",
-        qn: 0,
-        platform: "web",
-        ptype: 8,
-        dolby: 5,
-      },
-    });
-    return {
-      live_time,
-      live_status,
-      roomid,
-      g_qn_desc,
-      base_url,
-      accept_qn,
-      current_qn,
-      url_info,
-      format_name,
-    };
+      } = playurl_info;
+      result.g_qn_desc = g_qn_desc;
+      result.base_url = base_url;
+      result.accept_qn = accept_qn;
+      result.current_qn = current_qn;
+      result.url_info = url_info;
+      result.format_name = format_name;
+    }
+    return result;
   } catch (error) {
     return { roomid, live_status: 0, code: error.code };
   }
@@ -105,10 +102,9 @@ export const GetLiveInfo = async (roomid) => {
 export const SearchLive = async (keyword) => {
   try {
     const {
-      data: {
-        result: { live_user = [] },
-      },
-    } = await Login.get("/x/web-interface/wbi/search/type", {
+      result: { live_user = [] },
+    } = await Bilibili.get("/x/web-interface/wbi/search/type", {
+      baseURL: "https://api.bilibili.com/",
       params: {
         order: "online",
         platform: "pc",
@@ -132,8 +128,9 @@ export const SearchLive = async (keyword) => {
 
 export const SearchUser = async (mid) => {
   try {
-    const { data } = await Login.get("/x/space/wbi/acc/info", {
+    const data = await Bilibili.get("/x/space/wbi/acc/info", {
       params: { mid, platform: "web" },
+      baseURL: "https://api.bilibili.com/",
     });
     const result = {
       uid: data.mid.toString(),
@@ -246,10 +243,10 @@ export const TakeOffModel = async (medal_id) => {
 export const GetFollowLive = async () => {
   try {
     const {
-      data: {
-        live_users: { items = [] },
-      },
-    } = await Login.get("/x/polymer/web-dynamic/v1/portal");
+      live_users: { items = [] },
+    } = await Bilibili.get("/x/polymer/web-dynamic/v1/portal", {
+      baseURL: "https://api.bilibili.com/",
+    });
     return await Promise.all(
       items.map(async (item) => ({
         uid: item.mid.toString(),
@@ -265,38 +262,248 @@ export const GetFollowLive = async () => {
   }
 };
 
-export const GetMusic = async (keyword) => {
+const GetMusic163Lyric = async (id) => {
   try {
-    const {
+    const { lrc, tlyric, yrc, ytlrc } = await Music163.get("/song/lyric", {
+      params: { id, lv: 1, tv: 1, yv: 1, ytv: 1 },
+    });
+    return {
+      lyric: lrc ? lrc.lyric : "",
+      tlyric: tlyric ? tlyric.lyric : "",
+      ylyric: yrc ? yrc.lyric : "",
+      ytlyric: ytlrc ? ytlrc.lyric : "",
+    };
+  } catch (error) {
+    return { lyric: "", tlyric: "" };
+  }
+};
+
+export const SearchMusic163 = async (keyword) => {
+  try {
+    let {
       result: { songs },
     } = await Music163.get("/cloudsearch/pc", {
-      params: { s: keyword, type: 1, limit: 10 },
+      params: { s: keyword, type: 1, limit: 15 },
     });
-    return await Promise.all(
-      songs.map(async ({ name, ar, id, dt, al }) => {
-        try {
-          const { lrc, tlyric, yrc, ytlrc } = await Music163.get(
-            "/song/lyric",
-            { params: { id, lv: 1, tv: 1, yv: 1, ytv: 1 } }
-          );
-          return {
-            id: `${al.id}-${id}`,
-            name,
-            lyric: lrc ? lrc.lyric : "",
-            tlyric: tlyric ? tlyric.lyric : "",
-            ylyric: yrc ? yrc.lyric : "",
-            ytlyric: ytlrc ? ytlrc.lyric : "",
-            singer: ar.map(({ name }) => name).join("/"),
-            origin: "网易云",
-            duration: dt,
-            avatar: al.picUrl,
-          };
-        } catch (error) {
-          return { lyric: "", tlyric: "" };
-        }
+    songs = songs.map(async ({ name, ar, id, dt, al }) => {
+      const lyric = await GetMusic163Lyric(id);
+      return {
+        id: `${al.id}-${id}`,
+        name,
+        ...lyric,
+        singer: ar.map(({ name }) => name).join("/"),
+        origin: "163",
+        duration: dt,
+        avatar: al.picUrl,
+      };
+    });
+    return await Promise.all(songs);
+  } catch (error) {
+    return [];
+  }
+};
+
+const GetMusicQQLyric = async (mid) => {
+  try {
+    const { lyric = "", trans = "" } = await MusicQQ.get(
+      "/lyric/fcgi-bin/fcg_query_lyric_new.fcg",
+      {
+        baseURL: "https://c.y.qq.com/",
+        params: {
+          songmid: mid,
+          nobase64: 1,
+          g_tk: 5381,
+          format: "json",
+        },
+      }
+    );
+    return { lyric, tlyric: trans };
+  } catch (error) {
+    return { lyric: "", tlyric: "" };
+  }
+};
+
+export const SearchMusicQQ = async (keyword) => {
+  const now = Math.floor(Date.now() / 1000);
+  try {
+    let {
+      request: {
+        data: {
+          body: {
+            song: { list = [] },
+          },
+        },
+      },
+    } = await MusicQQ.post("/cgi-bin/musicu.fcg", {
+      comm: {
+        cv: 4747474,
+        ct: 24,
+        format: "json",
+        inCharset: "utf-8",
+        outCharset: "utf-8",
+        notice: 0,
+        platform: "yqq.json",
+        needNewCode: 1,
+        uin: 0,
+        g_tk_new_20200303: now,
+        g_tk: now,
+      },
+      request: {
+        method: "DoSearchForQQMusicDesktop",
+        module: "music.search.SearchCgiService",
+        param: {
+          remoteplace: "txt.yqq.top",
+          searchid: "",
+          search_type: 0,
+          query: keyword,
+          page_num: 1,
+          num_per_page: 15,
+        },
+      },
+    });
+    list = list.map(async ({ mid, album, name, singer, interval }) => {
+      const avatar = `https://y.qq.com/music/photo_new/T00${
+        album.mid ? 2 : 1
+      }R300x300M000${album.mid || singer[0].mid}.jpg?max_age=2592000`;
+      const lyric = await GetMusicQQLyric(mid);
+      return {
+        id: `${album.id}-${mid}`,
+        name: name,
+        ...lyric,
+        singer: singer.map(({ name }) => name).join("/"),
+        origin: "QQ",
+        duration: interval * 1000,
+        avatar,
+      };
+    });
+    return await Promise.all(list);
+  } catch (error) {
+    return [];
+  }
+};
+
+export const CheckLogin = async () => {
+  try {
+    const { face } = await Bilibili.get("/x/web-interface/nav", {
+      baseURL: "https://api.bilibili.com/",
+    });
+    return face;
+  } catch (error) {
+    const win = BrowserWindow.fromId(AllWindows.index);
+    win.webContents.send("CookieOverdue");
+    return null;
+  }
+};
+
+export const GetWebSocket = async (roomid) => {
+  try {
+    const [
+      { host_list = [], token },
+      { room = [] },
+      {
+        badge: { is_room_admin = false },
+        info: { uid = "" },
+        property: {
+          danmu: { length = 20 },
+        },
+      },
+      { uid: ruid },
+    ] = await Promise.all([
+      Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
+        params: { type: 0, id: roomid },
+      }),
+      Bilibili.get("/xlive/web-room/v1/dM/gethistory", {
+        params: { roomid },
+      }),
+      Bilibili.get("/xlive/web-room/v1/index/getInfoByUser", {
+        params: { room_id: roomid },
+      }),
+      GetLiveInfo(roomid),
+    ]);
+    const host = host_list[host_list.length - 1];
+    return {
+      host: `wss://${host.host}:${host.wss_port}/sub`,
+      token,
+      comments: room.map((item) => ({
+        id: "HISTORY-" + item.rnd,
+        message: item.text,
+        uid: item.uid,
+        name: item.nickname,
+        admin: item.isadmin || uid == item.uid,
+      })),
+      admin: is_room_admin,
+      roomid,
+      uid,
+      ruid,
+      length,
+    };
+  } catch (error) {
+    return { host: "", comments: [], admin: false, roomid };
+  }
+};
+
+export const SilentUser = async (event, tuid, room_id) => {
+  try {
+    return await Bilibili.post(
+      "/xlive/web-ucenter/v1/banned/AddSilentUser",
+      QS.stringify({
+        room_id,
+        tuid,
+        mobile_app: "web",
+        csrf: Bilibili.defaults.data.csrf,
+        csrf_token: Bilibili.defaults.data.csrf_token,
       })
     );
   } catch (error) {
-    return [];
+    return false;
+  }
+};
+
+export const GetAuthen = async () => {
+  try {
+    const { headers } = await axios.get("https://fanyi.baidu.com");
+    let Cookie = headers["set-cookie"]
+      .map((item) => item.split(";")[0])
+      .join("; ");
+    const result = await axios.get("https://fanyi.baidu.com", {
+      headers: { ...Baidu.defaults.headers, Cookie },
+      withCredentials: true,
+    });
+    if (result.headers["set-cookie"]) {
+      Cookie += "; ";
+      Cookie += result.headers["set-cookie"]
+        .map((item) => item.split(";")[0])
+        .join(";");
+    }
+    const match = result.data.match(/token: ?'(.*)'/);
+    return { Cookie, token: match[1] };
+  } catch (error) {
+    return { Cookie: null, token: null };
+  }
+};
+
+export const Translate = async (query, sign, to = "zh") => {
+  try {
+    const { lan } = await Baidu.post("/langdetect", { query });
+    if (lan !== to) {
+      const {
+        trans_result: {
+          data: [{ dst }],
+        },
+      } = await Baidu.post("/v2transapi", {
+        from: lan,
+        to,
+        query,
+        transtype: "realtime",
+        simple_means_flag: 3,
+        sign,
+        token: Translate.token,
+        domain: "common",
+      });
+      return dst;
+    }
+    return null;
+  } catch (error) {
+    return null;
   }
 };

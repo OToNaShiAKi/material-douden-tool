@@ -252,3 +252,31 @@ export default {
   },
 };
 </script>
+
+<style>
+em.keyword {
+  font-style: normal !important;
+  color: var(--v-primary-base);
+}
+.v-autocomplete__content {
+  margin-top: 28px;
+}
+.living-border {
+  border-width: 3px;
+  border-color: var(--v-primary-base);
+  border-style: solid;
+}
+.medal-border {
+  width: 20px;
+  height: 20px;
+  text-align: center;
+  line-height: 20px;
+}
+.medal-title {
+  width: 36px;
+}
+.medal-image.v-chip--pill .v-avatar {
+  width: 24px !important;
+  height: 24px !important;
+}
+</style>

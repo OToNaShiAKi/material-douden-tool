@@ -134,7 +134,7 @@
           >
             <template v-slot="{ item, index }">
               <p
-                class="ma-1 rounded px-2 py-1"
+                class="rounded px-3 py-2 ma-0"
                 :class="{ 'primary--text lyric-content': index === stamp + 2 }"
                 :key="item.stamp"
               >
@@ -300,3 +300,19 @@ export default {
   },
 };
 </script>
+
+<style>
+.lyric-control .relative::before {
+  content: "";
+  position: absolute;
+  top: 128px;
+  left: 0;
+  width: 100%;
+  height: 64px;
+  border-radius: 4px;
+}
+.lyric-control .relative .step-button {
+  top: 50%;
+  transform: translateY(-50%);
+}
+</style>

@@ -90,3 +90,13 @@ export default {
   },
 };
 </script>
+
+<style>
+#setting .v-input--radio-group,
+#setting .v-item-group {
+  width: 45%;
+  padding: 12px;
+  margin: 0;
+  border-radius: 8px;
+}
+</style>

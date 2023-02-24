@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer app expand-on-hover permanent>
+    <v-navigation-drawer class="rounded-lg ma-3" app expand-on-hover permanent>
       <v-list dense nav>
         <v-list-item
           color="primary"
@@ -50,6 +50,7 @@ export default {
       { title: "禁言用户", icon: "mdi-account-cancel", to: "/silent" },
       { title: "动画鉴赏", icon: "mdi-microsoft-excel", to: "/anime" },
       { title: "歌词制作", icon: "mdi-playlist-music", to: "/lyric" },
+      { title: "成就", icon: "mdi-seal", to: "/seal" },
       { title: "反馈", icon: "mdi-chart-bubble", to: "/sponsor" },
     ],
   }),
@@ -57,9 +58,6 @@ export default {
 </script>
 
 <style>
-*::-webkit-scrollbar {
-  width: 0;
-}
 video {
   width: 100%;
 }

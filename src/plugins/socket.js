@@ -1,57 +1,79 @@
 import { ipcRenderer } from "electron";
-import { Certification, HandleMessage } from "../util/client";
-import GoTo from "vuetify/lib/services/goto";
+import { Certification, HandleMessage, HeartBeat } from "../util/client";
 
 export default class Socket {
   static Command = {
     DANMU_MSG: async ({ info, cmd }, uid) => {
       if (info[0][9] || info[0][12] === 1) return;
-      const translate = await Socket.Translate(info[1].trim());
+      const translate = await Socket.Translate(info[1]);
       return {
         id: cmd + "-" + info[0][4],
         message: info[1],
-        title: info[2][1],
-        translate,
+        uid: info[2][0],
+        name: info[2][1],
         admin: info[2][2] || uid == info[2][0],
+        translate,
       };
     },
-    SUPER_CHAT_MESSAGE_JPN: async ({ data, cmd }) => {
-      const translate =
-        data.message_jpn || (await Socket.Translate(data.message));
+    SUPER_CHAT_MESSAGE: async ({ data, cmd }) => {
+      const translate = await Socket.Translate(data.message);
       return {
         id: cmd + "-" + data.id,
         message: data.message,
-        title: data.user_info.uname,
-        translate,
+        name: data.user_info.uname,
+        uid: data.uid,
         style: { color: data.background_bottom_color },
         admin: 1,
+        translate,
       };
     },
+    LIVE: ({ roomid }) => ipcRenderer.send("Channel", "Live", roomid),
+    ROOM_ADMIN_ENTRANCE: ({ uid }, socket) => {
+      socket.admin = socket.uid === uid;
+    },
+    POPULARITY_RED_POCKET_START: async ({ data, cmd }, socket) => {
+      if (Socket.AutoClickRedPocket) {
+        const result = await ipcRenderer.invoke(
+          "ClickRedPocket",
+          socket.ruid,
+          socket.roomid,
+          data.lot_id
+        );
+        return {
+          message: "自动点击红包" + (result ? "成功" : "失败"),
+          uid: socket.uid,
+          name: "System",
+          class: "primary--text",
+          admin: 1,
+          id: cmd + "-" + Date.now(),
+        };
+      }
+    },
   };
-  static AutoUp = true;
   static AutoTranslate = localStorage.getItem("AutoTranslate") === "true";
   static AutoClickRedPocket =
     localStorage.getItem("AutoClickRedPocket") !== "false";
   static AutoChangeMedal = localStorage.getItem("AutoChangeMedal") !== "false";
   static AutoCopyForbidWord =
     localStorage.getItem("AutoCopyForbidWord") !== "false";
-  static target = document.getElementById("comment");
   constructor(host) {
+    this.roomid =host. roomid;
+    this.token = host.token;
     this.timer = null;
-    this.comments = [];
-    this.uid = host.uid;
     this.admin = host.admin;
+    this.uid = host.uid;
     this.ruid = host.ruid;
+    this.comments = host.comments.reverse();
     this.reconnect = true;
+
+    this.socket = this.Connect(host.host);
   }
-  static GoToBottom = () =>
-    GoTo(Socket.target.scrollHeight, { easing: "easeInOutCubic" });
   static Translate = (text) =>
     Socket.AutoTranslate
       ? ipcRenderer.invoke("Translate", text, Socket.language)
       : "";
   Connect = (host) => {
-    const socket = new WebSocket(host.host);
+    const socket = new WebSocket(host);
     socket.addEventListener("open", this.Open);
     socket.addEventListener("message", this.Message);
     socket.addEventListener("close", () => {
@@ -78,27 +100,20 @@ export default class Socket {
     ipcRenderer.send("Channel", "Live", this.roomid);
     clearInterval(this.timer);
     this.timer = setInterval(() => {
-      const buffer = new ArrayBuffer(16);
-      const i = new DataView(buffer);
-      i.setUint32(0, 0);
-      i.setUint16(4, 16);
-      i.setUint16(6, 1);
-      i.setUint32(8, 2);
-      i.setUint32(12, 1);
+      const buffer = HeartBeat();
       this.socket.send(buffer);
     }, 30000);
   };
   Message = async ({ data }) => {
     const messages = await new Promise((resolve) =>
       HandleMessage(data, resolve)
-    )(data);
+    );
     for (const item of messages) {
       const comment =
         Socket.Command[item.cmd] &&
         (await Socket.Command[item.cmd](item, this.ruid));
       if (comment) {
-        this.comments.push(comment);
-        Socket.AutoUp && Socket.GoToBottom();
+        this.comments.unshift(comment);
       }
     }
   };

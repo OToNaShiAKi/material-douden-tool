@@ -4,7 +4,7 @@
     <v-main>
       <v-container>
         <v-text-field
-          class="fix-input"
+          class="fix-input input-avatar"
           v-model.trim="content"
           @keyup.enter="Send"
           @click:append="Send"
@@ -19,6 +19,9 @@
           append-icon="mdi-arrow-left-bottom"
           hint="Alt+上下键切换已发弹幕 TAB可循环切换前后缀"
         >
+          <template v-slot:prepend>
+            <HonourAvatar />
+          </template>
           <template v-slot:prepend-inner>
             <v-select
               return-object
@@ -63,11 +66,13 @@ import { clipboard, ipcRenderer } from "electron";
 import { FormatComment } from "../../util/client";
 import { mapMutations, mapState } from "vuex";
 import Socket from "../../plugins/socket";
+import HonourAvatar from "../../components/HonourAvatar.vue";
 
 const CommentRecord = [];
 
 export default {
   name: "App",
+  components: { HonourAvatar },
   data: ({ $store: { state } }) => ({
     content: "",
     message: "",
@@ -119,10 +124,10 @@ export default {
       this.$router.push("/cookie");
     } else if (this.select.length <= 0) {
       this.$router.push("/room");
-    } /* else {
+    } else {
       this.$router.push("/live");
       this.Open();
-    } */
+    }
   },
   methods: {
     ...mapMutations(["ChangeCookie", "Notify"]),
@@ -182,61 +187,10 @@ export default {
 .relative {
   position: relative;
 }
-
 #app .v-system-bar {
   -webkit-app-region: drag;
   -webkit-user-drag: none;
   border-radius: 8px !important;
   color: #8d7ca6;
-}
-
-#setting .v-input--radio-group,
-#setting .v-item-group {
-  width: 45%;
-  padding: 12px;
-  margin: 0;
-  border-radius: 8px;
-}
-
-em.keyword {
-  font-style: normal !important;
-  color: var(--v-primary-base);
-}
-.v-autocomplete__content {
-  margin-top: 28px;
-}
-.living-border {
-  border-width: 3px;
-  border-color: var(--v-primary-base);
-  border-style: solid;
-}
-
-.medal-border {
-  width: 20px;
-  height: 20px;
-  text-align: center;
-  line-height: 20px;
-}
-.medal-title {
-  width: 36px;
-}
-.medal-image.v-chip--pill .v-avatar {
-  width: 24px !important;
-  height: 24px !important;
-}
-
-.lyric-control .relative::before {
-  content: "";
-  position: absolute;
-  top: 128px;
-  left: 0;
-  width: 100%;
-  height: 64px;
-  border-radius: 4px;
-}
-
-.lyric-control .relative .step-button {
-  top: 50%;
-  transform: translateY(-50%);
 }
 </style>
