@@ -26,39 +26,44 @@
     </v-text-field>
     <v-tabs-items v-model="tab">
       <v-tab-item value="table">
-        <DataTable
-          :dense="false"
+        <v-data-table
+          no-data-text=""
+          :items-per-page="5"
+          :page.sync="page"
+          hide-default-footer
           :headers="headers"
           :items="musics"
           :loading="loading"
-          :on="{ [`click:row`]: Select }"
+          @click:row="Select"
         >
-          <template v-slot="{ item }">
-            <v-hover v-slot="{ hover }">
-              <v-avatar rounded="rounded" size="32">
-                <v-img :src="item.avatar">
-                  <v-expand-transition>
-                    <v-icon
-                      v-show="hover"
-                      small
-                      color="white"
-                      style="opacity: 0.7"
-                      class="fill-height primary transition-fast-in-fast-out"
-                      @click.stop="Aegisub"
-                      :data-key="item.id"
-                    >
-                      {{
-                        /\[\d+,\d+\]\(\d+,\d+,\d+\)/.test(item.ylyric)
-                          ? "mdi-arrow-decision-auto"
-                          : "mdi-arrow-decision"
-                      }}
-                    </v-icon>
-                  </v-expand-transition>
-                </v-img>
-              </v-avatar>
-            </v-hover>
+          <template v-slot:[`item.actions`]="{ item }">
+            <v-icon
+              small
+              @click.stop="Aegisub"
+              v-if="item.origin !== 'local'"
+              :data-key="item.id"
+            >
+              {{
+                /\[\d+,\d+\]\(\d+,\d+,\d+\)/.test(item.ylyric)
+                  ? "mdi-arrow-decision-auto"
+                  : "mdi-arrow-decision"
+              }}
+            </v-icon>
           </template>
-        </DataTable>
+          <template v-slot:[`item.avatar`]="{ value }">
+            <v-avatar rounded="rounded" size="32">
+              <v-img :src="value" />
+            </v-avatar>
+          </template>
+          <template v-slot:footer="{ props: { pagination } }">
+            <v-pagination
+              circle
+              class="my-3"
+              v-model="page"
+              :length="pagination.pageCount"
+            />
+          </template>
+        </v-data-table>
         <p class="caption px-3 mb-0">
           <v-icon small>mdi-arrow-decision-auto</v-icon>:包含K轴
           <v-icon small>mdi-arrow-decision</v-icon>:不包含k轴
@@ -162,24 +167,24 @@
 </template>
 
 <script>
-// import { GetLocalData } from "../../../plugins/indexedDB";
-import DataTable from "../../../components/DataTable.vue";
+import { GetLocalData } from "../../../plugins/indexedDB";
 import Pack from "../../../components/Pack.vue";
 import { ipcRenderer } from "electron";
 import { mapMutations, mapState } from "vuex";
 import GoTo from "vuetify/lib/services/goto";
-import { FormatComment } from "../../../util/client";
+import { SendComment } from "../../../util/SendComment";
 
 export default {
   name: "Music",
-  components: { Pack, DataTable },
+  components: { Pack },
   data: ({ $store: { state } }) => ({
     keyword: "",
     headers: [
-      { text: "导出", value: "actions", sortable: false },
+      { text: "封面", value: "avatar", sortable: false },
       { text: "歌名", value: "name", class: "text-truncate" },
       { text: "歌手", value: "singer" },
       { text: "语言", value: "language", sortable: false },
+      { text: "导出", value: "actions", sortable: false },
     ],
     musics: [],
     loading: false,
@@ -190,6 +195,7 @@ export default {
     ),
     message: "",
     language: "translate",
+    page: 1,
   }),
   computed: {
     ...mapState(["select", "shields", "stamp"]),
@@ -208,11 +214,15 @@ export default {
       this.loading = true;
       this.tab = "table";
       this.message = "";
-      this.musics = await ipcRenderer.invoke("GetMusic", this.keyword);
+      const result = await Promise.all([
+        GetLocalData("music", this.keyword),
+        ipcRenderer.invoke("GetMusic", this.keyword),
+      ]);
+      this.musics = result[0].concat(result[1]);
       this.loading = false;
     },
     Aegisub({ target: { dataset } }) {
-      const music = this.musics.find(({ id }) => id == dataset.id);
+      const music = this.musics.find(({ id }) => id == dataset.key);
       ipcRenderer.send("Channel", "ConvertLyric", music, true);
     },
     Select(item) {
@@ -239,20 +249,22 @@ export default {
       this.active = false;
     },
     Send(index) {
-      if (/translate/.test(this.language) && this.lyrics[index].tlyric)
-        FormatComment(
+      if (/translate/.test(this.language) && this.lyrics[index].tlyric) {
+        SendComment(
           this.lyrics[index].tlyric,
           this.select,
           this.fix,
           this.shields
         );
-      if (/text/.test(this.language) && this.lyrics[index].lyric)
-        FormatComment(
+      }
+      if (/text/.test(this.language) && this.lyrics[index].lyric) {
+        SendComment(
           this.lyrics[index].lyric,
           this.select,
           this.fix,
           this.shields
         );
+      }
       this.ChangeSong({ stamp: index });
       this.Send.stamp = Date.now();
       GoTo(index * 64 + 128, {

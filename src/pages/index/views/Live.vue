@@ -36,8 +36,7 @@
           <v-chip
             label
             x-small
-            :data-uid="item.uid"
-            :data-name="item.name"
+            @click.stop="() => SilentUser(item)"
             v-if="
               sockets[show.value] && sockets[show.value].admin && !item.admin
             "
@@ -60,7 +59,7 @@
 
 <script>
 import Socket from "../../../plugins/socket";
-import { CommentLength } from "../../../util/client";
+import { CommentLength } from "../../../util/SendComment";
 import { clipboard, ipcRenderer } from "electron";
 import { mapMutations } from "vuex";
 import Pack from "../../../components/Pack.vue";
@@ -72,7 +71,7 @@ export default {
   data: ({ $store: { state } }) => ({
     comments: {},
     sockets: {},
-    show: state.rooms.find(({ value }) => value === state.select[0]),
+    show: state.rooms.find(({ value }) => value === state.select[0]) || "",
   }),
   computed: {
     rooms: ({ $store: { state } }) =>
@@ -80,22 +79,22 @@ export default {
   },
   methods: {
     ...mapMutations(["Notify"]),
-    async Copy({ target }) {
+    Copy({ target }) {
       let { innerText } = target;
-      const uid = target.dataset.uid || target.parentElement.dataset.uid;
-      const nickname = target.dataset.name || target.parentElement.dataset.name;
-      if (uid) {
-        const result = await ipcRenderer.invoke(
-          "SilentUser",
-          uid,
-          this.show.value
-        );
-        this.Notify(`禁言 ${nickname} ${result ? "成功" : "失败"}`);
-      } else if (innerText && !/\n/.test(innerText)) {
+      if (innerText && !/\n/.test(innerText)) {
         innerText = innerText.replace(/\(|\)|:/g, "");
         clipboard.writeText(innerText);
         this.Notify("已复制：" + innerText);
       }
+    },
+    async SilentUser({ uid, name, message }) {
+      const result = await ipcRenderer.invoke(
+        "SilentUser",
+        uid,
+        this.show.value,
+        message
+      );
+      this.Notify(`禁言 ${name} ${result ? "成功" : "失败"}`);
     },
     Top() {
       GoTo(0, {
@@ -129,7 +128,7 @@ export default {
         }
         this.comments = comments;
         if (!result.find(({ roomid }) => roomid === this.show.value)) {
-          this.show = this.rooms[0];
+          this.show = this.rooms[0] || "";
         }
       },
       immediate: true,

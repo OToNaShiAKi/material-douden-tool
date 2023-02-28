@@ -1,5 +1,5 @@
 import { ipcRenderer } from "electron";
-import { Certification, HandleMessage, HeartBeat } from "../util/client";
+import { Certification, HandleMessage, HeartBeat } from "../util/Verify";
 
 export default class Socket {
   static Command = {

@@ -33,6 +33,9 @@
 #app .v-system-bar {
   background-color: var(--color-tertiary-gray-light) !important;
 }
+.v-autocomplete__content {
+  margin-top: 28px;
+}
 
 .fix-input .v-input__slot,
 .fix-input .v-btn,
@@ -53,6 +56,8 @@ nav .v-pagination button,
 .v-navigation-drawer,
 button.fix-button,
 .fix-input .v-image,
+.candy-container > section,
+.v-color-picker,
 video {
   background-color: var(--color-tertiary-gray-light) !important;
   box-shadow: var(--field-box-shadow-base) !important;
@@ -61,7 +66,7 @@ video {
 .fix-input .v-input__prepend-inner {
   max-width: 24%;
 }
-.input-avatar .v-input__prepend-outer ,
+.input-avatar .v-input__prepend-outer,
 .input-avatar .v-input__append-outer {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
@@ -83,7 +88,7 @@ nav .v-pagination .v-pagination__item--active,
 .v-tabs .v-tabs-bar .v-tab--active,
 .v-chip-group .v-chip.v-chip--active,
 .lyric-control .v-btn-toggle .v-btn.v-size--small.v-btn--active,
-.v-navigation-drawer .v-list-item--active  {
+.v-navigation-drawer .v-list-item--active {
   background-color: var(--color-tertiary-gray-light) !important;
   box-shadow: var(--field-box-shadow-base-inset) !important;
 }
@@ -98,7 +103,7 @@ nav .v-pagination .v-pagination__item--active {
 .v-tabs .v-tabs-bar,
 .v-menu__content .v-select-list,
 .lyric-control .v-btn-toggle,
-.v-navigation-drawer .v-list-item--link::before ,
+.v-navigation-drawer .v-list-item--link::before,
 .v-data-table {
   background-color: var(--color-tertiary-gray-light) !important;
 }
@@ -112,6 +117,10 @@ nav .v-pagination .v-pagination__item--active {
 .fix-input .v-btn:disabled,
 .lyric-control .v-btn-toggle .v-btn:disabled {
   box-shadow: var(--field-box-shadow-disabled) !important;
+}
+
+.v-input--range-slider .v-input__control .v-input__slot{
+  box-shadow: none !important;
 }
 
 .v-window.v-tabs-items {

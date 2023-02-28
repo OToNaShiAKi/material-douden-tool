@@ -63,7 +63,7 @@
 
 <script>
 import { clipboard, ipcRenderer } from "electron";
-import { FormatComment } from "../../util/client";
+import { SendComment } from "../../util/SendComment";
 import { mapMutations, mapState } from "vuex";
 import Socket from "../../plugins/socket";
 import HonourAvatar from "../../components/HonourAvatar.vue";
@@ -132,7 +132,7 @@ export default {
   methods: {
     ...mapMutations(["ChangeCookie", "Notify"]),
     Send() {
-      this.message = FormatComment(
+      this.message = SendComment(
         this.content,
         this.select,
         this.fix,
@@ -171,7 +171,7 @@ export default {
           .replace(/\{s\}/gi, this.song.name)
           .replace(/\{a\}/gi, this.song.singer)
           .replace(/\{l\}/gi, lyric.tlyric || lyric.lyric);
-        FormatComment(phrase, this.select, this.fix, this.shields);
+        SendComment(phrase, this.select, this.fix, this.shields);
       } else if (event.altKey && event.keyCode === 80) {
         ipcRenderer.send("Channel", "Point");
       }
