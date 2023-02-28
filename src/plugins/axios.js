@@ -4,6 +4,21 @@ import { BrowserWindow } from "electron";
 import { AllWindows } from "../background";
 import axios from "axios";
 
+export const GetUserRoomInfo = async (room_id) => {
+  try {
+    const {
+      badge: { is_room_admin = false },
+      info: { uid = "" },
+      property: { danmu },
+    } = await Bilibili.get("/xlive/web-room/v1/index/getInfoByUser", {
+      params: { room_id },
+    });
+    return { admin: is_room_admin, uid, danmu, roomid: room_id };
+  } catch (error) {
+    return { roomid: room_id };
+  }
+};
+
 const GetFollow = async (vmid) => {
   try {
     const { follower } = await Bilibili.get("/x/relation/stat", {
@@ -99,28 +114,20 @@ export const GetLiveInfo = async (roomid) => {
   }
 };
 
-export const SearchLive = async (keyword) => {
+export const SearchLive = async (keyword, type = "live") => {
   try {
-    const {
-      result: { live_user = [] },
-    } = await Bilibili.get("/x/web-interface/wbi/search/type", {
+    const { result } = await Bilibili.get("/x/web-interface/wbi/search/type", {
       baseURL: "https://api.bilibili.com/",
       params: {
         order: "online",
         platform: "pc",
         keyword,
-        search_type: "live",
+        search_type: type,
+        source_tag: 3,
+        highlight: 1,
       },
     });
-    return live_user.map((item) => ({
-      uid: item.uid.toString(),
-      value: item.roomid.toString(),
-      name: item.uname,
-      text: item.uname.replace(/<em class="keyword">|<\/em>/g, ""),
-      avatar: item.uface,
-      live_status: item.live_status,
-      follower: item.attentions,
-    }));
+    return result;
   } catch (error) {
     return [];
   }
@@ -139,7 +146,7 @@ export const SearchUser = async (mid) => {
       avatar: data.face,
       live_status: data.live_room.liveStatus,
     };
-    result.follower = await GetFollow(item.mid);
+    result.follower = await GetFollow(data.mid);
     return result;
   } catch (error) {
     return null;
@@ -148,18 +155,11 @@ export const SearchUser = async (mid) => {
 
 export const GetUserRoomMode = async (room_id) => {
   try {
-    const [
-      { group, mode },
-      {
-        property: { danmu },
-      },
-    ] = await Promise.all([
+    const [{ group, mode }, { danmu }] = await Promise.all([
       Bilibili.get("/xlive/web-room/v1/dM/GetDMConfigByGroup", {
         params: { room_id },
       }),
-      Bilibili.get("/xlive/web-room/v1/index/getInfoByUser", {
-        params: { room_id },
-      }),
+      GetUserRoomInfo(room_id),
     ]);
     return {
       colors: group,
@@ -401,11 +401,9 @@ export const GetWebSocket = async (roomid) => {
       { host_list = [], token },
       { room = [] },
       {
-        badge: { is_room_admin = false },
-        info: { uid = "" },
-        property: {
-          danmu: { length = 20 },
-        },
+        admin,
+        uid,
+        danmu: { length = 20 },
       },
       { uid: ruid },
     ] = await Promise.all([
@@ -415,9 +413,7 @@ export const GetWebSocket = async (roomid) => {
       Bilibili.get("/xlive/web-room/v1/dM/gethistory", {
         params: { roomid },
       }),
-      Bilibili.get("/xlive/web-room/v1/index/getInfoByUser", {
-        params: { room_id: roomid },
-      }),
+      GetUserRoomInfo(roomid),
       GetLiveInfo(roomid),
     ]);
     const host = host_list[host_list.length - 1];
@@ -431,7 +427,7 @@ export const GetWebSocket = async (roomid) => {
         name: item.nickname,
         admin: item.isadmin || uid == item.uid,
       })),
-      admin: is_room_admin,
+      admin: admin || uid == ruid,
       roomid,
       uid,
       ruid,
@@ -442,7 +438,7 @@ export const GetWebSocket = async (roomid) => {
   }
 };
 
-export const SilentUser = async (event, tuid, room_id) => {
+export const SilentUser = async (event, tuid, room_id, msg) => {
   try {
     return await Bilibili.post(
       "/xlive/web-ucenter/v1/banned/AddSilentUser",
@@ -450,6 +446,7 @@ export const SilentUser = async (event, tuid, room_id) => {
         room_id,
         tuid,
         mobile_app: "web",
+        msg,
         csrf: Bilibili.defaults.data.csrf,
         csrf_token: Bilibili.defaults.data.csrf_token,
       })
@@ -505,5 +502,103 @@ export const Translate = async (query, sign, to = "zh") => {
     return null;
   } catch (error) {
     return null;
+  }
+};
+
+export const GetSilentUser = async (room_id) => {
+  let result = [];
+  try {
+    let ps = 1;
+    do {
+      const { data, total_page } = await Bilibili.post(
+        "/xlive/web-ucenter/v1/banned/GetSilentUserList",
+        QS.stringify({
+          room_id,
+          ps,
+          visit_id: "",
+          csrf: Bilibili.defaults.data.csrf,
+          csrf_token: Bilibili.defaults.data.csrf_token,
+        })
+      );
+      result = result.concat(data);
+      ps += 1;
+      if (ps > total_page) break;
+    } while (true);
+    return result;
+  } catch (error) {
+    return result;
+  }
+};
+
+export const RemoveSilentUser = async (event, id, roomid) => {
+  try {
+    return await Bilibili.post(
+      "/banned_service/v1/Silent/del_room_block_user",
+      QS.stringify({
+        roomid,
+        id,
+        csrf: Bilibili.defaults.data.csrf,
+        csrf_token: Bilibili.defaults.data.csrf_token,
+        visit_id: "",
+      })
+    );
+  } catch (error) {
+    return false;
+  }
+};
+
+export const GetDynamic = async (id, next = 0) => {
+  try {
+    const {
+      item: {
+        basic: { comment_id_str, comment_type },
+      },
+    } = await Bilibili.get("/x/polymer/web-dynamic/v1/detail", {
+      baseURL: "https://api.bilibili.com/",
+      params: { id, timezone_offset: -480 },
+    });
+    let result = [];
+    do {
+      const { cursor, replies } = await Bilibili.get("/x/v2/reply/main", {
+        baseURL: "https://api.bilibili.com/",
+        params: {
+          next,
+          type: comment_type,
+          plat: 1,
+          mode: 3,
+          oid: comment_id_str,
+        },
+      });
+      if (!replies || replies.length <= 0) break;
+      result = result.concat(replies);
+      next = cursor.next;
+    } while (true);
+    return result;
+  } catch (error) {
+    return [];
+  }
+};
+
+export const GetVideoInfo = async (key) => {
+  try {
+    if (/(BV[A-Za-z0-9_-]*)|(av[0-9]*)/gi.test(key)) {
+      const bvid = key.match(/(BV[A-Za-z0-9_-]*)/);
+      const aid = key.match(/av([0-9]*)/);
+      const { duration, pic } = await Bilibili.get("/x/web-interface/view", {
+        baseURL: "https://api.bilibili.com/",
+        params: { bvid: bvid && bvid[0], aid: aid && aid[1] },
+      });
+      return { duration, avatar: pic };
+    } else {
+      const {
+        request: { path },
+      } = await axios.get(key, {
+        withCredentials: true,
+        headers: Bilibili.defaults.headers,
+      });
+      return await GetVideoInfo(path);
+    }
+  } catch (error) {
+    return { duration: null, avatar: "" };
   }
 };

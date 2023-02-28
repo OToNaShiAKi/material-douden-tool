@@ -19,7 +19,7 @@ export const SaveLocalData = (store, music) => {
   });
 };
 
-export const GetLocalData = async (store) => {
+export const GetLocalData = async (store, keyword = "") => {
   request.readyState !== "done" &&
     (await new Promise((resolve) =>
       request.addEventListener("success", resolve)
@@ -29,8 +29,13 @@ export const GetLocalData = async (store) => {
     const transaction = DB.transaction(store, "readonly")
       .objectStore(store)
       .getAll();
-    transaction.addEventListener("success", () => resolve(transaction.result));
-    transaction.addEventListener("error", resolve([]));
+    transaction.addEventListener("success", () => {
+      const result = transaction.result.filter(
+        (v) => v.name.includes(keyword) || v.singer.includes(keyword)
+      );
+      resolve(result);
+    });
+    transaction.addEventListener("error", () => resolve([]));
   });
 };
 

@@ -8,7 +8,6 @@
     :dense="dense"
     hide-default-footer
     :loading="loading"
-    v-on="on"
   >
     <template v-slot:[`item.actions`]="{ item }">
       <slot :item="item" />
@@ -34,7 +33,6 @@ export default {
     perpage: { type: Number, default: 5 },
     dense: { type: Boolean, default: true },
     loading: { type: Boolean, default: false },
-    on: { type: Object, required: false },
   },
 };
 </script>

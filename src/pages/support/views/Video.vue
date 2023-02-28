@@ -63,18 +63,22 @@
         :key="image.key"
         :src="image.src"
       >
-        <div class="thumbnail">
-          <v-icon style="cursor: pointer" :data-key="image.key" small>
-            mdi-delete
-          </v-icon>
-        </div>
+        <v-icon
+          class="thumbnail"
+          style="cursor: pointer"
+          :data-key="image.key"
+          small
+        >
+          mdi-delete
+        </v-icon>
       </v-img>
     </section>
   </v-container>
 </template>
 
 <script>
-import { CreatePlayer, FormatTime, FormatDuration } from "../../../util/client";
+import { CreatePlayer } from "../../../util/CreatePlayer";
+import { FormatTime, FormatDuration } from "../../../util/Format";
 import mpegts from "mpegts.js";
 import { ipcRenderer } from "electron";
 
@@ -130,6 +134,9 @@ export default {
       const rooms = JSON.parse(localStorage.getItem("rooms"));
       const select = (localStorage.getItem("select") || "").split(",");
       this.rooms = rooms.filter(({ value }) => select.includes(value));
+      if (!this.rooms.find(({ value }) => value === this.selected.value)) {
+        this.selected = this.rooms[0] || "";
+      }
     },
     Screenshot() {
       if (!this.timer || this.timer <= 0) return;
@@ -165,4 +172,17 @@ export default {
 };
 </script>
 
-<style></style>
+<style>
+video {
+  width: 100%;
+}
+video::-webkit-media-controls-timeline {
+  display: none;
+}
+.thumbnail {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  cursor: pointer;
+}
+</style>

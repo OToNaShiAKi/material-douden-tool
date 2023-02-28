@@ -7,6 +7,7 @@
       solo
       dense
       no-filter
+      clearable
       @keyup.enter="Search"
       :loading="loading"
       :items="items"
@@ -29,7 +30,7 @@
           small
           icon
           color="primary"
-          :disabled="keyword && !/^\d+$/.test(keyword.value)"
+          :disabled="!(keyword && /^\d+$/.test(keyword.value))"
           @click="Add"
         >
           <v-icon>mdi-plus</v-icon>
@@ -139,7 +140,7 @@
 import { ipcRenderer } from "electron";
 import Pack from "../../../components/Pack.vue";
 import { mapMutations, mapState } from "vuex";
-import { CommentLength } from "../../../util/client";
+import { CommentLength } from "../../../util/SendComment";
 import Socket from "../../../plugins/socket";
 
 export default {
@@ -257,9 +258,6 @@ export default {
 em.keyword {
   font-style: normal !important;
   color: var(--v-primary-base);
-}
-.v-autocomplete__content {
-  margin-top: 28px;
 }
 .living-border {
   border-width: 3px;

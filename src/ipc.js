@@ -20,10 +20,17 @@ import {
   GetAuthen,
   Translate,
   GetLiveInfo,
+  GetSilentUser,
+  RemoveSilentUser,
+  GetUserRoomInfo,
+  GetDynamic,
 } from "./plugins/axios";
-import { e, Stacks, TranslateResult } from "./util/server";
+import { Stacks } from "./util/Stacks";
+import { e, TranslateResult } from "./util/Translate";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import { Replies } from "./util/Replies";
+import FontList from "font-list";
 
 const options = {
   alwaysOnTop: false,
@@ -39,7 +46,7 @@ ipcMain.on("WindowSize", (event, height) => {
 });
 
 ipcMain.on("OtherWindow", async (event, page, DevTools = false) => {
-  const win = AllWindows[page] && BrowserWindow.fromId(AllWindows[page]);
+  let win = AllWindows[page] && BrowserWindow.fromId(AllWindows[page]);
   if (win && DevTools) {
     win.webContents.openDevTools();
   } else if (!win) {
@@ -54,10 +61,7 @@ ipcMain.on("Channel", async (event, channel, data, create = false) => {
     const size = screen.getPrimaryDisplay().workAreaSize;
     win = await CreateWindow("support", { ...size, ...options });
   }
-  if (win) {
-    win.focus();
-    win.webContents.send(channel, data);
-  }
+  win && win.webContents.send(channel, data);
 });
 
 ipcMain.on("SendComment", (event, message, roomid) => {
@@ -101,12 +105,22 @@ ipcMain.handle("Cookie", async (event, cookie, csrf) => {
 
 ipcMain.handle("SearchLive", async (event, keyword) => {
   const match = /^\d+$/.test(keyword);
-  const [search, uid] = await Promise.all([
+  let [{ live_user = [] }, uid] = await Promise.all([
     SearchLive(keyword),
     match && SearchUser(keyword),
   ]);
-  uid && search.unshift(uid);
-  return search;
+  live_user = live_user || [];
+  live_user = live_user.map((item) => ({
+    uid: item.uid.toString(),
+    value: item.roomid.toString(),
+    name: item.uname,
+    text: item.uname.replace(/<em class="keyword">|<\/em>/g, ""),
+    avatar: item.uface,
+    live_status: item.live_status,
+    follower: item.attentions,
+  }));
+  uid && live_user.unshift(uid);
+  return live_user;
 });
 
 ipcMain.handle("GetUserRoomMode", async (event, roomid) => {
@@ -199,12 +213,67 @@ ipcMain.on("SaveFiles", async (event, Datas, name, encoding = "buffer") => {
     if (isArray) {
       await mkdir(filePath);
       for (let i = 0; i < Datas.length; i++) {
-        writeFile(join(filePath, `./${name}-${i}.png`), Datas[i], {
+        await writeFile(join(filePath, `./${name}-${i}.png`), Datas[i], {
           encoding,
         });
       }
     } else {
-      writeFile(filePath, Datas, { encoding });
+      await writeFile(filePath, Datas, { encoding });
     }
   }
+});
+
+ipcMain.handle("GetSilentUser", async (event, roomids) => {
+  const result = await Promise.all(roomids.map((v) => GetSilentUser(v.value)));
+  let slients = [];
+  for (let i = 0; i < result.length; i++) {
+    result[i] = result[i].map((item) => ({
+      tname: item.tname,
+      tuid: item.tuid,
+      id: item.id,
+      ctime: item.ctime,
+      executor: item.name,
+      ...roomids[i],
+    }));
+    slients = slients.concat(result[i]);
+  }
+  return slients;
+});
+
+ipcMain.handle("RemoveSilentUser", RemoveSilentUser);
+
+ipcMain.handle("GetUserRoomInfo", async (event, roomids) => {
+  const result = await Promise.all(
+    roomids.map((v) => GetUserRoomInfo(v.value))
+  );
+  return result;
+});
+
+ipcMain.handle("SearchUser", async (event, keyword) => {
+  const match = /^\d+$/.test(keyword);
+  let [search = [], uid] = await Promise.all([
+    SearchLive(keyword, "bili_user"),
+    match && SearchUser(keyword),
+  ]);
+  search = search || [];
+  search = search.map((item) => ({
+    uid: item.mid.toString(),
+    value: item.room_id.toString(),
+    text: item.uname,
+    avatar: item.upic,
+    follower: item.fans,
+  }));
+  uid && search.unshift(uid);
+  return search;
+});
+
+ipcMain.handle("GetDynamic", async (event, ids) => {
+  ids = ids.map(async (v) => await Replies(await GetDynamic(v, 0)));
+  const result = await Promise.all(ids);
+  return result.flat(1);
+});
+
+ipcMain.handle("GetFont", async (event) => {
+  const result = await FontList.getFonts();
+  return result.map((item) => item.replace(/^"|"$/g, ""));
 });
