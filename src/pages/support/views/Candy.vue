@@ -132,7 +132,7 @@ import { ipcRenderer } from "electron";
 import { Colors } from "../../../util/Format";
 import Card from "../../../components/Card.vue";
 import { ExportCandy, DomToImage, ReadLogo } from "../../../util/ExportFile";
-const Logo = { name: "默认Logo", path: "/candy.png" };
+const Logo = { name: "默认Logo", path: "/images/candy.png" };
 
 export default {
   name: "Candy",

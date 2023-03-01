@@ -52,7 +52,7 @@
               v-if="item.live_status"
               class="mr-1 primary rounded-circle living-border"
               width="18"
-              src="//s1.hdslb.com/bfs/static/jinkela/space/assets/live.gif"
+              src="https://s1.hdslb.com/bfs/static/jinkela/space/assets/live.gif"
             />
             <v-list-item-action-text>
               Fans:{{ item.follower }}

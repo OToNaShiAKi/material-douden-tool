@@ -143,7 +143,7 @@ export const SearchUser = async (mid) => {
       uid: data.mid.toString(),
       value: data.live_room.roomid.toString(),
       text: data.name,
-      avatar: data.face,
+      avatar: /https:/.test(data.face) ? data.face : `https:${data.face}`,
       live_status: data.live_room.liveStatus,
     };
     result.follower = await GetFollow(data.mid);
@@ -384,10 +384,10 @@ export const SearchMusicQQ = async (keyword) => {
 
 export const CheckLogin = async () => {
   try {
-    const { face } = await Bilibili.get("/x/web-interface/nav", {
+    const { face, uname, mid } = await Bilibili.get("/x/web-interface/nav", {
       baseURL: "https://api.bilibili.com/",
     });
-    return face;
+    return { avatar: face, name: uname, mid };
   } catch (error) {
     const win = BrowserWindow.fromId(AllWindows.index);
     win.webContents.send("CookieOverdue");

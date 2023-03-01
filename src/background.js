@@ -20,7 +20,7 @@ const CreateWindow = async (page = "index", options = {}) => {
     width: 650,
     height: 168,
     alwaysOnTop: true,
-    icon: "./public/favicon.png",
+    icon: "./public/images/favicon.png",
     center: true,
     frame: false,
     titleBarStyle: "hidden",

@@ -8,10 +8,10 @@ module.exports = defineConfig({
         publish: ["github"],
         productName: "Material DouDen Tool",
         win: {
-          icon: "./public/favicon.png",
+          icon: "./public/images/favicon.png",
           target: ["nsis"],
         },
-        mac: { icon: "./public/favicon.png" },
+        mac: { icon: "./public/images/favicon.png" },
         nsis: {
           oneClick: false,
           allowElevation: true,

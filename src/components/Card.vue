@@ -35,7 +35,7 @@ export default {
   props: {
     tip: String,
     colors: { type: Object, default: () => Colors },
-    logo: { type: String, default: "/candy.png" },
+    logo: { type: String, default: "/images/candy.png" },
     size: Array,
     fontface: { type: String, default: "Roboto, sans-serif" },
   },

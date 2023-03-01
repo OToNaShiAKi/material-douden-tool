@@ -1,4 +1,4 @@
-import { Baidu, Bilibili, Login } from "./plugins/headers";
+import { API, Baidu, Bilibili, Login } from "./plugins/headers";
 import CreateWindow, { AllWindows } from "./background";
 import { ipcMain, BrowserWindow, dialog, screen } from "electron";
 import {
@@ -31,6 +31,8 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { Replies } from "./util/Replies";
 import FontList from "font-list";
+import MD5 from "blueimp-md5";
+import OS from "os";
 
 const options = {
   alwaysOnTop: false,
@@ -93,14 +95,18 @@ ipcMain.handle("BilibiliLogin", async () => {
 });
 
 ipcMain.handle("Cookie", async (event, cookie, csrf) => {
-  Bilibili.defaults.headers["Cookie"] = cookie;
-  Login.defaults.headers["Cookie"] = cookie;
+  Bilibili.defaults.headers.Cookie = cookie;
+  Login.defaults.headers.Cookie = cookie;
   Bilibili.defaults.data = {
     csrf,
     csrf_token: csrf,
     rnd: Math.floor(Date.now() / 1000),
   };
-  return await CheckLogin();
+  const result = await CheckLogin();
+  const equipment = `${OS.platform().toUpperCase()}:${OS.hostname()}`;
+  const crypto = MD5(`${result.mid}.${equipment}.${csrf}`);
+  API.defaults.headers.Cookie = `mid=${result.mid}; equipment=${equipment}; crypto=${crypto}`;
+  return result.avatar;
 });
 
 ipcMain.handle("SearchLive", async (event, keyword) => {
@@ -115,7 +121,7 @@ ipcMain.handle("SearchLive", async (event, keyword) => {
     value: item.roomid.toString(),
     name: item.uname,
     text: item.uname.replace(/<em class="keyword">|<\/em>/g, ""),
-    avatar: item.uface,
+    avatar: /https:/.test(item.uface) ? item.uface : `https:${item.uface}`,
     live_status: item.live_status,
     follower: item.attentions,
   }));
@@ -260,7 +266,7 @@ ipcMain.handle("SearchUser", async (event, keyword) => {
     uid: item.mid.toString(),
     value: item.room_id.toString(),
     text: item.uname,
-    avatar: item.upic,
+    avatar: /https:/.test(item.upic) ? item.upic : `https:${item.upic}`,
     follower: item.fans,
   }));
   uid && search.unshift(uid);

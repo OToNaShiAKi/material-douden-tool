@@ -197,7 +197,7 @@ export const SaveLyric = (lyric, name, singer, id) => {
     tlyric: "",
     stamps: [],
     origin: "local",
-    avatar: "/favicon.png",
+    avatar: "/images/favicon.png",
   };
   const start = lyric[0].start.split(":").reduce(Reduce, 0);
   const end = lyric[lyric.length - 1].end.split(":").reduce(Reduce, 0);
