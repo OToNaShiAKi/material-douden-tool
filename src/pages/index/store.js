@@ -1,6 +1,7 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import { ipcRenderer } from "electron";
+import Socket from "../../plugins/socket";
 
 Vue.use(Vuex);
 
@@ -16,14 +17,43 @@ const shields = JSON.parse(localStorage.getItem("shields")) || [];
 const stamps = [];
 stamps[-1] = { lyric: "", tlyric: "" };
 
+const Handler = {
+  rooms: (config) =>
+    config.map((item) => ({
+      value: item.value,
+      text: item.text,
+      uid: item.uid,
+      avatar: item.avatar,
+    })),
+  shields: (config, mid) =>
+    config.filter((item) => !item.mid || item.mid == mid),
+};
+
+const ChangeConfig = (state, { key, config = [] }) => {
+  state[key] = [...config];
+  const mid = state.cookie.match(/DedeUserID=([^;]+);/);
+  config = Handler[key] ? Handler[key](config, mid && mid[1]) : config;
+  localStorage.setItem(key, JSON.stringify(config));
+};
+
 const ChangeCookie = async (state, cookie) => {
-  localStorage.setItem("cookie", cookie || "");
-  state.cookie = cookie || "";
-  if (cookie) {
-    const bili_jct = cookie.match(/bili_jct=([^;]+);/);
-    if (bili_jct) {
-      state.avatar = await ipcRenderer.invoke("Cookie", cookie, bili_jct[1]);
+  cookie = cookie || "";
+  localStorage.setItem("cookie", cookie);
+  state.cookie = cookie;
+  const bili_jct = cookie.match(/bili_jct=([^;]+);/);
+  if (bili_jct) {
+    const result = await ipcRenderer.invoke(
+      "Cookie",
+      cookie,
+      bili_jct[1],
+      Socket.UseShareShields
+    );
+    for (const v of state.shields) {
+      const find = result.shields.find((item) => item.shield === v.shield);
+      if (!find) result.shields.push(v);
     }
+    ChangeConfig(state, { key: "shields", config: result.shields });
+    state.avatar = result.avatar;
   }
 };
 
@@ -35,19 +65,6 @@ const ChangeSelect = (state, select = []) => {
     : [];
   localStorage.setItem("select", select);
   state.select = select.filter((v) => v);
-};
-
-const ChangeConfig = (state, { key, config = [] }) => {
-  state[key] = [...config];
-  if (key === "rooms") {
-    config = config.map((item) => ({
-      value: item.value,
-      text: item.text,
-      uid: item.uid,
-      avatar: item.avatar,
-    }));
-  }
-  localStorage.setItem(key, JSON.stringify(config));
 };
 
 const ChangeShortcuts = (state, { key, value }) => {

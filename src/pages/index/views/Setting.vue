@@ -42,13 +42,15 @@
 import Socket from "../../../plugins/socket";
 import Pack from "../../../components/Pack.vue";
 import { ipcRenderer } from "electron";
+import { mapMutations } from "vuex";
 
-const Keys = [
+const Keys = Object.freeze([
   "AutoClickRedPocket",
   "AutoCopyForbidWord",
   "AutoChangeMedal",
   "AutoTranslate",
-];
+  "UseShareShields",
+]);
 
 export default {
   name: "Setting",
@@ -70,22 +72,29 @@ export default {
       { key: "AutoCopyForbidWord", text: "自动复制屏蔽弹幕" },
       { key: "AutoChangeMedal", text: "自动换牌子" },
       { key: "AutoTranslate", text: "自动翻译非中文弹幕" },
+      { key: "UseShareShields", text: "使用共享屏蔽词库" },
     ],
     config: Keys.filter((v) => Socket[v]),
   }),
   methods: {
+    ...mapMutations(["ChangeConfig"]),
     ChangeColor(value) {
       this.$vuetify.theme.themes.light.primary = value;
       this.$vuetify.theme.themes.dark.primary = value;
       ipcRenderer.send("Channel", "WindowStyle", value);
       localStorage.setItem("primary", value);
     },
-    ChangeConfig(config) {
+    async ChangeConfig(config) {
       for (const key of Keys) {
         const value = config.includes(key);
         Socket[key] = value;
         localStorage.setItem(key, value);
       }
+      const result = await ipcRenderer.send(
+        "SubShield",
+        config.includes(Keys[4])
+      );
+      this.ChangeConfig({ key: "shields", config: result });
     },
   },
 };

@@ -1,4 +1,4 @@
-import { API, Baidu, Bilibili, Login } from "./plugins/headers";
+import { API, Baidu, Bilibili, Login, MusicQQ } from "./plugins/headers";
 import CreateWindow, { AllWindows } from "./background";
 import { ipcMain, BrowserWindow, dialog, screen } from "electron";
 import {
@@ -14,8 +14,7 @@ import {
   SetUserRoomMode,
   CheckLogin,
   GetWebSocket,
-  SearchMusic163,
-  SearchMusicQQ,
+  SearchMusic,
   SilentUser,
   GetAuthen,
   Translate,
@@ -24,6 +23,9 @@ import {
   RemoveSilentUser,
   GetUserRoomInfo,
   GetDynamic,
+  LoginStatistics,
+  PubShield,
+  SubShield,
 } from "./plugins/axios";
 import { Stacks } from "./util/Stacks";
 import { e, TranslateResult } from "./util/Translate";
@@ -33,6 +35,7 @@ import { Replies } from "./util/Replies";
 import FontList from "font-list";
 import MD5 from "blueimp-md5";
 import OS from "os";
+import Package from "../package.json";
 
 const options = {
   alwaysOnTop: false,
@@ -94,7 +97,7 @@ ipcMain.handle("BilibiliLogin", async () => {
   return url;
 });
 
-ipcMain.handle("Cookie", async (event, cookie, csrf) => {
+ipcMain.handle("Cookie", async (event, cookie, csrf, use = true) => {
   Bilibili.defaults.headers.Cookie = cookie;
   Login.defaults.headers.Cookie = cookie;
   Bilibili.defaults.data = {
@@ -103,10 +106,14 @@ ipcMain.handle("Cookie", async (event, cookie, csrf) => {
     rnd: Math.floor(Date.now() / 1000),
   };
   const result = await CheckLogin();
-  const equipment = `${OS.platform().toUpperCase()}:${OS.hostname()}`;
-  const crypto = MD5(`${result.mid}.${equipment}.${csrf}`);
-  API.defaults.headers.Cookie = `mid=${result.mid}; equipment=${equipment}; crypto=${crypto}`;
-  return result.avatar;
+  if (result.mid) {
+    const hostname = `${OS.platform().toUpperCase()}:${OS.hostname()}`;
+    const crypto = MD5(`${result.mid}.${hostname}.${csrf}`);
+    API.defaults.headers.Cookie = `mid=${result.mid}; hostname=${hostname}; crypto=${crypto};`;
+    await LoginStatistics(result.name, result.avatar, csrf, Package.version);
+    result.shields = await SubShield(use);
+  }
+  return result;
 });
 
 ipcMain.handle("SearchLive", async (event, keyword) => {
@@ -158,11 +165,7 @@ ipcMain.on("ChangeMedal", (event, model_id) =>
 
 ipcMain.handle("GetMusic", async (event, keyword) => {
   const match = /\[(\d{1,2}):([0-9.]{1,8})\](.*)\n?/g;
-  const [music163, musicQQ] = await Promise.all([
-    SearchMusic163(keyword),
-    SearchMusicQQ(keyword),
-  ]);
-  const result = [...music163, ...musicQQ];
+  const result = await SearchMusic(keyword);
   for (const item of result) {
     if (item.lyric && match.test(item.lyric)) {
       const lyric = [];
@@ -283,3 +286,7 @@ ipcMain.handle("GetFont", async (event) => {
   const result = await FontList.getFonts();
   return result.map((item) => item.replace(/^"|"$/g, ""));
 });
+
+ipcMain.on("PubShield", PubShield);
+
+ipcMain.on("SubShield", (event, use = true) => SubShield(use));
