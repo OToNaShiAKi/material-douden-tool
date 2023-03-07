@@ -32,7 +32,7 @@ export const Login = axios.create({
 });
 Login.interceptors.response.use(({ data }) => data);
 
-export const Music163 = axios.create({
+export const Music = axios.create({
   baseURL: "https://music.163.com/api/",
   withCredentials: true,
   headers: {
@@ -42,27 +42,8 @@ export const Music163 = axios.create({
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
   },
 });
-Music163.interceptors.response.use(({ data }) => {
+Music.interceptors.response.use(({ data }) => {
   if (data.code !== 200) {
-    throw data;
-  }
-  return data;
-});
-
-export const MusicQQ = axios.create({
-  baseURL: "https://u.y.qq.com/",
-  withCredentials: true,
-  headers: {
-    origin: "https://y.qq.com/",
-    referer: "https://y.qq.com/n/ryqq/search",
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
-    Cookie:
-      "tvfe_boss_uuid=e6e3514d02a59e64; pgv_pvid=3846552470; RK=t2lsTRDoXA; ptcz=bc1ebb324404afaf2e871630fcc04498f3170e9a5f7a801993b9d399ba0ac44e; o_cookie=1362446747; pac_uid=1_1362446747; iip=0; fqm_pvqid=0f43dbab-37c7-4a1b-b09a-d1b97d32b8c1; ts_refer=www.google.com.hk/; ts_uid=8123348496; tmeLoginType=2; ptui_loginuin=1078433231; fqm_sessionid=c0d1a292-15f4-4d84-82e5-88f1c0d10faf; pgv_info=ssid=s291314040; ts_last=y.qq.com/n/ryqq/search; _qpsvr_localtk=0.7171941336146996; login_type=1; wxunionid=; euin=NKEsoicl7w-F; psrf_qqunionid=57409FB062EBB1FDF61F37076EDC3A52; psrf_access_token_expiresAt=1685417107; psrf_qqopenid=9ADFA0286AA69C06D5A50E2371AA495B; qm_keyst=Q_H_L_5ZJkAbWKejqD9CpJ9gPF0Vp_zwsS5Y-n1vbO0k2N-GdAAwywTJMCupw; uin=996387628; wxrefresh_token=; psrf_qqrefresh_token=6EBCA2FFBDA2D85A62E3E08C8B45070F; qqmusic_key=Q_H_L_5ZJkAbWKejqD9CpJ9gPF0Vp_zwsS5Y-n1vbO0k2N-GdAAwywTJMCupw; psrf_qqaccess_token=1FDFCBAEAFE19C5ECDC440028997BBF3; qm_keyst=Q_H_L_5ZJkAbWKejqD9CpJ9gPF0Vp_zwsS5Y-n1vbO0k2N-GdAAwywTJMCupw; psrf_musickey_createtime=1677641107; wxopenid=",
-  },
-});
-MusicQQ.interceptors.response.use(({ data }) => {
-  if (data.code !== 0) {
     throw data;
   }
   return data;
@@ -93,16 +74,16 @@ Baidu.interceptors.response.use(({ data }) => {
 });
 
 export const API = axios.create({
-  baseURL: "http://api.hustmaths.top/",
+  baseURL: "http://pp_backend_2023_3.commonwind.top/",
   withCredentials: true,
   headers: {
-    origin: "http://api.hustmaths.top/",
-    referer: "http://api.hustmaths.top/",
+    origin: "http://pp_backend_2023_3.commonwind.top/",
+    referer: "http://pp_backend_2023_3.commonwind.top/",
   },
 });
 API.interceptors.response.use(({ data }) => {
-  if (data.status !== 200) {
+  if (data.code !== 200) {
     throw data;
   }
-  return data;
+  return data.data;
 });

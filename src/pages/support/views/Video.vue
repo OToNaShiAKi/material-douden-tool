@@ -158,6 +158,8 @@ export default {
         src.replace(/^data:image\/(png|gif|jpeg);base64,/, "")
       );
       ipcRenderer.send("SaveFiles", datas, Date.now().toString(), "base64");
+      this.images = [];
+      localStorage.setItem("screenshot", JSON.stringify([]));
     },
     Remove({ target: { dataset } }) {
       const { key } = dataset;

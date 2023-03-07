@@ -56,8 +56,9 @@ export default class Socket {
   static AutoChangeMedal = localStorage.getItem("AutoChangeMedal") !== "false";
   static AutoCopyForbidWord =
     localStorage.getItem("AutoCopyForbidWord") !== "false";
+  static UseShareShields = localStorage.getItem("UseShareShields") !== "false";
   constructor(host) {
-    this.roomid =host. roomid;
+    this.roomid = host.roomid;
     this.token = host.token;
     this.timer = null;
     this.admin = host.admin;

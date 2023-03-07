@@ -1,4 +1,4 @@
-import { Baidu, Bilibili, Login, Music163, MusicQQ } from "./headers.js";
+import { Baidu, Bilibili, Login, Music, API } from "./headers.js";
 import QS from "qs";
 import { BrowserWindow } from "electron";
 import { AllWindows } from "../background";
@@ -262,9 +262,9 @@ export const GetFollowLive = async () => {
   }
 };
 
-const GetMusic163Lyric = async (id) => {
+const GetMusicLyric = async (id) => {
   try {
-    const { lrc, tlyric, yrc, ytlrc } = await Music163.get("/song/lyric", {
+    const { lrc, tlyric, yrc, ytlrc } = await Music.get("/song/lyric", {
       params: { id, lv: 1, tv: 1, yv: 1, ytv: 1 },
     });
     return {
@@ -278,15 +278,15 @@ const GetMusic163Lyric = async (id) => {
   }
 };
 
-export const SearchMusic163 = async (keyword) => {
+export const SearchMusic = async (keyword) => {
   try {
     let {
       result: { songs },
-    } = await Music163.get("/cloudsearch/pc", {
-      params: { s: keyword, type: 1, limit: 15 },
+    } = await Music.get("/cloudsearch/pc", {
+      params: { s: keyword, type: 1, limit: 20 },
     });
     songs = songs.map(async ({ name, ar, id, dt, al }) => {
-      const lyric = await GetMusic163Lyric(id);
+      const lyric = await GetMusicLyric(id);
       return {
         id: `${al.id}-${id}`,
         name,
@@ -303,85 +303,6 @@ export const SearchMusic163 = async (keyword) => {
   }
 };
 
-const GetMusicQQLyric = async (mid) => {
-  try {
-    const { lyric = "", trans = "" } = await MusicQQ.get(
-      "/lyric/fcgi-bin/fcg_query_lyric_new.fcg",
-      {
-        baseURL: "https://c.y.qq.com/",
-        params: {
-          songmid: mid,
-          nobase64: 1,
-          g_tk: 5381,
-          format: "json",
-        },
-      }
-    );
-    return { lyric, tlyric: trans };
-  } catch (error) {
-    return { lyric: "", tlyric: "" };
-  }
-};
-
-export const SearchMusicQQ = async (keyword) => {
-  const now = Math.floor(Date.now() / 1000);
-  try {
-    let {
-      request: {
-        data: {
-          body: {
-            song: { list = [] },
-          },
-        },
-      },
-    } = await MusicQQ.post("/cgi-bin/musicu.fcg", {
-      comm: {
-        cv: 4747474,
-        ct: 24,
-        format: "json",
-        inCharset: "utf-8",
-        outCharset: "utf-8",
-        notice: 0,
-        platform: "yqq.json",
-        needNewCode: 1,
-        uin: 0,
-        g_tk_new_20200303: now,
-        g_tk: now,
-      },
-      request: {
-        method: "DoSearchForQQMusicDesktop",
-        module: "music.search.SearchCgiService",
-        param: {
-          remoteplace: "txt.yqq.top",
-          searchid: "",
-          search_type: 0,
-          query: keyword,
-          page_num: 1,
-          num_per_page: 15,
-        },
-      },
-    });
-    list = list.map(async ({ mid, album, name, singer, interval }) => {
-      const avatar = `https://y.qq.com/music/photo_new/T00${
-        album.mid ? 2 : 1
-      }R300x300M000${album.mid || singer[0].mid}.jpg?max_age=2592000`;
-      const lyric = await GetMusicQQLyric(mid);
-      return {
-        id: `${album.id}-${mid}`,
-        name: name,
-        ...lyric,
-        singer: singer.map(({ name }) => name).join("/"),
-        origin: "QQ",
-        duration: interval * 1000,
-        avatar,
-      };
-    });
-    return await Promise.all(list);
-  } catch (error) {
-    return [];
-  }
-};
-
 export const CheckLogin = async () => {
   try {
     const { face, uname, mid } = await Bilibili.get("/x/web-interface/nav", {
@@ -391,7 +312,7 @@ export const CheckLogin = async () => {
   } catch (error) {
     const win = BrowserWindow.fromId(AllWindows.index);
     win.webContents.send("CookieOverdue");
-    return null;
+    return { mid: null };
   }
 };
 
@@ -600,5 +521,34 @@ export const GetVideoInfo = async (key) => {
     }
   } catch (error) {
     return { duration: null, avatar: "" };
+  }
+};
+
+export const LoginStatistics = async (name, avatar, jct, version) => {
+  try {
+    return await API.post("/alogin", { name, avatar, jct, version });
+  } catch (error) {
+    return null;
+  }
+};
+
+export const PubShield = async (event, shield, handle, operation = true) => {
+  try {
+    return await API.post("/app/add-words", {
+      shield,
+      handle,
+      operation,
+    });
+  } catch (error) {
+    return false;
+  }
+};
+
+export const SubShield = async (use = true) => {
+  try {
+    const result = await API.post("/app/get-words", { use });
+    return result || [];
+  } catch (error) {
+    return [];
   }
 };

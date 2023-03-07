@@ -3,7 +3,12 @@
     <Pack>屏蔽词</Pack>
     <DataTable :items="shields" :headers="headers">
       <template v-slot="{ item }">
-        <v-icon small @click="Remove" :data-key="item.shield">
+        <v-icon
+          v-if="!item.mid || item.mid == mid"
+          small
+          @click="Remove"
+          :data-key="item.shield"
+        >
           mdi-delete
         </v-icon>
       </template>
@@ -39,6 +44,7 @@
 import Pack from "../../../components/Pack.vue";
 import DataTable from "../../../components/DataTable.vue";
 import { mapMutations, mapState } from "vuex";
+import { ipcRenderer } from "electron";
 
 export default {
   name: "Shield",
@@ -52,7 +58,13 @@ export default {
     shield: "",
     handle: "",
   }),
-  computed: { ...mapState(["shields"]) },
+  computed: {
+    ...mapState(["shields"]),
+    mid: ({ $store: { state } }) => {
+      const mid = state.cookie.match(/DedeUserID=([^;]+);/);
+      return mid && mid[1];
+    },
+  },
   methods: {
     ...mapMutations(["ChangeConfig"]),
     Add() {
@@ -65,6 +77,7 @@ export default {
       } else {
         find.handle = this.handle;
       }
+      ipcRenderer.send("PubShield", this.shield, this.handle, true);
       this.shield = "";
       this.handle = "";
       this.ChangeConfig({ key: "shields", config: this.shields });
@@ -73,6 +86,7 @@ export default {
       const shields = this.shields.filter(
         (item) => item.shield !== dataset.key
       );
+      ipcRenderer.send("PubShield", dataset.key, "", false);
       this.ChangeConfig({ key: "shields", config: shields });
     },
   },
