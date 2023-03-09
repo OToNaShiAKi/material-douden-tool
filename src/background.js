@@ -100,5 +100,6 @@ if (isDevelopment) {
 }
 
 import "./ipc";
+import "./plugins/speech"
 
 export default CreateWindow;

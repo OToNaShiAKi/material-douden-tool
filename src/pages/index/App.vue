@@ -32,6 +32,17 @@
               :items="fixes"
             />
           </template>
+          <template v-slot:append-outer>
+            <v-btn
+              :disabled="recognition"
+              color="primary"
+              @click="Speech"
+              icon
+              style="margin-top: 6px"
+            >
+              <v-icon>mdi-microphone</v-icon>
+            </v-btn>
+          </template>
         </v-text-field>
         <section class="link-tab d-flex justify-space-between align-center">
           <v-btn-toggle color="primary" rounded group dense>
@@ -62,7 +73,7 @@
 </template>
 
 <script>
-import { clipboard, ipcRenderer } from "electron";
+import { clipboard, ipcRenderer, shell } from "electron";
 import { SendComment } from "../../util/SendComment";
 import { mapMutations, mapState } from "vuex";
 import Socket from "../../plugins/socket";
@@ -74,6 +85,7 @@ export default {
   name: "App",
   components: { HonourAvatar },
   data: ({ $store: { state } }) => ({
+    recognition: false,
     content: "",
     message: "",
     fix: state.fixes.find(
@@ -120,6 +132,14 @@ export default {
       }
       this.message = message;
     });
+    ipcRenderer.on(
+      "SpeechRecognition",
+      (event, message) => (this.content += message)
+    );
+    ipcRenderer.on(
+      "SpeechConnect",
+      (event, connect) => (this.recognition = connect)
+    );
     if (!cookie) {
       this.$router.push("/cookie");
     } else if (this.select.length <= 0) {
@@ -178,6 +198,10 @@ export default {
     },
     Open() {
       ipcRenderer.send("OtherWindow", "support");
+    },
+    Speech() {
+      this.recognition = true;
+      shell.openExternal("http://localhost:9669/");
     },
   },
 };
