@@ -62,6 +62,7 @@
         class="ma-2 rounded-lg"
         :key="image.key"
         :src="image.src"
+        content-class="relative"
       >
         <v-icon
           class="thumbnail"
@@ -182,9 +183,8 @@ video::-webkit-media-controls-timeline {
   display: none;
 }
 .thumbnail {
-  position: absolute;
+  position: absolute !important;
   right: 0;
   bottom: 0;
-  cursor: pointer;
 }
 </style>

@@ -110,7 +110,12 @@ ipcMain.handle("Cookie", async (event, cookie, csrf, use = true) => {
     const hostname = `${OS.platform().toUpperCase()}:${OS.hostname()}`;
     const crypto = MD5(`${result.mid}.${hostname}.${csrf}`);
     API.defaults.headers.Cookie = `mid=${result.mid}; hostname=${hostname}; crypto=${crypto};`;
-    await LoginStatistics(result.name, result.avatar, csrf, Package.version);
+    result.sponsor = await LoginStatistics(
+      result.name,
+      result.avatar,
+      csrf,
+      Package.version
+    );
     result.shields = await SubShield(use);
   }
   return result;

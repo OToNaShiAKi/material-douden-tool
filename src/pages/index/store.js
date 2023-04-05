@@ -54,6 +54,7 @@ const ChangeCookie = async (state, cookie) => {
     }
     ChangeConfig(state, { key: "shields", config: result.shields });
     state.avatar = result.avatar;
+    state.sponsor = result.sponsor;
   }
 };
 
@@ -101,6 +102,7 @@ export default new Vuex.Store({
     song: { stamps, singer: "", name: "" },
     stamp: -1,
     avatar: "",
+    sponsor: false,
   },
   mutations: {
     ChangeCookie,
@@ -111,3 +113,7 @@ export default new Vuex.Store({
     Notify,
   },
 });
+
+for (const item of shields) {
+  !item.mid && ipcRenderer.send("PubShield", item.shield, item.handle);
+}

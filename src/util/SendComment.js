@@ -13,7 +13,7 @@ export const SendComment = (content, select = [], fix = {}, shield = []) => {
     const { [item]: length = CommentLength.default } = CommentLength;
     ipcRenderer.send("SendComment", content.slice(0, length), item);
     if (content.length > length) {
-      content = content.slice(length, content.length - suffix.length);
+      content = content.slice(length, content.length - suffix.trim().length);
       SendComment(content, [item], fix);
     }
   }

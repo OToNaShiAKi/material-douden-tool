@@ -40,7 +40,7 @@
     </v-data-table>
     <section class="d-flex align-center flex-wrap">
       <v-checkbox
-        v-for="v of headers.slice(1, 6)"
+        v-for="v of headers.slice(0, 6)"
         :key="v.value"
         hide-details
         dense
@@ -55,17 +55,19 @@
         dense
         label="总时长"
         v-model="total"
-        value="total"
       />
     </section>
-    <v-btn-toggle class="mt-3" dense rounded>
+    <v-btn-toggle class="my-3" dense rounded>
+      <v-btn icon :loading="exporting" @click="Word">
+        <v-icon>mdi-microsoft-word</v-icon>
+      </v-btn>
       <v-btn icon @click="Excel">
         <v-icon>mdi-microsoft-excel</v-icon>
       </v-btn>
-      <v-btn icon @click="Excel">
-        <v-icon>mdi-microsoft-word</v-icon>
-      </v-btn>
     </v-btn-toggle>
+    <p class="caption px-3 mb-0">
+      仅Word格式支持导出封面图片，同时耗时会比较长。
+    </p>
   </v-container>
 </template>
 
@@ -77,6 +79,7 @@ export default {
   name: "Anime",
   data: () => ({
     keyword: "",
+    exporting: false,
     headers: [
       { text: "封面", value: "avatar", sortable: false },
       { text: "标题", value: "title" },
@@ -108,8 +111,10 @@ export default {
       shell.openExternal(href);
     },
     async Word() {
+      this.exporting = true;
       const buffer = await ExportWord(this.comments, this.config, this.total);
       ipcRenderer.send("SaveFiles", buffer, `${Date.now()}.docx`);
+      this.exporting = false;
     },
     Excel() {
       const result = ExportExcel(this.comments, this.config, this.total);

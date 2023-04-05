@@ -526,9 +526,15 @@ export const GetVideoInfo = async (key) => {
 
 export const LoginStatistics = async (name, avatar, jct, version) => {
   try {
-    return await API.post("/alogin", { name, avatar, jct, version });
+    const { sponsor = 0 } = await API.post("/alogin", {
+      name,
+      avatar,
+      jct,
+      version,
+    });
+    return sponsor > 0;
   } catch (error) {
-    return null;
+    return false;
   }
 };
 

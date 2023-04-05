@@ -20,7 +20,7 @@
           hint="Alt+上下键切换已发弹幕 TAB可循环切换前后缀"
         >
           <template v-slot:prepend>
-            <HonourAvatar />
+            <HonourAvatar class="mr-1" badge="60px"/>
           </template>
           <template v-slot:prepend-inner>
             <v-select

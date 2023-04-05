@@ -2,6 +2,7 @@ import {
   Document,
   ExternalHyperlink,
   HeadingLevel,
+  ImageRun,
   Packer,
   Paragraph,
   SectionType,
@@ -18,19 +19,44 @@ const Mapping = Object.freeze({
   duration_desc: "时长",
   time_desc: "发布",
   uname: "推荐人",
+  avatar: "封面",
 });
+
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d");
+canvas.width = 190;
+canvas.height = 120;
+
+const LoadImage = async (src) => {
+  const image = new Image(canvas.width, canvas.height);
+  image.src = src;
+  const result = await new Promise((resolve) => {
+    image.addEventListener("load", () => {
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpg"));
+    });
+  });
+  return result;
+};
 
 export const ExportWord = async (comments, config, need) => {
   let total = 0;
-  const sections = comments.map((v) => {
-    const children = config.map((key) => {
+  let sections = comments.map(async (v) => {
+    let children = config.map(async (key) => {
       let child = new TextRun({
         text: v[key],
         size: 24,
+        italics: false,
         bold: key === "title",
       });
-      if (key === "bvid")
+      if (key === "bvid") {
         child = new ExternalHyperlink({ children: [child], link: v[key] });
+      } else if (key === "avatar" && v[key]) {
+        child = new ImageRun({
+          data: await LoadImage(v[key]),
+          transformation: { width: canvas.width, height: canvas.height },
+        });
+      }
       return new Paragraph({
         children: [
           new TextRun({
@@ -43,6 +69,7 @@ export const ExportWord = async (comments, config, need) => {
         heading: key === "title" ? HeadingLevel.HEADING_3 : undefined,
       });
     });
+    children = await Promise.all(children);
     children.push(new Paragraph("\n"));
     total += v.duration || 0;
     return {
@@ -50,26 +77,23 @@ export const ExportWord = async (comments, config, need) => {
       children,
     };
   });
+  sections = await Promise.all(sections);
   if (need) {
-    sections.unshift({
+    const p = new Paragraph({
       children: [
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `【总时长】`,
-              bold: true,
-              italics: false,
-            }),
-            new TextRun({
-              text: FormatDuration(total, true),
-              italics: false,
-            }),
-          ],
-          heading: HeadingLevel.HEADING_4,
+        new TextRun({
+          text: `【总时长】`,
+          bold: true,
+          italics: false,
         }),
-        new Paragraph("\n"),
+        new TextRun({
+          text: FormatDuration(total, true),
+          italics: false,
+        }),
       ],
+      heading: HeadingLevel.HEADING_4,
     });
+    sections.unshift({ children: [p, new Paragraph("\n")] });
   }
   const buffer = await Packer.toBuffer(
     new Document({ title: "动画鉴赏", sections })

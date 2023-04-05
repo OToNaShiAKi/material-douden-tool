@@ -60,7 +60,7 @@ export default {
         this.cookie = result.query;
         this.ChangeCookie(this.cookie);
         this.Notify("登陆成功");
-        this.$router.push("/room")
+        this.$router.push("/room");
       } else if (result.data === -2) {
         this.code = "";
       }
