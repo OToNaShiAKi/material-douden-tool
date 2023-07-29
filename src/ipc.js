@@ -26,6 +26,7 @@ import {
   LoginStatistics,
   PubShield,
   SubShield,
+  ClickRedPocket
 } from "./plugins/axios";
 import { Stacks } from "./util/Stacks";
 import { e, TranslateResult } from "./util/Translate";
@@ -214,7 +215,7 @@ ipcMain.handle("Translate", async (event, phrase, to = "zh") => {
   return result;
 });
 
-ipcMain.handle("TrackLive", (event, roomid) => GetLiveInfo(roomid));
+ipcMain.handle("TrackLive", (event, roomid, qn = 0) => GetLiveInfo(roomid, qn));
 
 ipcMain.on("SaveFiles", async (event, Datas, name, encoding = "buffer") => {
   const isArray = Array.isArray(Datas);
@@ -295,3 +296,10 @@ ipcMain.handle("GetFont", async (event) => {
 ipcMain.on("PubShield", PubShield);
 
 ipcMain.handle("SubShield", (event, use = true) => SubShield(use));
+
+ipcMain.handle("ClickRedPocket", async (event, ...ids) => {
+  clearInterval(Stacks.timer);
+  const result = await ClickRedPocket(...ids);
+  Stacks.timer = setInterval(Stacks.interval, 1750);
+  return result;
+});

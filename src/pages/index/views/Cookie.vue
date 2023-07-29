@@ -46,12 +46,7 @@ import HonourAvatar from "../../../components/HonourAvatar.vue";
 export default {
   name: "Cookie",
   components: { Pack, HonourAvatar },
-  data: ({ $store: { state } }) => ({
-    cookie: state.cookie,
-    tab: "QQMusic",
-    code: "",
-    music: "",
-  }),
+  data: ({ $store: { state } }) => ({ cookie: state.cookie, code: "" }),
   created() {
     !this.cookie && this.Login();
     ipcRenderer.on("Login", (event, result) => {

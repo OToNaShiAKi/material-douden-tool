@@ -4,6 +4,16 @@ import { BrowserWindow } from "electron";
 import { AllWindows } from "../background";
 import axios from "axios";
 
+const VideoIcons = Object.freeze({
+  30000: "mdi-dolby",
+  20000: "mdi-video-4k-box",
+  10000: "mdi-video-box",
+  400: "mdi-compare",
+  250: "mdi-quality-high",
+  150: "mdi-quality-medium",
+  80: "mdi-quality-low",
+});
+
 export const GetUserRoomInfo = async (room_id) => {
   try {
     const {
@@ -67,7 +77,7 @@ export const GetLoginInfo = async (oauthKey) => {
   }
 };
 
-export const GetLiveInfo = async (roomid) => {
+export const GetLiveInfo = async (roomid, qn = 0) => {
   try {
     const { live_time, live_status, uid, playurl_info } = await Bilibili.get(
       "/xlive/web-room/v2/index/getRoomPlayInfo",
@@ -77,7 +87,7 @@ export const GetLiveInfo = async (roomid) => {
           protocol: "0,1",
           format: "0,1,2",
           codec: "0,1",
-          qn: 0,
+          qn,
           platform: "web",
           ptype: 8,
           dolby: 5,
@@ -86,7 +96,8 @@ export const GetLiveInfo = async (roomid) => {
     );
     const result = { live_time, live_status, roomid, uid };
     if (playurl_info) {
-      const {
+    console.log(JSON.stringify(playurl_info))
+    const {
         playurl: {
           g_qn_desc,
           stream: [
@@ -101,15 +112,21 @@ export const GetLiveInfo = async (roomid) => {
           ],
         },
       } = playurl_info;
-      result.g_qn_desc = g_qn_desc;
+      result.accept_qn = g_qn_desc
+        .filter(({ qn }) => accept_qn.includes(qn))
+        .map(({ qn, desc }) => ({
+          icon: VideoIcons[qn],
+          value: qn,
+          text: desc,
+        }));
       result.base_url = base_url;
-      result.accept_qn = accept_qn;
       result.current_qn = current_qn;
       result.url_info = url_info;
       result.format_name = format_name;
     }
     return result;
   } catch (error) {
+    console.log(error);
     return { roomid, live_status: 0, code: error.code };
   }
 };
@@ -556,5 +573,26 @@ export const SubShield = async (use = true) => {
     return result || [];
   } catch (error) {
     return [];
+  }
+};
+
+export const ClickRedPocket = async (ruid, room_id, lot_id) => {
+  try {
+    return await Bilibili.post(
+      "/xlive/lottery-interface/v1/popularityRedPocket/RedPocketDraw",
+      QS.stringify({
+        ruid,
+        room_id,
+        lot_id,
+        spm_id: "444.8.red_envelope.extract",
+        jump_from: "",
+        session_id: "",
+        visit_id: "",
+        csrf: Bilibili.defaults.data.csrf,
+        csrf_token: Bilibili.defaults.data.csrf_token,
+      })
+    );
+  } catch (error) {
+    return false;
   }
 };

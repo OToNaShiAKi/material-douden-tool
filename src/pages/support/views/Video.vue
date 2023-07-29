@@ -2,12 +2,31 @@
   <v-container class="fix-input">
     <video class="rounded-lg" controls id="tracing" />
     <p class="d-flex justify-space-between caption align-center">
-      <span>
+      <span class="flex-grow-1">
         开始时间：{{ new Date(timer * 1000) | FormatTime }}
         <br />
         开播后同传输入框中按下Alt+P即可记录时点
       </span>
-      <v-btn icon color="primary" @click="() => Live(selected, true)">
+      <v-select
+        class="flex-grow-0 mr-3"
+        v-model="quality"
+        @change="(value) => Live(selected, value, true)"
+        solo
+        hide-details
+        dense
+        :items="qns"
+        :prepend-inner-icon="icon"
+      >
+        <template v-slot:item="{ item, on, attrs }">
+          <v-list-item v-on="on" v-bind="attrs">
+            <v-list-item-icon>
+              <v-icon>{{ item.icon }}</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>{{ item.text }}</v-list-item-title>
+          </v-list-item>
+        </template>
+      </v-select>
+      <v-btn icon color="primary" @click="() => Live(selected, quality, true)">
         <v-icon>mdi-refresh</v-icon>
       </v-btn>
     </p>
@@ -101,6 +120,8 @@ export default {
     rooms: [],
     images: Screenshot,
     timer: null,
+    qns: [],
+    quality: 0,
   }),
   mounted() {
     const select = (localStorage.getItem("select") || "").split(",");
@@ -113,15 +134,34 @@ export default {
       this.Live(find);
     }
   },
+  computed: {
+    icon: ({ quality, qns }) => {
+      const find = qns.find(({ value }) => value === quality);
+      return find && find.icon;
+    },
+  },
   methods: {
-    async Live({ value: roomid }, refresh = false) {
-      const live = await ipcRenderer.invoke("TrackLive", roomid);
+    async Live({ value: roomid }, qn = this.quality, refresh = false) {
+      const live = await ipcRenderer.invoke("TrackLive", roomid, qn);
+      const rooms = JSON.parse(localStorage.getItem("rooms"));
+      const select = (localStorage.getItem("select") || "").split(",");
+      this.rooms = rooms.filter(({ value }) => select.includes(value));
+      if (!this.rooms.find(({ value }) => value === this.selected.value)) {
+        this.selected = this.rooms[0] || "";
+      }
+
+      if (refresh) {
+        CreatePlayer.player.roomid = null;
+        live.live_status = 1;
+        live.live_time = -1
+      }
+
       if (
-        refresh ||
-        (roomid == this.selected.value &&
-          live.live_status &&
-          mseLivePlayback &&
-          (!CreatePlayer.player || roomid != CreatePlayer.player.roomid))
+        roomid == this.selected.value &&
+        live.live_status &&
+        live.live_time &&
+        mseLivePlayback &&
+        (!CreatePlayer.player || roomid != CreatePlayer.player.roomid)
       ) {
         const video = document.getElementById("tracing");
         if (CreatePlayer.player) {
@@ -129,15 +169,11 @@ export default {
           CreatePlayer.player.detachMediaElement();
           CreatePlayer.player.destroy();
         }
+        this.qns = live.accept_qn;
+        this.quality = live.current_qn;
         CreatePlayer.player = CreatePlayer(live, video);
       }
       this.timer = live.live_time;
-      const rooms = JSON.parse(localStorage.getItem("rooms"));
-      const select = (localStorage.getItem("select") || "").split(",");
-      this.rooms = rooms.filter(({ value }) => select.includes(value));
-      if (!this.rooms.find(({ value }) => value === this.selected.value)) {
-        this.selected = this.rooms[0] || "";
-      }
     },
     Screenshot() {
       if (!this.timer || this.timer <= 0) return;
