@@ -74,11 +74,11 @@ Baidu.interceptors.response.use(({ data }) => {
 });
 
 export const API = axios.create({
-  baseURL: "http://pp_backend_2023_3.commonwind.top/",
+  baseURL: "http://1.14.126.44:60022/",
   withCredentials: true,
   headers: {
-    origin: "http://pp_backend_2023_3.commonwind.top/",
-    referer: "http://pp_backend_2023_3.commonwind.top/",
+    origin: "http://1.14.126.44:60022/",
+    referer: "http://1.14.126.44:60022/",
   },
 });
 API.interceptors.response.use(({ data }) => {
