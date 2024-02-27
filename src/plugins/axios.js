@@ -62,16 +62,21 @@ export const SendComment = async (roomid, msg) => {
 
 export const GetQRCode = async () => {
   try {
-    const { data } = await Login.get("/qrcode/getLoginUrl");
+    const { data } = await Login.get("/x/passport-login/web/qrcode/generate", {
+      params: { source: "main-fe-header" },
+    });
     return data;
   } catch (error) {
     return { url: "", oauthKey: "" };
   }
 };
 
-export const GetLoginInfo = async (oauthKey) => {
+export const GetLoginInfo = async (qrcode_key) => {
   try {
-    return await Login.post("/qrcode/getLoginInfo", QS.stringify({ oauthKey }));
+    const { data } = await Login.get("/x/passport-login/web/qrcode/poll", {
+      params: { qrcode_key, source: "main-fe-header" },
+    });
+    return data;
   } catch (error) {
     return { status: false, data: null };
   }
@@ -96,8 +101,7 @@ export const GetLiveInfo = async (roomid, qn = 0) => {
     );
     const result = { live_time, live_status, roomid, uid };
     if (playurl_info) {
-    console.log(JSON.stringify(playurl_info))
-    const {
+      const {
         playurl: {
           g_qn_desc,
           stream: [
@@ -126,7 +130,6 @@ export const GetLiveInfo = async (roomid, qn = 0) => {
     }
     return result;
   } catch (error) {
-    console.log(error);
     return { roomid, live_status: 0, code: error.code };
   }
 };
@@ -576,23 +579,3 @@ export const SubShield = async (use = true) => {
   }
 };
 
-export const ClickRedPocket = async (ruid, room_id, lot_id) => {
-  try {
-    return await Bilibili.post(
-      "/xlive/lottery-interface/v1/popularityRedPocket/RedPocketDraw",
-      QS.stringify({
-        ruid,
-        room_id,
-        lot_id,
-        spm_id: "444.8.red_envelope.extract",
-        jump_from: "",
-        session_id: "",
-        visit_id: "",
-        csrf: Bilibili.defaults.data.csrf,
-        csrf_token: Bilibili.defaults.data.csrf_token,
-      })
-    );
-  } catch (error) {
-    return false;
-  }
-};

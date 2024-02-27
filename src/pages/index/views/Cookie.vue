@@ -56,7 +56,7 @@ export default {
         this.ChangeCookie(this.cookie);
         this.Notify("登陆成功");
         this.$router.push("/room");
-      } else if (result.data === -2) {
+      } else if (result.code === 86038) {
         this.code = "";
       }
     });

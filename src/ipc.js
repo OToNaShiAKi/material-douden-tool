@@ -26,7 +26,6 @@ import {
   LoginStatistics,
   PubShield,
   SubShield,
-  ClickRedPocket
 } from "./plugins/axios";
 import { Stacks } from "./util/Stacks";
 import { e, TranslateResult } from "./util/Translate";
@@ -79,22 +78,20 @@ ipcMain.on("SendComment", (event, message, roomid) => {
 });
 
 ipcMain.handle("BilibiliLogin", async () => {
-  const { url, oauthKey } = await GetQRCode();
+  const { url, qrcode_key } = await GetQRCode();
   const timer = setInterval(async () => {
-    const { status = false, data } = await GetLoginInfo(oauthKey);
-    if (status || data === -2) {
+    const { code, url: data } = await GetLoginInfo(qrcode_key);
+    if (code === 0 || code === 86038) {
       clearInterval(timer);
-      const query =
-        typeof data === "object" &&
-        data.url
-          .slice(data.url.indexOf("?") + 1)
-          .replace(/\?/g, "")
-          .replace(/&/g, ";");
+      const query = data
+        .slice(data.indexOf("?") + 1)
+        .replace(/\?/g, "")
+        .replace(/&/g, ";");
       const win = BrowserWindow.fromId(AllWindows.index);
-      win.webContents.send("Login", { status, data, query });
+      win.webContents.send("Login", { status: true, data, query });
     }
   }, 3000);
-  if (!(url && oauthKey)) clearInterval(timer);
+  if (!(url && qrcode_key)) clearInterval(timer);
   return url;
 });
 
@@ -296,10 +293,3 @@ ipcMain.handle("GetFont", async (event) => {
 ipcMain.on("PubShield", PubShield);
 
 ipcMain.handle("SubShield", (event, use = true) => SubShield(use));
-
-ipcMain.handle("ClickRedPocket", async (event, ...ids) => {
-  clearInterval(Stacks.timer);
-  const result = await ClickRedPocket(...ids);
-  Stacks.timer = setInterval(Stacks.interval, 1750);
-  return result;
-});

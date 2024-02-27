@@ -45,7 +45,6 @@ import { ipcRenderer } from "electron";
 import { mapMutations } from "vuex";
 
 const Keys = Object.freeze([
-  "AutoClickRedPocket",
   "AutoCopyForbidWord",
   "AutoChangeMedal",
   "AutoTranslate",
@@ -68,7 +67,6 @@ export default {
     ],
     dark: theme.dark,
     auto: [
-      { key: "AutoClickRedPocket", text: "自动抽红包" },
       { key: "AutoCopyForbidWord", text: "自动复制屏蔽弹幕" },
       { key: "AutoChangeMedal", text: "自动换牌子" },
       { key: "AutoTranslate", text: "自动翻译非中文弹幕" },

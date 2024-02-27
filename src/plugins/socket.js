@@ -31,28 +31,8 @@ export default class Socket {
     ROOM_ADMIN_ENTRANCE: ({ uid }, socket) => {
       socket.admin = socket.uid === uid;
     },
-    POPULARITY_RED_POCKET_START: async ({ data, cmd }, socket) => {
-      if (Socket.AutoClickRedPocket) {
-        const result = await ipcRenderer.invoke(
-          "ClickRedPocket",
-          socket.ruid,
-          socket.roomid,
-          data.lot_id
-        );
-        return {
-          message: "自动点击红包" + (result ? "成功" : "失败"),
-          uid: socket.uid,
-          name: "System",
-          class: "primary--text",
-          admin: 1,
-          id: cmd + "-" + Date.now(),
-        };
-      }
-    },
   };
   static AutoTranslate = localStorage.getItem("AutoTranslate") === "true";
-  static AutoClickRedPocket =
-    localStorage.getItem("AutoClickRedPocket") !== "false";
   static AutoChangeMedal = localStorage.getItem("AutoChangeMedal") !== "false";
   static AutoCopyForbidWord =
     localStorage.getItem("AutoCopyForbidWord") !== "false";

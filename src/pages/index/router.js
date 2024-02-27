@@ -48,7 +48,7 @@ const routes = [
     component: Bracket,
     meta: { height: 526 },
   },
-  { path: "/cookie", name: "Cookie", component: Cookie, meta: { height: 532 } },
+  { path: "/cookie", name: "Cookie", component: Cookie, meta: { height: 608 } },
   { path: "/shield", name: "Shield", component: Shield, meta: { height: 558 } },
   {
     path: "/setting",
