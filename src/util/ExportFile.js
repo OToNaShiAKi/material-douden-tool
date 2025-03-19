@@ -280,10 +280,10 @@ export const ConvertLyric = (next) => {
   return { name: next.name, singer: next.singer, lyric };
 };
 
+export const Base64 = /^data:image\/(png|gif|jpeg);base64,/;
+
 export const DomToImage = async (Dom) =>
-  (await HtmlToCanvas(Dom))
-    .toDataURL()
-    .replace(/^data:image\/(png|gif|jpeg);base64,/, "");
+  (await HtmlToCanvas(Dom)).toDataURL().replace(Base64, "");
 
 export const ExportCandy = (file, Dom) => {
   const result = [];

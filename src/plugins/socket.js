@@ -43,48 +43,54 @@ export default class Socket {
         loginfo: `${info[2][1]}: ${info[1]}`,
       };
     },
-    SUPER_CHAT_MESSAGE: async ({ data, cmd }) => {
+    SUPER_CHAT_MESSAGE: async ({ data, cmd, send_time }) => {
       let name = data.user_info.uname;
       const url = Ships[data.user_info.guard_level];
       if (url) {
-        name += `<img src="${url}" class="ml-2" width="20" height="20" />`;
+        name =
+          `<img src="${url}" class="ml-2" width="20" height="20" />` + name;
       }
       return {
         id: cmd + "-" + data.id,
+        time: send_time ?? data.ts * 1000,
         uid: data.uid,
         name,
-        message: `￥${data.price} data.message`,
+        message: `￥${data.price} ${data.message}`,
         admin: true,
         config: "Superchat",
         loginfo: `${data.user_info.uname}: ￥${data.price} ${data.message}`,
-        style: { color: data.background_bottom_color },
+        style: { color: data.background_price_color },
       };
     },
     GUARD_BUY: async ({ data, cmd }) => {
       const colors = Colors.Ships[data.guard_level];
       const url = Ships[data.guard_level];
       const price = (data.price / 1000).toFixed(0);
+      let time = Date.now();
       return {
-        id: cmd + "-" + Date.now(),
+        id: cmd + "-" + time,
+        time: time,
+        uid: data.uid,
         name: data.username,
         message: `${data.gift_name} - <img src="${url}" class="ml-2" width="20" height="20" /><span>×${data.num}</span><span class="ml-6">￥${price}</span>`,
+        admin: true,
         config: "Member",
         loginfo: `${data.username}: ${data.gift_name}×${data.num} ￥${price}`,
-        style: { backgroundColor: colors.background, color: colors.message },
+        style: {
+          backgroundColor: colors.background,
+          color: colors.message,
+          padding: "0px 8px",
+          "border-radius": "4px",
+        },
       };
     },
-    SEND_GIFT: async ({ data, cmd, send_time }, { combos }) => {
+    SEND_GIFT: async ({ data, cmd, send_time }, socket) => {
       if (data.coin_type !== "gold") return;
       const number =
-        (data.batch_combo_send && data.batch_combo_send.batch_combo_num) ||
-        data.num;
+        data.super_batch_gift_num || data.super_gift_num || data.num;
       const price = (data.price * number) / 1000;
       const { gif = img_basic, img_basic } = data.gift_info;
       const message = `${data.giftName} - <img src="${gif}" width="20" height="20" /><span>×${number}</span><span class="ml-2">￥${price}</span>`;
-      if (combos.has(data.batch_combo_id)) {
-        combos.get(data.batch_combo_id).message = message;
-        return;
-      }
       send_time = send_time ?? data.timestamp * 1000;
       const result = {
         id: cmd + "-" + data.tid,
@@ -97,22 +103,28 @@ export default class Socket {
         loginfo: `${data.uname}: ${data.giftName}×${number} ￥${price}`,
         style: { color: Colors.Gift },
       };
-      combos.set(data.batch_combo_id, result);
+      if (socket.combos.has(data.batch_combo_id)) {
+        socket.combos.get(data.batch_combo_id).message = message;
+        Socket.Write(socket.roomid, socket.live_time, result);
+        return;
+      }
+      socket.combos.set(data.batch_combo_id, result);
       return result;
     },
     LIVE: ({ roomid, live_time, cmd }, socket) => {
       live_time = live_time * 1000;
       socket.live_time = live_time;
       ipcRenderer.send("Channel", "Live", roomid);
+      const message = new Date(live_time).toLocaleTimeString() + " Start Live";
       return {
         id: cmd + "-" + roomid,
         time: live_time,
         uid: socket.ruid,
         name: socket.name,
-        message: new Date(live_time).toLocaleTimeString() + " Start Live",
+        message,
         admin: true,
         config: "Live",
-        loginfo: `${socket.name}: Start Live`,
+        loginfo: `${socket.name}: ${message}`,
         style: { color: Colors.UP },
       };
     },

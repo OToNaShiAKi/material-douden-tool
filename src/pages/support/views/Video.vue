@@ -1,12 +1,56 @@
 <template>
   <v-container class="fix-input">
     <video class="rounded-lg" controls id="tracing" />
-    <p class="d-flex justify-space-between caption align-center">
-      <span class="flex-grow-1">
+    <section class="d-flex justify-space-between caption align-center">
+      <p class="ma-0">
         开始时间：{{ new Date(timer * 1000) | FormatTime }}
         <br />
-        开播后同传输入框中按下Alt+P即可记录时点
-      </span>
+        开播后同传输入框中按下Alt+P即可记录时点，并可在截图中输入关键字
+      </p>
+      <v-select
+        class="input-avatar mx-6"
+        :items="rooms"
+        solo
+        hide-details
+        return-object
+        v-model="selected"
+        @change="Live"
+        dense
+      >
+        <template v-slot:prepend>
+          <v-btn
+            :disabled="!timer || timer <= 0"
+            @click="Screenshot"
+            icon
+            color="primary"
+          >
+            <v-icon>mdi-monitor-screenshot</v-icon>
+          </v-btn>
+        </template>
+        <template v-slot:item="{ item, on, attrs }">
+          <v-list-item v-on="on" v-bind="attrs">
+            <v-list-item-avatar>
+              <v-img referrepolicy="no-referrer" :src="item.avatar" />
+            </v-list-item-avatar>
+            <v-list-item-title>{{ item.text }}</v-list-item-title>
+          </v-list-item>
+        </template>
+        <template v-slot:prepend-inner>
+          <v-avatar size="32">
+            <v-img :src="selected.avatar" />
+          </v-avatar>
+        </template>
+        <template v-slot:append-outer>
+          <v-btn
+            icon
+            color="primary"
+            :disabled="images.length <= 0"
+            @click="Save"
+          >
+            <v-icon>mdi-export</v-icon>
+          </v-btn>
+        </template>
+      </v-select>
       <v-select
         class="flex-grow-0 mr-3"
         v-model="quality"
@@ -29,60 +73,25 @@
       <v-btn icon color="primary" @click="() => Live(selected, quality, true)">
         <v-icon>mdi-refresh</v-icon>
       </v-btn>
-    </p>
-    <v-select
-      class="input-avatar"
-      :items="rooms"
-      solo
-      hide-details
-      return-object
-      v-model="selected"
-      @change="Live"
-      dense
+    </section>
+    <section
+      class="d-flex mt-3 flex-wrap"
+      @keyup.stop.prevent.enter="Input"
+      @click="Remove"
     >
-      <template v-slot:prepend>
-        <v-btn
-          :disabled="!timer || timer <= 0"
-          @click="Screenshot"
-          icon
-          color="primary"
-        >
-          <v-icon>mdi-monitor-screenshot</v-icon>
-        </v-btn>
-      </template>
-      <template v-slot:item="{ item, on, attrs }">
-        <v-list-item v-on="on" v-bind="attrs">
-          <v-list-item-avatar>
-            <v-img referrepolicy="no-referrer" :src="item.avatar" />
-          </v-list-item-avatar>
-          <v-list-item-title>{{ item.text }}</v-list-item-title>
-        </v-list-item>
-      </template>
-      <template v-slot:prepend-inner>
-        <v-avatar size="32">
-          <v-img :src="selected.avatar" />
-        </v-avatar>
-      </template>
-      <template v-slot:append-outer>
-        <v-btn
-          icon
-          color="primary"
-          :disabled="images.length <= 0"
-          @click="Save"
-        >
-          <v-icon>mdi-export</v-icon>
-        </v-btn>
-      </template>
-    </v-select>
-    <section class="d-flex mt-3 flex-wrap" @click="Remove">
       <v-img
-        v-for="image of images"
+        v-for="(image, index) of images"
         max-width="200"
         class="ma-2 rounded-lg"
         :key="image.key"
         :src="image.src"
         content-class="relative"
       >
+        <p
+          class="keyword pa-1 ma-0"
+          :data-index="index"
+          contenteditable="true"
+        />
         <v-icon
           class="thumbnail"
           style="cursor: pointer"
@@ -99,6 +108,8 @@
 <script>
 import { CreatePlayer } from "../../../util/CreatePlayer";
 import { FormatTime, FormatDuration } from "../../../util/Format";
+import { Base64 } from "../../../util/ExportFile";
+
 import mpegts from "mpegts.js";
 import { ipcRenderer } from "electron";
 
@@ -107,7 +118,7 @@ const canvas = document.createElement("canvas");
 const ctx = canvas.getContext("2d");
 canvas.width = 1920;
 canvas.height = 1080;
-ctx.fillStyle = "red";
+ctx.fillStyle = "#F00";
 ctx.font = "normal normal 600 150px/200px Robot";
 ctx.textBaseline = "top";
 
@@ -191,9 +202,7 @@ export default {
       localStorage.setItem("screenshot", JSON.stringify(this.images));
     },
     Save() {
-      const datas = this.images.map(({ src }) =>
-        src.replace(/^data:image\/(png|gif|jpeg);base64,/, "")
-      );
+      const datas = this.images.map(({ src }) => src.replace(Base64, ""));
       const date = Date.now().toString() + ".png";
       ipcRenderer.send("SaveFiles", datas, date, "base64");
       this.images = [];
@@ -203,6 +212,20 @@ export default {
       const { key } = dataset;
       this.images = this.images.filter((v) => v.key !== key);
       localStorage.setItem("screenshot", JSON.stringify(this.images));
+    },
+    Input(event) {
+      const target = event.target;
+      const { index } = target.dataset;
+      const image = new Image();
+      image.src = this.images[index].src;
+      image.onload = () => {
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        ctx.fillText(target.innerText, 60, 420);
+        this.images[index].src = canvas.toDataURL("image/jpg");
+        localStorage.setItem("screenshot", JSON.stringify(this.images));
+        target.innerText = "";
+        target.blur();
+      };
     },
   },
   filters: {
@@ -223,5 +246,16 @@ video::-webkit-media-controls-timeline {
   position: absolute !important;
   right: 0;
   bottom: 0;
+}
+.keyword {
+  position: absolute !important;
+  top: 40px;
+  left: 0;
+  height: calc(100% - 40px);
+  width: 100%;
+  line-height: 20px;
+  font-size: 12px;
+  color: #f00;
+  font-weight: bold;
 }
 </style>

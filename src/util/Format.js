@@ -33,3 +33,22 @@ export const Colors = Object.freeze({
   text: "#333333",
   tip: "#aaaaaa",
 });
+
+export const Keys = [
+  { key: "AutoCopyForbidWord", text: "自动复制屏蔽弹幕" },
+  {
+    key: "AutoChangeMedal",
+    text: "自动换牌子",
+    hint: "如果未拥有则不佩戴",
+  },
+  {
+    key: "AutoWriteComment",
+    text: "自动写入弹幕到本地",
+    hint: "弹幕在安装目录下logs文件夹中",
+  },
+  {
+    key: "UseShareShields",
+    text: "使用共享屏蔽词库",
+    hint: "他人创建词条无法删除只可覆盖",
+  },
+];

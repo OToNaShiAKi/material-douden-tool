@@ -193,7 +193,7 @@ ipcMain.handle("GetMusic", async (event, keyword) => {
 });
 
 ipcMain.handle("GetWebSocket", async (event, roomids) => {
-  const promise = roomids.map(async (roomid) => {
+  const promise = roomids.map(async ({ roomid }) => {
     const socket = await GetWebSocket(roomid);
     socket.comments = socket.comments.map((item) => {
       if (item.emoticon.text) {
@@ -233,7 +233,7 @@ ipcMain.handle("TrackLive", (event, roomid, qn = 0) => GetLiveInfo(roomid, qn));
 ipcMain.on("SaveFiles", async (event, Datas, name, encoding = "buffer") => {
   const ext = extname(name);
   const isArray = Array.isArray(Datas);
-  name = isArray ? name.replace(ext, "") : name
+  name = isArray ? name.replace(ext, "") : name;
   const { filePath } = await dialog.showSaveDialog({
     defaultPath: name,
     filters: [{ name: "All Files", extensions: ["*"] }],

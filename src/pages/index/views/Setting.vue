@@ -44,13 +44,7 @@ import Socket from "../../../plugins/socket";
 import Pack from "../../../components/Pack.vue";
 import { ipcRenderer } from "electron";
 import { mapMutations } from "vuex";
-
-const Keys = Object.freeze([
-  "AutoCopyForbidWord",
-  "AutoChangeMedal",
-  "AutoWriteComment",
-  "UseShareShields",
-]);
+import { Keys } from "../../../util/Format";
 
 export default {
   name: "Setting",
@@ -67,13 +61,8 @@ export default {
       { label: "罗兰紫", value: "#9c28b1" },
     ],
     dark: theme.dark,
-    auto: [
-      { key: "AutoCopyForbidWord", text: "自动复制屏蔽弹幕" },
-      { key: "AutoChangeMedal", text: "自动换牌子", hint: "如果未拥有则不佩戴" },
-      { key: "AutoWriteComment", text: "自动写入弹幕到本地", hint: "弹幕在安装目录下comments文件夹中" },
-      { key: "UseShareShields", text: "使用共享屏蔽词库", hint: "他人创建词条无法删除只可覆盖" },
-    ],
-    config: Keys.filter((v) => Socket[v]),
+    auto: Keys,
+    config: Keys.filter((v) => Socket[v.key]).map((v) => v.key),
   }),
   methods: {
     ...mapMutations(["ChangeConfig"]),

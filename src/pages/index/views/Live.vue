@@ -106,10 +106,14 @@ export default {
   watch: {
     rooms: {
       async handler(next) {
-        const sockets = next.map(({ value }) => value);
+        const sockets = next.map((item) => ({
+          roomid: item.value,
+          room_name: item.text,
+          room_avatar: item.avatar,
+        }));
         const comments = { ...this.comments };
         for (const key in this.sockets) {
-          const index = sockets.indexOf(key);
+          const index = sockets.findIndex(({ roomid }) => key == roomid);
           if (index < 0) {
             this.sockets[key].reconnect = false;
             this.sockets[key].socket.close();
@@ -121,10 +125,10 @@ export default {
         }
         const result = await ipcRenderer.invoke("GetWebSocket", sockets);
         for (let i = 0; i < result.length; i += 1) {
-          const item = result[i]
+          const item = result[i];
           CommentLength[item.roomid] = item.length;
-          item.name = next[i].name
-          const socket = new Socket(item);
+          item.name = sockets[i].room_name;
+          const socket = this.sockets[item.roomid] ?? new Socket(item);
           this.sockets[item.roomid] = socket;
           comments[item.roomid] = socket.comments;
         }

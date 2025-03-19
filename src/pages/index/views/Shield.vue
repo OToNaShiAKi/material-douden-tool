@@ -35,7 +35,7 @@
       </v-btn>
     </section>
     <p class="caption mt-3 px-3 mb-0">
-      被屏蔽弹幕记录保存在安装目录下的forbidden-words.txt中
+      被屏蔽弹幕记录保存在安装目录下的logs/forbidden-words.txt中
     </p>
   </section>
 </template>
