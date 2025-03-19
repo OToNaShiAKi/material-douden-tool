@@ -1,8 +1,12 @@
 import { SendComment } from "../plugins/axios";
-import { writeFile } from "fs/promises";
+import { writeFile, stat, mkdir } from "fs/promises";
 import { join } from "path";
 import { BrowserWindow, app } from "electron";
 import { AllWindows } from "../background";
+
+export const folder = join(app.getPath("exe"), "../logs");
+const file = join(folder, "./forbidden-words.txt");
+stat(folder).catch(() => mkdir(folder));
 
 export const Stacks = {
   Messages: [],
@@ -17,8 +21,7 @@ export const Stacks = {
         Stacks.timer = setInterval(Stacks.interval, 1750);
       } else if (message === "f") {
         const data = `屏蔽词：${send.message} 房间：${send.id}\n`;
-        const file = join(app.getPath("exe"), "../forbidden-words.txt");
-        const win = BrowserWindow.fromId(AllWindows.index);
+        const win = BrowserWindow.fromId(AllWindows.get("index"));
         win.webContents.send("Forbidden", send.id, send.message);
         await writeFile(file, data, { flag: "a+" });
       }

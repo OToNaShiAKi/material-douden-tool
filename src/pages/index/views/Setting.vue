@@ -1,7 +1,7 @@
 <template>
   <section>
     <Pack>设置</Pack>
-    <section id="setting" class="d-flex justify-space-between">
+    <section class="setting d-flex justify-space-between flex-wrap">
       <v-radio-group
         hide-details
         dense
@@ -26,11 +26,12 @@
         >
           <v-checkbox
             v-model="config"
-            hide-details
             dense
             :value="v.key"
             :label="v.text"
             @change="toggle"
+            :hint="v.hint"
+            persistent-hint
           />
         </v-item>
       </v-item-group>
@@ -47,7 +48,7 @@ import { mapMutations } from "vuex";
 const Keys = Object.freeze([
   "AutoCopyForbidWord",
   "AutoChangeMedal",
-  "AutoTranslate",
+  "AutoWriteComment",
   "UseShareShields",
 ]);
 
@@ -68,9 +69,9 @@ export default {
     dark: theme.dark,
     auto: [
       { key: "AutoCopyForbidWord", text: "自动复制屏蔽弹幕" },
-      { key: "AutoChangeMedal", text: "自动换牌子" },
-      { key: "AutoTranslate", text: "自动翻译非中文弹幕" },
-      { key: "UseShareShields", text: "使用共享屏蔽词库" },
+      { key: "AutoChangeMedal", text: "自动换牌子", hint: "如果未拥有则不佩戴" },
+      { key: "AutoWriteComment", text: "自动写入弹幕到本地", hint: "弹幕在安装目录下comments文件夹中" },
+      { key: "UseShareShields", text: "使用共享屏蔽词库", hint: "他人创建词条无法删除只可覆盖" },
     ],
     config: Keys.filter((v) => Socket[v]),
   }),
@@ -90,7 +91,7 @@ export default {
       }
       const result = await ipcRenderer.invoke(
         "SubShield",
-        config.includes(Keys[4])
+        config.includes(Keys[3])
       );
       const shields = JSON.parse(localStorage.getItem("shields")) || [];
       for (const v of shields) {
@@ -104,8 +105,8 @@ export default {
 </script>
 
 <style>
-#setting .v-input--radio-group,
-#setting .v-item-group {
+.setting .v-input--radio-group,
+.setting .v-item-group {
   width: 45%;
   padding: 12px;
   margin: 0;

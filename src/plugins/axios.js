@@ -1,4 +1,4 @@
-import { Baidu, Bilibili, Login, Music, API } from "./headers.js";
+import { Bilibili, Login, Music, API } from "./headers.js";
 import QS from "qs";
 import { BrowserWindow } from "electron";
 import { AllWindows } from "../background";
@@ -330,7 +330,7 @@ export const CheckLogin = async () => {
     });
     return { avatar: face, name: uname, mid };
   } catch (error) {
-    const win = BrowserWindow.fromId(AllWindows.index);
+    const win = BrowserWindow.fromId(AllWindows.get('index'));
     win.webContents.send("CookieOverdue");
     return { mid: null };
   }
@@ -346,7 +346,7 @@ export const GetWebSocket = async (roomid) => {
         uid,
         danmu: { length = 20 },
       },
-      { uid: ruid },
+      { uid: ruid, live_time },
     ] = await Promise.all([
       Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
         params: { type: 0, id: roomid },
@@ -361,18 +361,13 @@ export const GetWebSocket = async (roomid) => {
     return {
       host: `wss://${host.host}:${host.wss_port}/sub`,
       token,
-      comments: room.map((item) => ({
-        id: "HISTORY-" + item.rnd,
-        message: item.text,
-        uid: item.uid,
-        name: item.nickname,
-        admin: item.isadmin || uid == item.uid,
-      })),
+      comments: room,
       admin: admin || uid == ruid,
       roomid,
       uid,
       ruid,
       length,
+      live_time,
     };
   } catch (error) {
     return { host: "", comments: [], admin: false, roomid };
@@ -394,55 +389,6 @@ export const SilentUser = async (event, tuid, room_id, msg) => {
     );
   } catch (error) {
     return false;
-  }
-};
-
-export const GetAuthen = async () => {
-  try {
-    const { headers } = await axios.get("https://fanyi.baidu.com");
-    let Cookie = headers["set-cookie"]
-      .map((item) => item.split(";")[0])
-      .join("; ");
-    const result = await axios.get("https://fanyi.baidu.com", {
-      headers: { ...Baidu.defaults.headers, Cookie },
-      withCredentials: true,
-    });
-    if (result.headers["set-cookie"]) {
-      Cookie += "; ";
-      Cookie += result.headers["set-cookie"]
-        .map((item) => item.split(";")[0])
-        .join(";");
-    }
-    const match = result.data.match(/token: ?'(.*)'/);
-    return { Cookie, token: match[1] };
-  } catch (error) {
-    return { Cookie: null, token: null };
-  }
-};
-
-export const Translate = async (query, sign, to = "zh") => {
-  try {
-    const { lan } = await Baidu.post("/langdetect", { query });
-    if (lan !== to) {
-      const {
-        trans_result: {
-          data: [{ dst }],
-        },
-      } = await Baidu.post("/v2transapi", {
-        from: lan,
-        to,
-        query,
-        transtype: "realtime",
-        simple_means_flag: 3,
-        sign,
-        token: Translate.token,
-        domain: "common",
-      });
-      return dst;
-    }
-    return null;
-  } catch (error) {
-    return null;
   }
 };
 
@@ -578,4 +524,3 @@ export const SubShield = async (use = true) => {
     return [];
   }
 };
-

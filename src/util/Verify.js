@@ -70,3 +70,19 @@ export const HandleMessage = (blob, resolve) => {
   });
   reader.readAsArrayBuffer(blob);
 };
+
+export const Colors = Object.freeze({
+  UP: "#FF9800",
+  Gift: "#4CAF50",
+  Ships: {
+    1: { message: "#B72E2E", background: "#FEBBAD" },
+    2: { message: "#6F3EC0", background: "#D2BCFB" },
+    3: { message: "#4153AD", background: "#A9CFFD" },
+  },
+});
+
+export const Ships = Object.freeze({
+  1: "https://s1.hdslb.com/bfs/static/blive/blfe-live-room/static/img/icon-l-1.fde1190..png",
+  2: "https://s1.hdslb.com/bfs/static/blive/blfe-live-room/static/img/icon-l-2.6f68d77..png",
+  3: "https://s1.hdslb.com/bfs/static/blive/blfe-live-room/static/img/icon-l-3.402ac8f..png",
+});

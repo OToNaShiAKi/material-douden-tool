@@ -11,23 +11,22 @@ export const CreatePlayer = (result, video) => {
     {
       enableWorker: true,
       enableStashBuffer: false,
+      liveBufferLatencyChasing: true,
+      liveBufferLatencyChasingOnPaused: true,
+      liveSync: false,
+      liveSyncPlaybackRate: 1.4,
       autoCleanupSourceBuffer: true,
     }
   );
   player.attachMediaElement(video);
   player.load();
-  player.play();
   player.on(mpegts.Events.ERROR, () => {
     player.unload();
     player.detachMediaElement();
     player.destroy();
     CreatePlayer.player = CreatePlayer(result, video);
   });
-  player.on(mpegts.Events.STATISTICS_INFO, () => {
-    const end = player.buffered.end(0);
-    const current = player.currentTime;
-    video.playbackRate = end - current > 1.5 ? 1.5 : 1;
-  });
   player.roomid = result.room_id;
+  player.play();
   return player;
 };

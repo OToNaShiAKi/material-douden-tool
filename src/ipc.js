@@ -1,4 +1,4 @@
-import { API, Baidu, Bilibili, Login, MusicQQ } from "./plugins/headers";
+import { API, Bilibili, Login } from "./plugins/headers";
 import CreateWindow, { AllWindows } from "./background";
 import { ipcMain, BrowserWindow, dialog, screen } from "electron";
 import {
@@ -16,8 +16,6 @@ import {
   GetWebSocket,
   SearchMusic,
   SilentUser,
-  GetAuthen,
-  Translate,
   GetLiveInfo,
   GetSilentUser,
   RemoveSilentUser,
@@ -27,15 +25,16 @@ import {
   PubShield,
   SubShield,
 } from "./plugins/axios";
-import { Stacks } from "./util/Stacks";
-import { e, TranslateResult } from "./util/Translate";
+import { folder, Stacks } from "./util/Stacks";
 import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { createWriteStream } from "fs";
+import { join, extname } from "path";
 import { Replies } from "./util/Replies";
 import FontList from "font-list";
 import MD5 from "blueimp-md5";
 import OS from "os";
 import Package from "../package.json";
+import { Ships } from "./util/Verify";
 
 const options = {
   alwaysOnTop: false,
@@ -45,13 +44,13 @@ const options = {
 };
 
 ipcMain.on("WindowSize", (event, height) => {
-  const win = BrowserWindow.fromId(AllWindows.index);
+  const win = BrowserWindow.fromId(AllWindows.get("index"));
   const [width] = win.getSize();
   win.setSize(width, height, true);
 });
 
 ipcMain.on("OtherWindow", async (event, page, DevTools = false) => {
-  let win = AllWindows[page] && BrowserWindow.fromId(AllWindows[page]);
+  let win = AllWindows.has(page) && BrowserWindow.fromId(AllWindows.get(page));
   if (win && DevTools) {
     win.webContents.openDevTools();
   } else if (!win) {
@@ -61,7 +60,9 @@ ipcMain.on("OtherWindow", async (event, page, DevTools = false) => {
 });
 
 ipcMain.on("Channel", async (event, channel, data, create = false) => {
-  let win = AllWindows.support && BrowserWindow.fromId(AllWindows.support);
+  let win =
+    AllWindows.has("support") &&
+    BrowserWindow.fromId(AllWindows.get("support"));
   if (!win && create) {
     const size = screen.getPrimaryDisplay().workAreaSize;
     win = await CreateWindow("support", { ...size, ...options });
@@ -87,7 +88,7 @@ ipcMain.handle("BilibiliLogin", async () => {
         .slice(data.indexOf("?") + 1)
         .replace(/\?/g, "")
         .replace(/&/g, ";");
-      const win = BrowserWindow.fromId(AllWindows.index);
+      const win = BrowserWindow.fromId(AllWindows.get("index"));
       win.webContents.send("Login", { status: true, data, query });
     }
   }, 3000);
@@ -192,30 +193,47 @@ ipcMain.handle("GetMusic", async (event, keyword) => {
 });
 
 ipcMain.handle("GetWebSocket", async (event, roomids) => {
-  const promise = roomids.map((roomid) => GetWebSocket(roomid));
+  const promise = roomids.map(async (roomid) => {
+    const socket = await GetWebSocket(roomid);
+    socket.comments = socket.comments.map((item) => {
+      if (item.emoticon.text) {
+        item.text = `<img src="${item.emoticon.url}" height="20" />`;
+      }
+      if (item.user.medal && item.user.medal.guard_level > 0) {
+        const url = Ships[item.user.medal.guard_level];
+        item.nickname =
+          `<img src="${url}" width="20" height="20" />` + item.nickname;
+      }
+      if (item.emots) {
+        const regexp = Object.keys(item.emots)
+          .join("|")
+          .replace(/\[|\]/g, (s) => "\\" + s);
+        item.text = item.text.replace(new RegExp(regexp, "ig"), (s) => {
+          const { url } = item.emots[s];
+          return `<img src="${url}" width="20" height="20" />`;
+        });
+      }
+      return {
+        id: "HISTORY-" + item.rnd,
+        message: item.text,
+        uid: item.uid,
+        name: item.nickname,
+        admin: item.isadmin || socket.uid == item.uid,
+      };
+    });
+    return socket;
+  });
   return await Promise.all(promise);
 });
 
 ipcMain.handle("SilentUser", SilentUser);
 
-ipcMain.handle("Translate", async (event, phrase, to = "zh") => {
-  const sign = e(phrase),
-    key = `${sign}-${to}`;
-  if (TranslateResult[key]) return TranslateResult[key];
-  if (!Baidu.defaults.headers.Cookie) {
-    const { Cookie, token } = await GetAuthen();
-    Baidu.defaults.headers.Cookie = Cookie;
-    Translate.token = token;
-  }
-  const result = await Translate(phrase, sign, to);
-  TranslateResult[key] = result;
-  return result;
-});
-
 ipcMain.handle("TrackLive", (event, roomid, qn = 0) => GetLiveInfo(roomid, qn));
 
 ipcMain.on("SaveFiles", async (event, Datas, name, encoding = "buffer") => {
+  const ext = extname(name);
   const isArray = Array.isArray(Datas);
+  name = isArray ? name.replace(ext, "") : name
   const { filePath } = await dialog.showSaveDialog({
     defaultPath: name,
     filters: [{ name: "All Files", extensions: ["*"] }],
@@ -225,7 +243,7 @@ ipcMain.on("SaveFiles", async (event, Datas, name, encoding = "buffer") => {
     if (isArray) {
       await mkdir(filePath);
       for (let i = 0; i < Datas.length; i++) {
-        await writeFile(join(filePath, `./${name}-${i}.png`), Datas[i], {
+        await writeFile(join(filePath, `./${name}-${i}${ext}`), Datas[i], {
           encoding,
         });
       }
@@ -293,3 +311,30 @@ ipcMain.handle("GetFont", async (event) => {
 ipcMain.on("PubShield", PubShield);
 
 ipcMain.handle("SubShield", (event, use = true) => SubShield(use));
+
+export const streams = new Map();
+
+ipcMain.on("WriteComment", (event, roomid, start, comment) => {
+  let stream = null;
+  if (!streams.has(roomid)) {
+    const date = new Date(start).toJSON().replace(/\:/gi, "-");
+    const filename = join(folder, `./[${roomid}]${date}.log`);
+    stream = createWriteStream(filename, {
+      flags: "a",
+      encoding: "utf8",
+    });
+    streams.set(roomid, stream);
+  }
+  stream = streams.get(roomid);
+  comment.time = new Date(comment.time).toLocaleString("zh-cn", {
+    timeStyle: "medium",
+    dateStyle: "short",
+    hourCycle: "h24",
+  });
+  const text = `${comment.time} [${comment.config}] (UID)${comment.uid} ${comment.loginfo}\n`;
+  if (stream.can === false) {
+    stream.once("drain", () => (stream.can = stream.write(text)));
+    return;
+  }
+  stream.can = stream.write(text);
+});

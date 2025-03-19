@@ -49,30 +49,6 @@ Music.interceptors.response.use(({ data }) => {
   return data;
 });
 
-export const Baidu = axios.create({
-  baseURL: "https://fanyi.baidu.com/",
-  withCredentials: true,
-  headers: {
-    origin: "https://fanyi.baidu.com/",
-    referer: "https://fanyi.baidu.com/",
-    "sec-ch-ua":
-      '"Not_A Brand";v="99", "Google Chrome";v="109", "Chromium";v="109"',
-    "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-platform": "Windows",
-    "Sec-Fetch-Dest": "empty",
-    "Sec-Fetch-Mode": "cors",
-    "Sec-Fetch-Site": "same-origin",
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
-  },
-});
-Baidu.interceptors.response.use(({ data }) => {
-  if (data.error && data.error !== 0) {
-    throw data;
-  }
-  return data;
-});
-
 export const API = axios.create({
   baseURL: "http://1.14.126.44:60022/",
   withCredentials: true,

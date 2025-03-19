@@ -11,7 +11,7 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true } },
 ]);
 
-export const AllWindows = {};
+export const AllWindows = new Map();
 
 const CreateWindow = async (page = "index", options = {}) => {
   Menu.setApplicationMenu(null);
@@ -36,7 +36,7 @@ const CreateWindow = async (page = "index", options = {}) => {
     },
     ...options,
   });
-  AllWindows[page] = win.id;
+  AllWindows.set(page, win.id);
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL + page);
@@ -99,6 +99,12 @@ if (isDevelopment) {
   }
 }
 
-import "./ipc";
+import { streams } from "./ipc";
+
+app.on("will-quit", () => {
+  for (const item of streams.values()) {
+    item.end();
+  }
+});
 
 export default CreateWindow;

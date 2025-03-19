@@ -149,11 +149,12 @@ export default {
       if (!this.rooms.find(({ value }) => value === this.selected.value)) {
         this.selected = this.rooms[0] || "";
       }
+      this.timer = live.live_time;
 
       if (refresh) {
         CreatePlayer.player.roomid = null;
         live.live_status = 1;
-        live.live_time = -1
+        live.live_time = -1;
       }
 
       if (
@@ -173,7 +174,6 @@ export default {
         this.quality = live.current_qn;
         CreatePlayer.player = CreatePlayer(live, video);
       }
-      this.timer = live.live_time;
     },
     Screenshot() {
       if (!this.timer || this.timer <= 0) return;
@@ -194,7 +194,8 @@ export default {
       const datas = this.images.map(({ src }) =>
         src.replace(/^data:image\/(png|gif|jpeg);base64,/, "")
       );
-      ipcRenderer.send("SaveFiles", datas, Date.now().toString(), "base64");
+      const date = Date.now().toString() + ".png";
+      ipcRenderer.send("SaveFiles", datas, date, "base64");
       this.images = [];
       localStorage.setItem("screenshot", JSON.stringify([]));
     },

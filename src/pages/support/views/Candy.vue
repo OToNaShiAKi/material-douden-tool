@@ -154,7 +154,7 @@ export default {
   methods: {
     async Read(type) {
       const Dom = document.getElementById(`dom-to-image-${type}`);
-      const date = Date.now().toString();
+      const date = Date.now().toString() + '.png';
       this.loading = true;
       if (this.file) {
         const result = await ExportCandy(this.file, Dom);

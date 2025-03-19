@@ -37,17 +37,17 @@
             label
             x-small
             @click.stop="() => SilentUser(item)"
-            v-if="
-              sockets[show.value] && sockets[show.value].admin && !item.admin
-            "
+            v-if="sockets[show.value]?.admin && !item.admin"
           >
             禁言
           </v-chip>
-          <span class="mx-2">{{ item.name }}:</span>
-          <span :class="item.class" :style="item.style">
-            {{ item.message }}
-          </span>
-          <span v-if="item.translate">({{ item.translate }})</span>
+          <span class="ml-2 d-flex align-center" v-html="item.name" />
+          <span class="mr-2">:</span>
+          <span
+            class="d-flex align-center"
+            :style="item.style"
+            v-html="item.message"
+          />
         </p>
       </template>
     </v-virtual-scroll>
@@ -120,8 +120,10 @@ export default {
           }
         }
         const result = await ipcRenderer.invoke("GetWebSocket", sockets);
-        for (const item of result) {
+        for (let i = 0; i < result.length; i += 1) {
+          const item = result[i]
           CommentLength[item.roomid] = item.length;
+          item.name = next[i].name
           const socket = new Socket(item);
           this.sockets[item.roomid] = socket;
           comments[item.roomid] = socket.comments;
