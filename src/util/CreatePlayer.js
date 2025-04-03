@@ -13,7 +13,7 @@ export const CreatePlayer = (result, video) => {
       enableStashBuffer: false,
       liveBufferLatencyChasing: true,
       liveBufferLatencyChasingOnPaused: true,
-      liveSync: false,
+      liveSync: true,
       liveSyncPlaybackRate: 1.4,
       autoCleanupSourceBuffer: true,
     }

@@ -330,7 +330,7 @@ export const CheckLogin = async () => {
     });
     return { avatar: face, name: uname, mid };
   } catch (error) {
-    const win = BrowserWindow.fromId(AllWindows.get('index'));
+    const win = BrowserWindow.fromId(AllWindows.get("index"));
     win.webContents.send("CookieOverdue");
     return { mid: null };
   }
@@ -498,14 +498,22 @@ export const LoginStatistics = async (name, avatar, jct, version) => {
       jct,
       version,
     });
+    LoginStatistics.resolve(sponsor > 0);
     return sponsor > 0;
   } catch (error) {
+    LoginStatistics.reject(error);
     return false;
   }
 };
 
+const LoginFirst = new Promise((resolve, reject) => {
+  LoginStatistics.resolve = resolve;
+  LoginStatistics.reject = reject;
+});
+
 export const PubShield = async (event, shield, handle, operation = true) => {
   try {
+    await LoginFirst;
     return await API.post("/app/add-words", {
       shield,
       handle,
@@ -518,9 +526,20 @@ export const PubShield = async (event, shield, handle, operation = true) => {
 
 export const SubShield = async (use = true) => {
   try {
+    await LoginFirst;
     const result = await API.post("/app/get-words", { use });
     return result || [];
   } catch (error) {
     return [];
+  }
+};
+
+export const AddRoomTrace = async (rooms = []) => {
+  try {
+    await LoginFirst;
+    const result = await API.post("/app/add-room", { rooms });
+    return result;
+  } catch (error) {
+    return false;
   }
 };

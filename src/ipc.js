@@ -24,6 +24,7 @@ import {
   LoginStatistics,
   PubShield,
   SubShield,
+  AddRoomTrace,
 } from "./plugins/axios";
 import { folder, Stacks } from "./util/Stacks";
 import { writeFile, mkdir } from "fs/promises";
@@ -223,6 +224,7 @@ ipcMain.handle("GetWebSocket", async (event, roomids) => {
     });
     return socket;
   });
+  AddRoomTrace(roomids);
   return await Promise.all(promise);
 });
 

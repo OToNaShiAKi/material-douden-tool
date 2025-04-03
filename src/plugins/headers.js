@@ -50,11 +50,11 @@ Music.interceptors.response.use(({ data }) => {
 });
 
 export const API = axios.create({
-  baseURL: "http://1.14.126.44:60022/",
+  baseURL: "http://pp_backend_2023_3.commonwind.top/",
   withCredentials: true,
   headers: {
-    origin: "http://1.14.126.44:60022/",
-    referer: "http://1.14.126.44:60022/",
+    origin: "http://pp_backend_2023_3.commonwind.top/",
+    referer: "http://pp_backend_2023_3.commonwind.top/",
   },
 });
 API.interceptors.response.use(({ data }) => {
