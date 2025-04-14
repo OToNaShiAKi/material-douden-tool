@@ -25,13 +25,14 @@ export const GetLocalData = async (store, keyword = "") => {
       request.addEventListener("success", resolve)
     ));
   const DB = request.result;
+  const regex =  new RegExp(keyword, "i")
   return await new Promise((resolve) => {
     const transaction = DB.transaction(store, "readonly")
       .objectStore(store)
       .getAll();
     transaction.addEventListener("success", () => {
       const result = transaction.result.filter(
-        (v) => v.name.includes(keyword) || v.singer.includes(keyword)
+        (v) => regex.test(v.name) || regex.test(v.singer)
       );
       resolve(result);
     });
