@@ -20,7 +20,7 @@ export const Stacks = {
         Stacks.Messages.unshift(send);
         Stacks.timer = setInterval(Stacks.interval, 1750);
       } else if (message === "f") {
-        const data = `屏蔽词：${send.message} 房间：${send.id}\n`;
+        const data = `Room: ${send.id} Word: ${send.message} \n`;
         const win = BrowserWindow.fromId(AllWindows.get("index"));
         win.webContents.send("Forbidden", send.id, send.message);
         await writeFile(file, data, { flag: "a+" });

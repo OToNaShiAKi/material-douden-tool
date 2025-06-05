@@ -55,7 +55,7 @@ export default class Socket {
         time: send_time ?? data.ts * 1000,
         uid: data.uid,
         name,
-        message: `￥${data.price} ${data.message}`,
+        message: `[￥${data.price}]<span class="ml-2">${data.message}</span>`,
         admin: true,
         config: "Superchat",
         loginfo: `${data.user_info.uname}: ￥${data.price} ${data.message}`,

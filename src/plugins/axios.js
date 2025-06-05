@@ -3,6 +3,7 @@ import QS from "qs";
 import { BrowserWindow } from "electron";
 import { AllWindows } from "../background";
 import axios from "axios";
+import { GetRID } from "../util/wbi.js";
 
 const VideoIcons = Object.freeze({
   30000: "mdi-dolby",
@@ -155,17 +156,20 @@ export const SearchLive = async (keyword, type = "live") => {
 
 export const SearchUser = async (mid) => {
   try {
+    const params = { mid, platform: "web", token: "", web_location: 1550101 };
     const data = await Bilibili.get("/x/space/wbi/acc/info", {
-      params: { mid, platform: "web" },
+      params: GetRID(params, Bilibili.defaults.data.wbi),
       baseURL: "https://api.bilibili.com/",
     });
     const result = {
       uid: data.mid.toString(),
-      value: data.live_room.roomid.toString(),
       text: data.name,
       avatar: /https:/.test(data.face) ? data.face : `https:${data.face}`,
-      live_status: data.live_room.liveStatus,
     };
+    if (data.live_room) {
+      result.value = data.live_room.roomid.toString();
+      result.live_status = data.live_room.liveStatus;
+    }
     result.follower = await GetFollow(data.mid);
     return result;
   } catch (error) {
@@ -325,10 +329,11 @@ export const SearchMusic = async (keyword) => {
 
 export const CheckLogin = async () => {
   try {
-    const { face, uname, mid } = await Bilibili.get("/x/web-interface/nav", {
-      baseURL: "https://api.bilibili.com/",
-    });
-    return { avatar: face, name: uname, mid };
+    const { face, uname, mid, wbi_img } = await Bilibili.get(
+      "/x/web-interface/nav",
+      { baseURL: "https://api.bilibili.com/" }
+    );
+    return { avatar: face, name: uname, mid, wbi: wbi_img };
   } catch (error) {
     const win = BrowserWindow.fromId(AllWindows.get("index"));
     win.webContents.send("CookieOverdue");
@@ -338,6 +343,8 @@ export const CheckLogin = async () => {
 
 export const GetWebSocket = async (roomid) => {
   try {
+    await LoginFirst;
+    const params = { type: 0, id: roomid, web_location: 444.8 };
     const [
       { host_list = [], token },
       { room = [] },
@@ -349,10 +356,10 @@ export const GetWebSocket = async (roomid) => {
       { uid: ruid, live_time },
     ] = await Promise.all([
       Bilibili.get("/xlive/web-room/v1/index/getDanmuInfo", {
-        params: { type: 0, id: roomid },
+        params: GetRID(params, Bilibili.defaults.data.wbi),
       }),
       Bilibili.get("/xlive/web-room/v1/dM/gethistory", {
-        params: { roomid },
+        params: { roomid, room_type: 0 },
       }),
       GetUserRoomInfo(roomid),
       GetLiveInfo(roomid),

@@ -36,6 +36,7 @@ import MD5 from "blueimp-md5";
 import OS from "os";
 import Package from "../package.json";
 import { Ships } from "./util/Verify";
+import { GetWBI } from "./util/wbi";
 
 const options = {
   alwaysOnTop: false,
@@ -106,6 +107,7 @@ ipcMain.handle("Cookie", async (event, cookie, csrf, use = true) => {
     rnd: Math.floor(Date.now() / 1000),
   };
   const result = await CheckLogin();
+  Bilibili.defaults.data.wbi = GetWBI(result.wbi.img_url, result.wbi.sub_url);
   if (result.mid) {
     const hostname = `${OS.platform().toUpperCase()}:${OS.hostname()}`;
     const crypto = MD5(`${result.mid}.${hostname}.${csrf}`);
@@ -134,7 +136,7 @@ ipcMain.handle("SearchLive", async (event, keyword) => {
     name: item.uname,
     text: item.uname.replace(/<em class="keyword">|<\/em>/g, ""),
     avatar: /https:/.test(item.uface) ? item.uface : `https:${item.uface}`,
-    live_status: item.live_status,
+    live_status: item.is_live,
     follower: item.attentions,
   }));
   uid && live_user.unshift(uid);

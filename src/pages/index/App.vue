@@ -15,6 +15,7 @@
           @keyup.alt="Phrase"
           autofocus
           solo
+          counter
           :error-messages="message"
           append-icon="mdi-arrow-left-bottom"
           hint="Alt+上下键切换已发弹幕 TAB可循环切换前后缀"
