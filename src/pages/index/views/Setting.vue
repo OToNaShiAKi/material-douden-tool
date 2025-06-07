@@ -73,10 +73,10 @@ export default {
       localStorage.setItem("primary", value);
     },
     async ChangeSetting(config) {
-      for (const key of Keys) {
-        const value = config.includes(key);
-        Socket[key] = value;
-        localStorage.setItem(key, value);
+      for (const item of Keys) {
+        const value = config.includes(item.key);
+        Socket[item.key] = value;
+        localStorage.setItem(item.key, value);
       }
       const result = await ipcRenderer.invoke(
         "SubShield",

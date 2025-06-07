@@ -82,7 +82,6 @@ export default {
     Copy({ target }) {
       let { innerText } = target;
       if (innerText && !/\n/.test(innerText)) {
-        innerText = innerText.replace(/\(|\)|:/g, "");
         clipboard.writeText(innerText);
         this.Notify("已复制：" + innerText);
       }
