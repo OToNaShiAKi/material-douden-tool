@@ -3,7 +3,7 @@
     <v-text-field
       append-icon="mdi-magnify"
       class="fix-input"
-      hint="多动态时以空格分隔，自动过滤非推荐视频评论"
+      hint="登录同传软件后，复制动态链接中的数字id输入；多动态时以空格分隔，自动过滤非推荐视频评论"
       label="动态ID"
       v-model.trim="keyword"
       solo

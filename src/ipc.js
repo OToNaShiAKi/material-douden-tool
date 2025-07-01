@@ -107,6 +107,7 @@ ipcMain.handle("Cookie", async (event, cookie, csrf, use = true) => {
     rnd: Math.floor(Date.now() / 1000),
   };
   const result = await CheckLogin();
+  Bilibili.defaults.headers.Cookie += result.cookie;
   Bilibili.defaults.data.wbi = GetWBI(result.wbi.img_url, result.wbi.sub_url);
   if (result.mid) {
     const hostname = `${OS.platform().toUpperCase()}:${OS.hostname()}`;

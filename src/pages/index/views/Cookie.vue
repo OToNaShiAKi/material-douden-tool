@@ -30,9 +30,14 @@
       hide-details
       solo
       :spellcheck="false"
-      clearable
       @input="ChangeCookie"
-    />
+    >
+      <template v-slot:append>
+        <v-btn @click="Logout" icon>
+          <v-icon small>mdi-logout</v-icon>
+        </v-btn>
+      </template>
+    </v-textarea>
   </section>
 </template>
 
@@ -46,18 +51,18 @@ import HonourAvatar from "../../../components/HonourAvatar.vue";
 export default {
   name: "Cookie",
   components: { Pack, HonourAvatar },
-  data: ({ $store: { state } }) => ({ cookie: state.cookie, code: "" }),
+  data: ({ $store: { state } }) => ({ cookie: state.cookie, code: null }),
   created() {
     !this.cookie && this.Login();
     ipcRenderer.on("Login", (event, result) => {
       if (result.status) {
-        this.code = "";
+        this.code = null;
         this.cookie = result.query;
         this.ChangeCookie(this.cookie);
         this.Notify("登陆成功");
         this.$router.push("/room");
       } else if (result.code === 86038) {
-        this.code = "";
+        this.code = null;
       }
     });
   },
@@ -68,6 +73,11 @@ export default {
         const url = await ipcRenderer.invoke("BilibiliLogin");
         this.code = await QRCode.toDataURL(url);
       }
+    },
+    Logout() {
+      this.ChangeCookie("");
+      this.cookie = "";
+      this.Login();
     },
   },
 };

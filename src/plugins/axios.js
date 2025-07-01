@@ -329,11 +329,21 @@ export const SearchMusic = async (keyword) => {
 
 export const CheckLogin = async () => {
   try {
-    const { face, uname, mid, wbi_img } = await Bilibili.get(
-      "/x/web-interface/nav",
-      { baseURL: "https://api.bilibili.com/" }
-    );
-    return { avatar: face, name: uname, mid, wbi: wbi_img };
+    const [{ face, uname, mid, wbi_img }, { b_3, b_4 }] = await Promise.all([
+      Bilibili.get("/x/web-interface/nav", {
+        baseURL: "https://api.bilibili.com/",
+      }),
+      Bilibili.get("/x/frontend/finger/spi", {
+        baseURL: "https://api.bilibili.com/",
+      }),
+    ]);
+    return {
+      avatar: face,
+      name: uname,
+      mid,
+      wbi: wbi_img,
+      cookie: `;buvid3=${b_3};buvid4=${b_4}`,
+    };
   } catch (error) {
     const win = BrowserWindow.fromId(AllWindows.get("index"));
     win.webContents.send("CookieOverdue");
@@ -443,28 +453,33 @@ export const RemoveSilentUser = async (event, id, roomid) => {
 
 export const GetDynamic = async (id, next = 0) => {
   try {
-    const {
-      item: {
-        basic: { comment_id_str, comment_type },
-      },
-    } = await Bilibili.get("/x/polymer/web-dynamic/v1/detail", {
-      baseURL: "https://api.bilibili.com/",
-      params: { id, timezone_offset: -480 },
+    const { data } = await axios.get(`https://www.bilibili.com/opus/${id}`, {
+      headers: Bilibili.defaults.headers,
     });
+    let regex = /['"]?(?:comment_id_str|rid_str)['"]?\s*:\s*['"]?(\d+)['"]?/;
+    const oid = data.match(regex)[1];
+    regex = /['"]?comment_type['"]?\s*:\s*['"]?(\d+)['"]?/;
+    const type = data.match(regex)[1];
+    const pagination = { offset: "" };
     let result = [];
+    const params = {
+      next,
+      type,
+      plat: 1,
+      mode: 3,
+      oid,
+      web_location: 1315875,
+      seek_rpid: "",
+    };
     do {
-      const { cursor, replies } = await Bilibili.get("/x/v2/reply/main", {
+      params.pagination_str = JSON.stringify(pagination);
+      const { cursor, replies } = await Bilibili.get("/x/v2/reply/wbi/main", {
         baseURL: "https://api.bilibili.com/",
-        params: {
-          next,
-          type: comment_type,
-          plat: 1,
-          mode: 3,
-          oid: comment_id_str,
-        },
+        params: GetRID(params),
       });
       if (!replies || replies.length <= 0) break;
       result = result.concat(replies);
+      pagination.offset = cursor.pagination_reply.next_offset;
       next = cursor.next;
     } while (true);
     return result;
