@@ -146,7 +146,7 @@ export default class Socket {
     this.comments = host.comments.reverse();
     this.reconnect = true;
     this.combos = new Map();
-    this.live_time = host.live_time * 1000;
+    this.live_time = host.live_time * 1000 || Date.now();
 
     this.socket = this.Connect(host.host);
   }

@@ -463,17 +463,16 @@ export const GetDynamic = async (id, next = 0) => {
     const pagination = { offset: "" };
     let result = [];
     const params = {
-      next,
-      type,
+      type: Number(type),
       plat: 1,
       mode: 3,
-      oid,
+      oid: Number(oid),
       web_location: 1315875,
       seek_rpid: "",
     };
     do {
       params.pagination_str = JSON.stringify(pagination);
-      const { cursor, replies } = await Bilibili.get("/x/v2/reply/wbi/main", {
+      const { cursor, replies } = await Bilibili.get("/x/v2/reply/main", {
         baseURL: "https://api.bilibili.com/",
         params: GetRID(params),
       });
