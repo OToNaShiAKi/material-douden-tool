@@ -38,12 +38,12 @@ import Package from "../package.json";
 import { Ships } from "./util/Verify";
 import { GetWBI } from "./util/wbi";
 
-const options = {
+const options = Object.freeze({
   alwaysOnTop: false,
   frame: true,
   titleBarStyle: "default",
   transparent: false,
-};
+});
 
 ipcMain.on("WindowSize", (event, height) => {
   const win = BrowserWindow.fromId(AllWindows.get("index"));

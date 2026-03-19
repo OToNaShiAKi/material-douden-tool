@@ -86,8 +86,7 @@ export default class Socket {
     },
     SEND_GIFT: async ({ data, cmd, send_time }, socket) => {
       if (data.coin_type !== "gold") return;
-      const number =
-        data.super_batch_gift_num || data.super_gift_num || data.num;
+      const number = data.super_gift_num;
       const price = (data.price * number) / 1000;
       const { gif = img_basic, img_basic } = data.gift_info;
       const message = `${data.giftName} - <img src="${gif}" width="20" height="20" /><span>×${number}</span><span class="ml-2">￥${price}</span>`;
