@@ -98,7 +98,7 @@
         <v-btn icon :disabled="!name || !singer" @click="Save">
           <v-icon>mdi-book-music</v-icon>
         </v-btn>
-        <v-btn icon @click="Aegisub">
+        <v-btn icon :disabled="!name || !singer" @click="Aegisub">
           <v-icon>mdi-export</v-icon>
         </v-btn>
       </v-btn-toggle>

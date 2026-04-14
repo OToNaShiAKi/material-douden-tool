@@ -48,7 +48,7 @@ export default {
       { title: "直播追帧", icon: "mdi-video", to: "/" },
       { title: "棉花糖", icon: "mdi-candy", to: "/candy" },
       { title: "禁言用户", icon: "mdi-account-cancel", to: "/silent" },
-      { title: "动画鉴赏", icon: "mdi-microsoft-dynamics-365", to: "/anime" },
+      { title: "动态评论", icon: "mdi-microsoft-dynamics-365", to: "/anime" },
       { title: "歌词制作", icon: "mdi-playlist-music", to: "/lyric" },
       { title: "反馈", icon: "mdi-chart-bubble", to: "/sponsor" },
     ],

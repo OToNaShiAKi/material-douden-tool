@@ -82,7 +82,13 @@ ipcMain.on("SendComment", (event, message, roomid) => {
 
 ipcMain.handle("BilibiliLogin", async () => {
   const { url, qrcode_key } = await GetQRCode();
+  let pollCount = 0;
   const timer = setInterval(async () => {
+    pollCount++;
+    if (pollCount > 60) {
+      clearInterval(timer);
+      return;
+    }
     const { code, url: data } = await GetLoginInfo(qrcode_key);
     if (code === 0 || code === 86038) {
       clearInterval(timer);
@@ -175,8 +181,10 @@ ipcMain.handle("GetMusic", async (event, keyword) => {
   const match = /\[(\d{1,2}):([0-9.]{1,8})\](.*)\n?/g;
   const result = await SearchMusic(keyword);
   for (const item of result) {
+    match.lastIndex = 0;
     if (item.lyric && match.test(item.lyric)) {
       const lyric = [];
+      match.lastIndex = 0;
       item.lyric.replace(match, (l, m, s, c) => {
         if (c && (!/:|：/.test(c) || lyric.length > 0)) {
           const t = item.tlyric.match(new RegExp(`\\[${m}:${s}\\](.*)\n?`));
@@ -190,6 +198,7 @@ ipcMain.handle("GetMusic", async (event, keyword) => {
         return "";
       });
       item.stamps = lyric;
+      match.lastIndex = 0;
       item.language = match.test(item.tlyric) ? "双语" : "单语";
     }
   }
@@ -201,12 +210,12 @@ ipcMain.handle("GetWebSocket", async (event, roomids) => {
     const socket = await GetWebSocket(roomid);
     socket.comments = socket.comments.map((item) => {
       if (item.emoticon.text) {
-        item.text = `<img src="${item.emoticon.url}" height="20" />`;
+        item.text = `<img src="${item.emoticon.url}" height="20" referrerpolicy="no-referrer" />`;
       }
       if (item.user.medal && item.user.medal.guard_level > 0) {
         const url = Ships[item.user.medal.guard_level];
         item.nickname =
-          `<img src="${url}" width="20" height="20" />` + item.nickname;
+          `<img src="${url}" width="20" height="20" referrerpolicy="no-referrer" />` + item.nickname;
       }
       if (item.emots) {
         const regexp = Object.keys(item.emots)
@@ -214,7 +223,7 @@ ipcMain.handle("GetWebSocket", async (event, roomids) => {
           .replace(/\[|\]/g, (s) => "\\" + s);
         item.text = item.text.replace(new RegExp(regexp, "ig"), (s) => {
           const { url } = item.emots[s];
-          return `<img src="${url}" width="20" height="20" />`;
+          return `<img src="${url}" width="20" height="20" referrerpolicy="no-referrer" />`;
         });
       }
       return {
@@ -260,7 +269,7 @@ ipcMain.on("SaveFiles", async (event, Datas, name, encoding = "buffer") => {
 
 ipcMain.handle("GetSilentUser", async (event, roomids) => {
   const result = await Promise.all(roomids.map((v) => GetSilentUser(v.value)));
-  let slients = [];
+  let silents = [];
   for (let i = 0; i < result.length; i++) {
     result[i] = result[i].map((item) => ({
       tname: item.tname,
@@ -270,9 +279,9 @@ ipcMain.handle("GetSilentUser", async (event, roomids) => {
       executor: item.name,
       ...roomids[i],
     }));
-    slients = slients.concat(result[i]);
+    silents = silents.concat(result[i]);
   }
-  return slients;
+  return silents;
 });
 
 ipcMain.handle("RemoveSilentUser", RemoveSilentUser);
@@ -303,12 +312,12 @@ ipcMain.handle("SearchUser", async (event, keyword) => {
 });
 
 ipcMain.handle("GetDynamic", async (event, ids) => {
-  ids = ids.map(async (v) => await Replies(await GetDynamic(v, 0)));
+  ids = ids.map(async (v) => await Replies(await GetDynamic(v)));
   const result = await Promise.all(ids);
   return result.flat(1);
 });
 
-ipcMain.handle("GetFont", async (event) => {
+ipcMain.handle("GetFont", async () => {
   const result = await FontList.getFonts();
   return result.map((item) => item.replace(/^"|"$/g, ""));
 });
@@ -322,7 +331,7 @@ export const streams = new Map();
 ipcMain.on("WriteComment", (event, roomid, start, comment) => {
   let stream = null;
   if (!streams.has(roomid)) {
-    const date = new Date(start).toJSON().replace(/\:/gi, "-");
+    const date = new Date(start).toJSON().replace(/:/gi, "-");
     const filename = join(folder, `./[${roomid}]${date}.log`);
     stream = createWriteStream(filename, {
       flags: "a",

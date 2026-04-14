@@ -4,7 +4,7 @@ import { join } from "path";
 import { BrowserWindow, app } from "electron";
 import { AllWindows } from "../background";
 
-export const folder = join(app.getPath("exe"), "../logs");
+export const folder = join(app.getPath("userData"), "logs");
 const file = join(folder, "./forbidden-words.txt");
 stat(folder).catch(() => mkdir(folder));
 

@@ -7,7 +7,7 @@
       :loading="loading"
       dense
       label="上传Excel"
-      hint="请确保文件中包含 中文 和 日文 的列标题；无文件时也可直接在图片中输入"
+      hint="文件中第一列为中文，第二列为日文；无文件时也可直接在图片中输入"
       v-model="file"
     />
     <v-btn-toggle dense v-model="direction" rounded>

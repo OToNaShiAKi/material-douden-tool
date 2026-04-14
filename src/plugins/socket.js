@@ -21,16 +21,16 @@ export default class Socket {
           .replace(/\[|\]/g, (s) => "\\" + s);
         message = info[1].replace(new RegExp(regexp, "ig"), (s) => {
           const { url } = emots[s];
-          return `<img src="${url}" width="20" height="20" />`;
+          return `<img referrerpolicy="no-referrer" src="${url}" width="20" height="20" />`;
         });
       } else if (info[0][12] === 1) {
         const { url } = info[0][13];
-        message = `<img src="${url}" height="20" />`;
+        message = `<img referrerpolicy="no-referrer" src="${url}" height="20" />`;
         config = "Stamp";
       }
       const url = Ships[info[7]];
       if (url) {
-        name = `<img src="${url}" width="20" height="20" />` + name;
+        name = `<img referrerpolicy="no-referrer" src="${url}" width="20" height="20" />` + name;
       }
       return {
         id: `${cmd}-${info[2][0]}-${info[0][4]}`,
@@ -48,7 +48,7 @@ export default class Socket {
       const url = Ships[data.user_info.guard_level];
       if (url) {
         name =
-          `<img src="${url}" class="ml-2" width="20" height="20" />` + name;
+          `<img referrerpolicy="no-referrer" src="${url}" class="ml-2" width="20" height="20" />` + name;
       }
       return {
         id: cmd + "-" + data.id,
@@ -72,7 +72,7 @@ export default class Socket {
         time: time,
         uid: data.uid,
         name: data.username,
-        message: `${data.gift_name} - <img src="${url}" class="ml-2" width="20" height="20" /><span>×${data.num}</span><span class="ml-6">￥${price}</span>`,
+        message: `${data.gift_name} - <img referrerpolicy="no-referrer" src="${url}" class="ml-2" width="20" height="20" /><span>×${data.num}</span><span class="ml-6">￥${price}</span>`,
         admin: true,
         config: "Member",
         loginfo: `${data.username}: ${data.gift_name}×${data.num} ￥${price}`,
@@ -88,8 +88,8 @@ export default class Socket {
       if (data.coin_type !== "gold") return;
       const number = data.super_gift_num;
       const price = (data.price * number) / 1000;
-      const { gif = img_basic, img_basic } = data.gift_info;
-      const message = `${data.giftName} - <img src="${gif}" width="20" height="20" /><span>×${number}</span><span class="ml-2">￥${price}</span>`;
+      const gif = data.gift_info.gif || data.gift_info.img_basic;
+      const message = `${data.giftName} - <img referrerpolicy="no-referrer" src="${gif}" width="20" height="20" /><span>×${number}</span><span class="ml-2">￥${price}</span>`;
       send_time = send_time ?? data.timestamp * 1000;
       const result = {
         id: cmd + "-" + data.tid,
@@ -197,6 +197,7 @@ export default class Socket {
       if (comment) {
         Socket.Write(this.roomid, this.live_time, comment);
         this.comments.unshift(comment);
+        if (this.comments.length > 500) this.comments.length = 500;
       }
     }
   };

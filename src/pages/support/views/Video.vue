@@ -30,7 +30,7 @@
         <template v-slot:item="{ item, on, attrs }">
           <v-list-item v-on="on" v-bind="attrs">
             <v-list-item-avatar>
-              <v-img referrepolicy="no-referrer" :src="item.avatar" />
+              <v-img referrerpolicy="no-referrer" :src="item.avatar" />
             </v-list-item-avatar>
             <v-list-item-title>{{ item.text }}</v-list-item-title>
           </v-list-item>
@@ -116,8 +116,8 @@ import { ipcRenderer } from "electron";
 const mseLivePlayback = mpegts.getFeatureList().mseLivePlayback;
 const canvas = document.createElement("canvas");
 const ctx = canvas.getContext("2d");
-canvas.width = 1920;
-canvas.height = 1080;
+canvas.width = 640;
+canvas.height = 360;
 ctx.fillStyle = "#F00";
 ctx.font = "normal normal 600 150px/200px Robot";
 ctx.textBaseline = "top";
@@ -183,7 +183,7 @@ export default {
         }
         this.qns = live.accept_qn;
         this.quality = live.current_qn;
-        CreatePlayer.player = CreatePlayer(live, video);
+        CreatePlayer.player = CreatePlayer(live, video, canvas, ctx);
       }
     },
     Screenshot() {
@@ -191,10 +191,12 @@ export default {
       const key = Date.now();
       const video = document.getElementById("tracing");
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const x = Math.round(canvas.width * 0.03);
+      const y = Math.round(canvas.height * 0.2);
       let text = FormatTime(new Date(this.timer * 1000)).split(" ")[0];
-      ctx.fillText(text, 60, 60);
+      ctx.fillText(text, x, y);
       text = FormatDuration(Math.floor(key / 1000 - this.timer), true);
-      ctx.fillText(text, 60, 240);
+      ctx.fillText(text, x, y * 2);
       this.images.push({
         src: canvas.toDataURL("image/jpg"),
         key: key.toString(),
@@ -220,7 +222,9 @@ export default {
       image.src = this.images[index].src;
       image.onload = () => {
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-        ctx.fillText(target.innerText, 60, 420);
+        const x = Math.round(canvas.width * 0.03);
+        const y = Math.round(canvas.height * 0.6);
+        ctx.fillText(target.innerText, x, y);
         this.images[index].src = canvas.toDataURL("image/jpg");
         localStorage.setItem("screenshot", JSON.stringify(this.images));
         target.innerText = "";

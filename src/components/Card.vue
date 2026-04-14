@@ -48,7 +48,7 @@ export default {
   padding: 10px 10px 0;
   text-align: center;
   width: 600px;
-  margin: "auto";
+  margin: auto;
 }
 .card-body {
   background-color: #fff;

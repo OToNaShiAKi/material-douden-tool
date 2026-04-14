@@ -15,7 +15,6 @@ const fixes = JSON.parse(localStorage.getItem("fixes")) || [
 const rooms = JSON.parse(localStorage.getItem("rooms")) || [];
 const shields = JSON.parse(localStorage.getItem("shields")) || [];
 const stamps = [];
-stamps[-1] = { lyric: "", tlyric: "" };
 
 const Handler = {
   rooms: (config) =>
@@ -77,7 +76,6 @@ const ChangeShortcuts = (state, { key, value }) => {
 };
 
 const ChangeSong = (state, { stamp = -1, song = state.song }) => {
-  song.stamps[-1] = { lyric: "", tlyric: "" };
   state.stamp = stamp;
   state.song = song;
 };

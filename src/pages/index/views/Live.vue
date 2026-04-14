@@ -13,7 +13,7 @@
       <template v-slot:item="{ item, on, attrs }">
         <v-list-item v-on="on" v-bind="attrs">
           <v-list-item-avatar>
-            <v-img referrepolicy="no-referrer" :src="item.avatar" />
+            <v-img referrerpolicy="no-referrer" :src="item.avatar" />
           </v-list-item-avatar>
           <v-list-item-title>{{ item.text }}</v-list-item-title>
         </v-list-item>
@@ -125,6 +125,7 @@ export default {
         const result = await ipcRenderer.invoke("GetWebSocket", sockets);
         for (let i = 0; i < result.length; i += 1) {
           const item = result[i];
+          if (!item.host) continue;
           CommentLength[item.roomid] = item.length;
           item.name = sockets[i].room_name;
           const socket = this.sockets[item.roomid] ?? new Socket(item);

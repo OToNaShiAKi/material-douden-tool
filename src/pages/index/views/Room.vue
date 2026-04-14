@@ -39,7 +39,7 @@
       <template v-slot:item="{ item, on, attrs }">
         <v-list-item v-bind="attrs" v-on="on">
           <v-list-item-avatar>
-            <v-img referrepolicy="no-referrer" :src="item.avatar" />
+            <v-img referrerpolicy="no-referrer" :src="item.avatar" />
           </v-list-item-avatar>
           <v-list-item-content>
             <v-list-item-title v-html="item.name || item.text" />

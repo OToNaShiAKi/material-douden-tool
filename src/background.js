@@ -42,7 +42,10 @@ const CreateWindow = async (page = "index", options = {}) => {
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL + page);
     if (!process.env.IS_TEST) win.webContents.openDevTools();
   } else {
-    createProtocol("app");
+    if (!CreateWindow._protocolCreated) {
+      createProtocol("app");
+      CreateWindow._protocolCreated = true;
+    }
     // Load the index.html when not in development
     win.loadURL(`app://./${page}.html`);
     autoUpdater.checkForUpdatesAndNotify();

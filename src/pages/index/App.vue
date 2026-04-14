@@ -165,7 +165,7 @@ export default {
       key += event.key;
       let phrase = this.shortcuts[key];
       if (phrase) {
-        const lyric = this.song.stamps[this.stamp];
+        const lyric = this.song.stamps[this.stamp] || { lyric: "", tlyric: "" };
         phrase = phrase
           .replace(/\{c\}/gi, this.content)
           .replace(/\{v\}/gi, clipboard.readText())

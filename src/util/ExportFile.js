@@ -9,32 +9,39 @@ import {
   TextRun,
 } from "docx";
 import { FormatDuration } from "./Format";
-import { writeFileXLSX, utils, read } from "xlsx";
+import { Workbook } from "exceljs";
 import MD5 from "blueimp-md5";
 import HtmlToCanvas from "html2canvas";
 
-const Mapping = Object.freeze({
-  title: "标题",
-  bvid: "链接",
-  duration_desc: "时长",
-  time_desc: "发布",
-  uname: "推荐人",
-  avatar: "封面",
-});
+export const Mapping = Object.freeze([
+  { text: "推荐", value: "uname" },
+  { text: "评论", value: "message" },
+  { text: "封面", value: "avatar", sortable: false },
+  { text: "标题", value: "title" },
+  { text: "链接", value: "bvid", sortable: false },
+  { text: "时长", value: "duration_desc" },
+  { text: "操作", value: "actions", sortable: false },
+]);
+
+const findMapping = (value) => Mapping.find((m) => m.value === value);
 
 const canvas = document.createElement("canvas");
 const ctx = canvas.getContext("2d");
-canvas.width = 190;
-canvas.height = 120;
+canvas.width = 240;
+canvas.height = 135;
 
 const LoadImage = async (src) => {
   const image = new Image(canvas.width, canvas.height);
+  image.referrerPolicy = "no-referrer";
   image.src = src;
-  const result = await new Promise((resolve) => {
+  const result = await new Promise((resolve, reject) => {
     image.addEventListener("load", () => {
       ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
       resolve(canvas.toDataURL("image/jpg"));
     });
+    image.addEventListener("error", () =>
+      reject(new Error(`Failed to load image: ${src}`)),
+    );
   });
   return result;
 };
@@ -47,26 +54,33 @@ export const ExportWord = async (comments, config, need) => {
         text: v[key],
         size: 24,
         italics: false,
-        bold: key === "title",
+        bold: key === Mapping[3].value,
       });
-      if (key === "bvid") {
+      if (key === Mapping[4].value) {
         child = new ExternalHyperlink({ children: [child], link: v[key] });
-      } else if (key === "avatar" && v[key]) {
+      } else if (key === Mapping[2].value && v[key]) {
         child = new ImageRun({
           data: await LoadImage(v[key]),
           transformation: { width: canvas.width, height: canvas.height },
         });
+      } else if (key === Mapping[1].value) {
+        const text = v[key].replace(
+          /<img width="20" height="20" src="[^"]*" alt="([^"]*)" loading="lazy" \/>/gi,
+          "$1",
+        );
+        child = new TextRun({ text, size: 24, italics: false });
       }
+      const mapping = findMapping(key);
       return new Paragraph({
         children: [
           new TextRun({
-            text: `【${Mapping[key]}】`,
+            text: `【${mapping ? mapping.text : key}】`,
             bold: true,
             size: 24,
           }),
           child,
         ],
-        heading: key === "title" ? HeadingLevel.HEADING_3 : undefined,
+        heading: key === Mapping[3].value ? HeadingLevel.HEADING_3 : undefined,
       });
     });
     children = await Promise.all(children);
@@ -96,40 +110,81 @@ export const ExportWord = async (comments, config, need) => {
     sections.unshift({ children: [p, new Paragraph("\n")] });
   }
   const buffer = await Packer.toBuffer(
-    new Document({ title: "动画鉴赏", sections })
+    new Document({ title: "动画鉴赏", sections }),
   );
   return buffer;
 };
 
-export const WriteExcel = (body, header, name, title, config = {}) => {
-  const sheet = utils.json_to_sheet(body, { header });
-  const workbook = utils.book_new();
-  sheet["!cols"] = config.cols;
-  sheet["!rows"] = config.rows || new Array(body.length + 1).fill({ hpt: 20 });
-  utils.book_append_sheet(workbook, sheet, title || name);
-  name += ".xlsx";
-  writeFileXLSX(workbook, name);
-};
+export const ExportExcel = async (comments, config, need) => {
+  const workbook = new Workbook();
+  const worksheet = workbook.addWorksheet("动画鉴赏");
 
-export const ExportExcel = (comments, config, need) => {
+  const avatarCol = config.indexOf("avatar");
+  const bvidCol = config.indexOf("bvid");
+
+  const ColumnWidths = {
+    uname: 14,
+    message: 36,
+    avatar: 34,
+    title: 30,
+    bvid: 40,
+    duration_desc: 12,
+  };
+  worksheet.columns = config.map((key) => ({
+    header: findMapping(key)?.text || key,
+    width: ColumnWidths[key] || 16,
+  }));
+  worksheet.getRow(1).font = { bold: true };
+
   let total = 0;
-  const header = config.map((v) => Mapping[v]);
-  const cols = config.map(() => ({ wch: 0 }));
-  const body = comments.map((v) => {
-    const row = {};
-    for (let i = 0; i < config.length; i++) {
-      const key = config[i];
-      row[Mapping[key]] = v[key];
-      const width = /[\u4e00-\u9fa5]/.test(row[Mapping[key]])
-        ? row[Mapping[key]].length * 2
-        : row[Mapping[key]].length + 10;
-      cols[i].wch = cols[i].wch > width ? cols[i].wch : width;
+
+  for (const comment of comments) {
+    const rowData = config.map((key) => {
+      if (key === "avatar" || key === "bvid") return "";
+      if (key === "message") {
+        return (comment[key] || "").replace(
+          /<img width="20" height="20" src="[^"]*" alt="([^"]*)" loading="lazy" \/>/gi,
+          "$1",
+        );
+      }
+      return comment[key] || "";
+    });
+    const row = worksheet.addRow(rowData);
+
+    if (avatarCol >= 0 && comment.avatar) {
+      const dataUrl = await LoadImage(comment.avatar);
+      const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, "");
+      const imageId = workbook.addImage({
+        base64: base64Data,
+        extension: "jpeg",
+      });
+      worksheet.addImage(imageId, {
+        tl: { col: avatarCol, row: row.number - 1 },
+        ext: { width: canvas.width, height: canvas.height },
+      });
+      row.height = canvas.height * 0.75;
     }
-    total += v.duration || 0;
-    return row;
-  });
-  if (need) body.push({ 时长: FormatDuration(total, true) });
-  return { body, header, cols };
+
+    if (bvidCol >= 0 && comment.bvid) {
+      const cell = row.getCell(bvidCol + 1);
+      cell.value = { text: comment.bvid, hyperlink: comment.bvid };
+      cell.font = { color: { argb: "FF0000FF" }, underline: true };
+    }
+
+    total += comment.duration || 0;
+  }
+
+  if (need) {
+    const durationCol = config.indexOf("duration_desc");
+    const rowData = new Array(config.length).fill("");
+    rowData[durationCol >= 0 ? durationCol : config.length - 1] =
+      `总时长: ${FormatDuration(total, true)}`;
+    const totalRow = worksheet.addRow(rowData);
+    totalRow.font = { bold: true };
+  }
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
 };
 
 const AssHeader = `[V4+ Styles]
@@ -141,18 +196,17 @@ Style: Default - Translate,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 `;
 
-const LineRegex =
-  /Dialogue: \d+,(\d{1}:\d{2}:\d{2}.\d{2}),(\d{1}:\d{2}:\d{2}.\d{2}),(.*),.*,\d+,\d+,\d+,.*,(.*)/g;
-
-export const LineStart = {
+export const LineStart = Object.freeze({
   start: "00:00:00.000",
   end: "00:00:00.000",
   lyric: "",
   tlyric: "",
   id: "00:00:00.000",
-};
+});
 
 export const ReadLyric = (file) => {
+  const LineRegex =
+    /Dialogue: \d+,(\d{1}:\d{2}:\d{2}.\d{2}),(\d{1}:\d{2}:\d{2}.\d{2}),(.*),.*,\d+,\d+,\d+,.*,(.*)/g;
   const reader = new FileReader();
   const promise = new Promise((resolve) => {
     reader.addEventListener("load", ({ target: { result } }) => {
@@ -201,7 +255,7 @@ export const ExportAegisub = (lyric, K = false) => {
     const start = line.start.slice(1, 11).padEnd(10, "0");
     const end = line.end.slice(1, 11).padEnd(10, "0");
     Lyric += `Dialogue: 0,${start},${end},Default,,0,0,0,,${lyric}\n`;
-    if (line.tlyric) {
+    if (tlyric) {
       TranslateLyric += `Dialogue: 0,${start},${end},Default - Translate,,0,0,0,,${tlyric}\n`;
     }
   }
@@ -214,7 +268,7 @@ const Reduce = (previous, value, index) =>
 
 export const SaveLyric = (lyric, name, singer, id) => {
   const music = {
-    id: id || MD5(`${name}.${singer}}.${Date.now()}`),
+    id: id || MD5(`${name}.${singer}.${Date.now()}`),
     name,
     singer,
     lyric: "",
@@ -235,7 +289,7 @@ export const SaveLyric = (lyric, name, singer, id) => {
     });
   }
   music.language = /\[(\d{1,2}:)*\d{1,2}:[0-9.]{1,8}\](.*)\n?/g.test(
-    music.tlyric
+    music.tlyric,
   )
     ? "双语"
     : "单语";
@@ -255,12 +309,12 @@ export const ConvertLyric = (next) => {
         end += duration.toString().split(".")[1] || "000";
       }
       return { id: start, lyric, tlyric, start, end };
-    }
+    },
   );
   const Replace = (s, start, end, m) => {
     m = m.replace(
       /\(\d+,(\d+),\d+\)(.)/g,
-      (string, k, v) => `{\\k${+k / 10}}${v}`
+      (string, k, v) => `{\\k${+k / 10}}${v}`,
     );
     end = (+end + +start) / 1000;
     start = +start / 1000;
@@ -285,36 +339,39 @@ export const Base64 = /^data:image\/(png|gif|jpeg);base64,/;
 export const DomToImage = async (Dom) =>
   (await HtmlToCanvas(Dom)).toDataURL().replace(Base64, "");
 
-export const ExportCandy = (file, Dom) => {
+export const ExportCandy = async (file, Dom) => {
   const result = [];
-  const reader = new FileReader();
   const chinese = document.querySelector("#dom-to-image-cn .card-text");
   const japanese = document.querySelector("#dom-to-image-jp .card-text");
-  const promise = new Promise((resolve) => {
-    reader.addEventListener("load", async ({ target }) => {
-      const { Sheets } = read(target.result, { type: "buffer" });
-      for (const key in Sheets) {
-        const json = utils.sheet_to_json(Sheets[key]);
-        for (const item of json) {
-          chinese.innerText = item["中文"];
-          japanese.innerText = item["日文"];
-          result.push(await DomToImage(Dom));
-        }
-      }
-      chinese.innerText = "";
-      japanese.innerText = "";
-      resolve(result);
+  const workbook = new Workbook();
+  const arrayBuffer = await file.arrayBuffer();
+  await workbook.xlsx.load(arrayBuffer);
+  const worksheet = workbook.worksheets[0];
+
+  const rows = [];
+  worksheet.eachRow((row) => {
+    rows.push({
+      cn: row.getCell(1).text,
+      jp: row.getCell(2).text,
     });
   });
-  reader.readAsArrayBuffer(file);
-  return promise;
+
+  for (const { cn, jp } of rows) {
+    chinese.innerText = cn;
+    japanese.innerText = jp;
+    result.push(await DomToImage(Dom));
+  }
+  chinese.innerText = "";
+  japanese.innerText = "";
+
+  return result;
 };
 
 export const ReadLogo = (file) => {
   const reader = new FileReader();
   const promise = new Promise((resolve) => {
     reader.addEventListener("load", async ({ target }) =>
-      resolve(target.result)
+      resolve(target.result),
     );
   });
   reader.readAsDataURL(file);

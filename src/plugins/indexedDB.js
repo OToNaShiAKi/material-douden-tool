@@ -25,7 +25,8 @@ export const GetLocalData = async (store, keyword = "") => {
       request.addEventListener("success", resolve)
     ));
   const DB = request.result;
-  const regex =  new RegExp(keyword, "i")
+  const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(escaped, "i");
   return await new Promise((resolve) => {
     const transaction = DB.transaction(store, "readonly")
       .objectStore(store)

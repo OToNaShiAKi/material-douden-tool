@@ -451,7 +451,7 @@ export const RemoveSilentUser = async (event, id, roomid) => {
   }
 };
 
-export const GetDynamic = async (id, next = 0) => {
+export const GetDynamic = async (id) => {
   try {
     const { data } = await axios.get(`https://www.bilibili.com/opus/${id}`, {
       headers: Bilibili.defaults.headers,
@@ -479,7 +479,6 @@ export const GetDynamic = async (id, next = 0) => {
       if (!replies || replies.length <= 0) break;
       result = result.concat(replies);
       pagination.offset = cursor.pagination_reply.next_offset;
-      next = cursor.next;
     } while (true);
     return result;
   } catch (error) {
@@ -487,7 +486,7 @@ export const GetDynamic = async (id, next = 0) => {
   }
 };
 
-export const GetVideoInfo = async (key) => {
+export const GetVideoInfo = async (key, depth = 0) => {
   try {
     if (/(BV[A-Za-z0-9_-]*)|(av[0-9]*)/gi.test(key)) {
       const bvid = key.match(/(BV[A-Za-z0-9_-]*)/);
@@ -497,14 +496,16 @@ export const GetVideoInfo = async (key) => {
         params: { bvid: bvid && bvid[0], aid: aid && aid[1] },
       });
       return { duration, avatar: pic };
-    } else {
+    } else if (depth < 3) {
       const {
         request: { path },
       } = await axios.get(key, {
         withCredentials: true,
         headers: Bilibili.defaults.headers,
       });
-      return await GetVideoInfo(path);
+      return await GetVideoInfo(path, depth + 1);
+    } else {
+      return { duration: null, avatar: "" };
     }
   } catch (error) {
     return { duration: null, avatar: "" };
@@ -522,7 +523,7 @@ export const LoginStatistics = async (name, avatar, jct, version) => {
     LoginStatistics.resolve(sponsor > 0);
     return sponsor > 0;
   } catch (error) {
-    LoginStatistics.reject(error);
+    LoginStatistics.resolve(false);
     return false;
   }
 };

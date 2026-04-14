@@ -1,9 +1,10 @@
 <template>
   <v-container class="lyric-control">
     <v-text-field
+      prepend-icon="mdi-microsoft-dynamics-365"
       append-icon="mdi-magnify"
       class="fix-input"
-      hint="登录同传软件后，复制动态链接中的数字id输入；多动态时以空格分隔，自动过滤非推荐视频评论"
+      hint="登录同传软件后，复制动态链接中的数字id输入；多动态时以空格分隔"
       label="动态ID"
       v-model.trim="keyword"
       solo
@@ -29,6 +30,9 @@
       <template v-slot:[`item.bvid`]="{ value }">
         <a :href="value" @click.prevent="Open">{{ value }}</a>
       </template>
+      <template v-slot:[`item.message`]="{ value }">
+        <p class="ma-0 d-flex align-center" v-html="value" />
+      </template>
       <template v-slot:footer="{ props: { pagination } }">
         <v-pagination
           circle
@@ -50,50 +54,51 @@
         v-model="config"
         :value="v.value"
       />
-      <v-checkbox
-        hide-details
-        dense
-        label="总时长"
-        v-model="total"
-      />
+      <v-checkbox hide-details dense label="总时长" v-model="total" />
     </section>
     <v-btn-toggle class="my-3" dense rounded>
-      <v-btn icon :loading="exporting" @click="Word">
+      <v-btn
+        icon
+        :loading="wordExporting"
+        :disabled="!comments.length"
+        @click="Word"
+      >
         <v-icon>mdi-microsoft-word</v-icon>
       </v-btn>
-      <v-btn icon @click="Excel">
+      <v-btn
+        icon
+        :loading="excelExporting"
+        :disabled="!comments.length"
+        @click="Excel"
+      >
         <v-icon>mdi-microsoft-excel</v-icon>
       </v-btn>
     </v-btn-toggle>
-    <p class="caption px-3 mb-0">
-      仅Word格式支持导出封面图片，同时耗时会比较长。
-    </p>
+    <p class="caption px-3 mb-0">导出评论同时会导出无视频链接的纯文字评论</p>
   </v-container>
 </template>
 
 <script>
 import { ipcRenderer, shell } from "electron";
-import { ExportWord, ExportExcel, WriteExcel } from "../../../util/ExportFile";
+import { ExportWord, ExportExcel, Mapping } from "../../../util/ExportFile";
+
+const FilteredComments = (comments, config) => {
+  if (config.includes(Mapping[1].value)) return comments;
+  return comments.filter((item) => item.bvid);
+};
 
 export default {
   name: "Anime",
   data: () => ({
     keyword: "",
-    exporting: false,
-    headers: [
-      { text: "封面", value: "avatar", sortable: false },
-      { text: "标题", value: "title" },
-      { text: "链接", value: "bvid", sortable: false },
-      { text: "时长", value: "duration_desc" },
-      { text: "推荐人", value: "uname" },
-      { text: "发布点", value: "time_desc" },
-      { text: "操作", value: "actions", sortable: false },
-    ],
+    wordExporting: false,
+    excelExporting: false,
+    headers: Mapping,
     comments: [],
     loading: false,
     page: 1,
-    config: ["title", "bvid", "duration_desc"],
-    total: true,
+    config: ["avatar", "bvid", "title", "duration_desc", "uname"],
+    total: false,
   }),
   methods: {
     async Search() {
@@ -110,17 +115,26 @@ export default {
       const href = target.href;
       shell.openExternal(href);
     },
+
     async Word() {
-      this.exporting = true;
-      const buffer = await ExportWord(this.comments, this.config, this.total);
+      this.wordExporting = true;
+      const buffer = await ExportWord(
+        FilteredComments(this.comments, this.config),
+        this.config,
+        this.total,
+      );
       ipcRenderer.send("SaveFiles", buffer, `${Date.now()}.docx`);
-      this.exporting = false;
+      this.wordExporting = false;
     },
-    Excel() {
-      const result = ExportExcel(this.comments, this.config, this.total);
-      WriteExcel(result.body, result.header, Date.now(), "动画鉴赏", {
-        cols: result.cols,
-      });
+    async Excel() {
+      this.excelExporting = true;
+      const buffer = await ExportExcel(
+        FilteredComments(this.comments, this.config),
+        this.config,
+        this.total,
+      );
+      ipcRenderer.send("SaveFiles", buffer, `${Date.now()}.xlsx`);
+      this.excelExporting = false;
     },
   },
 };

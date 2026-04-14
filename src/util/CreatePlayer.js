@@ -1,7 +1,7 @@
 // import { writeFileXLSX, utils } from "xlsx";
 import mpegts from "mpegts.js";
 
-export const CreatePlayer = (result, video) => {
+export const CreatePlayer = (result, video, canvas, ctx) => {
   const player = mpegts.createPlayer(
     {
       type: result.format_name,
@@ -16,10 +16,21 @@ export const CreatePlayer = (result, video) => {
       liveSync: true,
       liveSyncPlaybackRate: 1.4,
       autoCleanupSourceBuffer: true,
-    }
+    },
   );
   player.attachMediaElement(video);
   player.load();
+  video.addEventListener(
+    "loadedmetadata",
+    () => {
+      canvas.width = video.videoWidth || canvas.width;
+      canvas.height = video.videoHeight || canvas.height;
+      const size = Math.round(canvas.height * 0.15);
+      ctx.font = `600 ${size}px Robot`;
+      ctx.fillStyle = "#F00";
+    },
+    { once: true },
+  );
   player.on(mpegts.Events.ERROR, () => {
     player.unload();
     player.detachMediaElement();
@@ -27,6 +38,6 @@ export const CreatePlayer = (result, video) => {
     CreatePlayer.player = CreatePlayer(result, video);
   });
   player.roomid = result.room_id;
-  player.play();
+  player.play().catch(() => {});
   return player;
 };
